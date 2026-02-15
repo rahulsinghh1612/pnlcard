@@ -25,12 +25,12 @@ Single checklist derived from [PNLCard_PRD.md](PNLCard_PRD.md) §15 (Build Timel
 
 - [x] **3.1** Build dashboard layout: top bar (logo, display name, settings, logout).
 - [x] **3.2** Quick stats row: this week’s P&L, win rate (this week), current streak.
-- [ ] **3.3** Calendar heatmap (month view): green = profit day, red = loss day, gray = no trade; click day to view/edit.
+- [x] **3.3** Calendar heatmap (month view): green = profit day, red = loss day, gray = no trade; click day to view/edit.
 - [x] **3.4** “Log Today’s Trade” button — opens trade entry modal.
 - [x] **3.5** Trade entry modal: Date, Number of Trades, Net P&L, Charges (optional), Capital Deployed (optional), Note (max 280). Validation per PRD §2.4. Save/Update/Delete with confirmation for delete.
 - [x] **3.6** Recent entries list: last 7 days with date, P&L, # trades, “Generate Card” button per row.
-- [ ] **3.7** Empty state: no trades yet — illustration + “Log your first trade” + Log Trade button; hide calendar until ≥1 trade.
-- [ ] **3.8** Clicking a day with existing entry opens modal in edit mode (pre-filled, Update + Delete options).
+- [x] **3.7** Empty state: no trades yet — illustration + “Log your first trade” + Log Trade button; hide calendar until ≥1 trade.
+- [x] **3.8** Clicking a day with existing entry opens modal in edit mode (pre-filled, Update + Delete options).
 
 ### Day 4–5: Card generation
 

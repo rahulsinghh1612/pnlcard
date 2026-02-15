@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { TradeEntryModal } from "./trade-entry-modal";
+import { format } from "date-fns";
 
 type LogTradeButtonProps = {
   userId: string;
@@ -13,6 +14,11 @@ type LogTradeButtonProps = {
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
   children?: React.ReactNode;
+  /**
+   * When provided, the button calls this instead of opening its own modal.
+   * Use when the parent controls the trade modal (e.g. dashboard with calendar).
+   */
+  onOpenCreate?: (defaultDate?: string) => void;
 };
 
 export function LogTradeButton({
@@ -23,8 +29,17 @@ export function LogTradeButton({
   size = "lg",
   className,
   children,
+  onOpenCreate,
 }: LogTradeButtonProps) {
   const [open, setOpen] = useState(false);
+
+  const handleClick = () => {
+    if (onOpenCreate) {
+      onOpenCreate(format(new Date(), "yyyy-MM-dd"));
+    } else {
+      setOpen(true);
+    }
+  };
 
   return (
     <>
@@ -32,7 +47,7 @@ export function LogTradeButton({
         variant={variant}
         size={size}
         className={className}
-        onClick={() => setOpen(true)}
+        onClick={handleClick}
       >
         {children ?? (
           <>
@@ -41,14 +56,16 @@ export function LogTradeButton({
           </>
         )}
       </Button>
-      <TradeEntryModal
-        open={open}
-        onOpenChange={setOpen}
-        userId={userId}
-        currency={currency}
-        tradingCapital={tradingCapital}
-        existingTrade={null}
-      />
+      {!onOpenCreate && (
+        <TradeEntryModal
+          open={open}
+          onOpenChange={setOpen}
+          userId={userId}
+          currency={currency}
+          tradingCapital={tradingCapital}
+          existingTrade={null}
+        />
+      )}
     </>
   );
 }

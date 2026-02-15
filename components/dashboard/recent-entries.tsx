@@ -36,7 +36,7 @@ export function RecentEntries({ trades, currency }: RecentEntriesProps) {
   if (trades.length === 0) return null;
 
   return (
-    <Card className="p-6">
+    <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-slate-50/30 dark:from-card dark:via-card dark:to-slate-900/20 p-6">
       <h2 className="text-sm font-medium text-foreground mb-4">
         Recent entries
       </h2>
