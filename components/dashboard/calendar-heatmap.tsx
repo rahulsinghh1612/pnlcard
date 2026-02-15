@@ -92,31 +92,28 @@ export function CalendarHeatmap({
 
   return (
     <div className="mx-auto w-full max-w-[340px] sm:max-w-[400px] overflow-hidden rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-foreground">This month</h2>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setViewDate((d) => subMonths(d, 1))}
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-[120px] text-center text-sm font-medium text-foreground">
-            {format(viewDate, "MMMM yyyy")}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setViewDate((d) => addMonths(d, 1))}
-            aria-label="Next month"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="mb-4 flex items-center justify-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setViewDate((d) => subMonths(d, 1))}
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="min-w-[140px] text-center text-sm font-semibold text-foreground">
+          {format(viewDate, "MMMM yyyy")}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setViewDate((d) => addMonths(d, 1))}
+          aria-label="Next month"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Weekday headers */}

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowDownToLine, ImageIcon } from "lucide-react";
+import { ArrowDownToLine, Upload, Trash2 } from "lucide-react";
 
 const tradeSchema = z.object({
   trade_date: z.string().min(1, "Date is required"),
@@ -276,11 +276,34 @@ export function TradeEntryModal({
         <DialogContent
           className="sm:max-w-md"
           onOpenAutoFocus={(e) => e.preventDefault()}
+          hideCloseButton={isEdit}
         >
-          <DialogHeader>
-            <DialogTitle>
-              {isEdit ? "Edit trade" : "Log today's trade"}
-            </DialogTitle>
+          <DialogHeader className="text-center">
+            {isEdit ? (
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isLoading}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30 disabled:opacity-50"
+                  title="Delete entry"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <DialogTitle>Edit trade</DialogTitle>
+                <Link
+                  href={`/dashboard/card?date=${form.trade_date}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  title="Generate Card"
+                >
+                  <Upload className="h-4 w-4" />
+                </Link>
+              </div>
+            ) : (
+              <DialogTitle className="text-center">
+                Log today&apos;s trade
+              </DialogTitle>
+            )}
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-7">
@@ -342,7 +365,7 @@ export function TradeEntryModal({
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="charges">Charges & taxes (optional)</Label>
+              <Label htmlFor="charges">Charges & taxes ({symbol})</Label>
               <Input
                 id="charges"
                 type="text"
@@ -374,28 +397,30 @@ export function TradeEntryModal({
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="capital_deployed">
-                Capital deployed for ROI (optional)
-              </Label>
-              {tradingCapital != null && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      capital_deployed: String(tradingCapital!),
-                    }))
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border/80 bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <ArrowDownToLine className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                  Fill from profile
-                  <span className="ml-0.5 opacity-75">
-                    · {symbol}
-                    {formatWithLocale(Number(tradingCapital), currency)}
-                  </span>
-                </button>
-              )}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="capital_deployed" className="mb-0">
+                  Capital ({symbol}) deployed for ROI
+                </Label>
+                {tradingCapital != null && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        capital_deployed: String(tradingCapital!),
+                      }))
+                    }
+                    className="inline-flex items-center gap-1 rounded-md border border-dashed border-border/80 bg-muted/40 px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-border hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <ArrowDownToLine className="h-3 w-3 shrink-0 opacity-70" />
+                    Fill from profile
+                    <span className="ml-0.5 opacity-75">
+                      · {symbol}
+                      {formatWithLocale(Number(tradingCapital), currency)}
+                    </span>
+                  </button>
+                )}
+              </div>
               <Input
                 id="capital_deployed"
                 type="text"
@@ -425,41 +450,14 @@ export function TradeEntryModal({
               )}
             </div>
 
-            <DialogFooter className="mt-10 gap-2 sm:gap-0 flex-wrap">
-              {isEdit && (
-                <>
-                  <Button variant="outline" size="sm" asChild className="mr-auto">
-                    <Link href={`/dashboard/card?date=${form.trade_date}`}>
-                      <ImageIcon className="h-4 w-4 mr-2" />
-                      Generate Card
-                    </Link>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    disabled={isLoading}
-                  >
-                    Delete
-                  </Button>
-                </>
-              )}
-              <div className="flex flex-1 justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isLoading || isFutureDate}>
-                  {isLoading
-                    ? "Saving…"
-                    : isEdit
-                      ? "Update"
-                      : "Save"}
-                </Button>
-              </div>
+            <DialogFooter className="mt-10">
+              <Button type="submit" className="w-full" disabled={isLoading || isFutureDate}>
+                {isLoading
+                  ? "Saving…"
+                  : isEdit
+                    ? "Update"
+                    : "Save"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
