@@ -1,0 +1,37 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+/**
+ * Creates a Supabase client for use in Next.js middleware and refreshes the
+ * session if needed. Call this from middleware.ts so auth state stays in sync
+ * and expired tokens are refreshed.
+ */
+export async function updateSession(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !key) {
+    return response;
+  }
+
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        );
+      },
+    },
+  });
+
+  await supabase.auth.getUser();
+  return response;
+}

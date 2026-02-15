@@ -1,0 +1,268 @@
+# PNLCard — Cursor Rules
+
+You are building PNLCard, a social-first trading recap card generator. This is a Next.js 14+ App Router project with Supabase, Tailwind CSS, and @vercel/og.
+
+## Project Context
+
+PNLCard lets traders log daily P&L and generate beautiful shareable image cards for X and Instagram. It is NOT a trading journal — it is a content creation tool. Keep everything simple and fast.
+
+Domain: pnlcard.com
+Company: Next Alphabet
+Payment: Razorpay only (India market, V1)
+
+---
+
+## Tech Stack (DO NOT deviate)
+
+- **Framework:** Next.js 14+ with App Router (NOT Pages Router)
+- **Language:** TypeScript (strict mode)
+- **Database:** Supabase (PostgreSQL + Auth + Row Level Security)
+- **Auth:** Supabase Auth via @supabase/ssr (Google OAuth + Email/Password)
+- **Styling:** Tailwind CSS + shadcn/ui components
+- **Card Generation:** @vercel/og (Satori) for JSX → PNG
+- **Payments:** Razorpay (India only for V1)
+- **Hosting:** Vercel
+
+---
+
+## Project Structure
+
+```
+pnlcard/
+├── app/
+│   ├── (public)/              # Public routes (no auth required)
+│   │   ├── page.tsx           # Landing page
+│   │   ├── login/page.tsx     # Login page
+│   │   └── card/[id]/page.tsx # Shareable card page
+│   ├── (protected)/           # Auth required routes
+│   │   ├── dashboard/
+│   │   │   ├── page.tsx       # Main dashboard
+│   │   │   ├── card/page.tsx  # Card generator
+│   │   │   └── settings/page.tsx
+│   │   └── onboarding/page.tsx
+│   ├── api/
+│   │   ├── og/
+│   │   │   ├── daily/route.tsx
+│   │   │   ├── weekly/route.tsx
+│   │   │   └── monthly/route.tsx
+│   │   └── webhooks/
+│   │       └── razorpay/route.ts
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── ui/                    # shadcn/ui components
+│   ├── dashboard/             # Dashboard-specific components
+│   ├── cards/                 # Card preview components
+│   └── shared/                # Shared components (navbar, footer, etc.)
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts          # Browser client
+│   │   ├── server.ts          # Server client
+│   │   └── middleware.ts      # Auth middleware helper
+│   ├── razorpay.ts            # Razorpay helpers
+│   ├── utils.ts               # General utilities
+│   ├── constants.ts           # App constants
+│   └── types.ts               # TypeScript types
+├── hooks/                     # Custom React hooks
+├── middleware.ts               # Next.js middleware (auth check)
+└── supabase/
+    └── migrations/            # SQL migration files
+```
+
+---
+
+## Code Style Rules
+
+### General
+- Use TypeScript strict mode. No `any` types. Define proper interfaces/types in `lib/types.ts`.
+- Use `const` by default. Never use `var`.
+- Use arrow functions for components and handlers.
+- Use early returns to reduce nesting.
+- Destructure props and state.
+- Use template literals over string concatenation.
+- Keep files under 200 lines. If longer, split into smaller components.
+
+### Naming Conventions
+- **Files:** kebab-case (`trade-entry-modal.tsx`, `card-generator.tsx`)
+- **Components:** PascalCase (`TradeEntryModal`, `CardGenerator`)
+- **Functions/variables:** camelCase (`handleSubmit`, `tradeData`)
+- **Constants:** UPPER_SNAKE_CASE (`MAX_NOTE_LENGTH`, `FREE_PLAN`)
+- **Types/Interfaces:** PascalCase with prefix (`type TradeEntry`, `interface UserProfile`)
+- **Database columns:** snake_case (matches Supabase schema)
+
+### React / Next.js
+- Default to Server Components. Only use `"use client"` when you need interactivity, hooks, or browser APIs.
+- Use Next.js App Router conventions: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`.
+- Use `loading.tsx` for loading states on pages. Use Suspense for component-level loading.
+- Colocate components with their pages when they are page-specific.
+- Use `next/image` for all images. Use `next/link` for all internal links.
+- Never use `useEffect` for data fetching. Use Server Components or React Query.
+
+### Tailwind CSS
+- Use Tailwind utility classes. No custom CSS unless absolutely necessary.
+- Use shadcn/ui components for UI primitives (Button, Input, Dialog, Toast, etc.).
+- Follow mobile-first responsive design.
+- Use CSS variables for theme colors defined in globals.css.
+- Default app theme is LIGHT mode.
+
+### Supabase
+- Use `@supabase/ssr` for both client and server.
+- Server Components: use `createServerClient` from `lib/supabase/server.ts`.
+- Client Components: use `createBrowserClient` from `lib/supabase/client.ts`.
+- ALWAYS rely on Row Level Security. Never trust client-side auth checks alone.
+- Use Supabase's built-in auth helpers. Don't build custom auth.
+
+---
+
+## Database Schema (3 tables only)
+
+### profiles
+- id (uuid, PK, references auth.users)
+- display_name (text, NOT NULL)
+- x_handle (text, nullable)
+- currency (text, default 'INR')
+- timezone (text, default 'Asia/Kolkata')
+- trading_capital (numeric(14,2), nullable)
+- plan (text, default 'free')
+- plan_expires_at (timestamptz, nullable)
+- card_theme (text, default 'light')
+- created_at, updated_at (timestamptz)
+
+### trades
+- id (uuid, PK)
+- user_id (uuid, FK → profiles)
+- trade_date (date, NOT NULL)
+- num_trades (integer, NOT NULL)
+- net_pnl (numeric(12,2), NOT NULL)
+- charges (numeric(12,2), nullable)
+- capital_deployed (numeric(14,2), nullable)
+- note (text, nullable, max 280 chars)
+- created_at, updated_at (timestamptz)
+- UNIQUE(user_id, trade_date)
+
+### subscriptions
+- id (uuid, PK)
+- user_id (uuid, FK → profiles)
+- provider (text, 'razorpay')
+- provider_subscription_id (text)
+- plan_type (text, 'monthly' or 'yearly')
+- status (text, 'active' / 'cancelled' / 'expired')
+- current_period_start, current_period_end (timestamptz)
+- created_at, updated_at (timestamptz)
+
+DO NOT create additional tables. All data fits in these 3 tables.
+
+---
+
+## Business Logic Rules
+
+### Capital & ROI
+- Capital is OPTIONAL. If missing, hide ROI completely — no placeholders, no warnings.
+- Daily ROI: (P&L - Charges) ÷ Capital × 100 (if charges exist), else P&L ÷ Capital × 100.
+- Weekly/Monthly ROI: Sum of P&L (or Net P&L) ÷ Profile Capital × 100.
+- No compounding. No balance tracking. No capital snapshots.
+
+### NET Logic
+- If charges entered for a day → show "Net P/L" and "Net ROI" on daily card.
+- Weekly/Monthly: only show NET if ALL logged days in that period have charges. If even one day is missing charges, fall back to plain P/L.
+
+### Win Rate
+- Day with final result > 0 = Win. < 0 = Loss. = 0 = Ignore.
+- Final result = Net P&L if charges exist, else P&L.
+- Win Rate = win_days ÷ (win_days + loss_days).
+
+### Week Definition
+- Week = Monday to Sunday (NOT rolling 7 days).
+- Based on user timezone (default: Asia/Kolkata).
+
+### Streak
+- Consecutive days with logged profit (final result > 0).
+- Only display on DAILY cards, and only when streak >= 5 days.
+- Show as growing dots (increasing opacity) + "{n}d streak" text.
+
+---
+
+## Card Design Rules
+
+### Layout C (Ultra Minimal)
+- Fixed 1080×1080 square (or 1080×1920 story for premium).
+- Green gradient = profit. Red gradient = loss.
+- Light and Dark themes available. Default: Light.
+- Numbers are the hero. Minimal labels. Maximum whitespace.
+- Font weights: Hero numbers at 800, labels at 500.
+
+### Card Types
+- **Daily (Free):** Date, trades pill, P&L context, Net P&L (hero), divider, Net ROI (hero), streak dots, footer.
+- **Weekly (Premium):** Date range, W/L pill, Net P&L (hero), ROI + Win Rate, bar chart, best day, footer.
+- **Monthly (Premium):** Month name, W/L pill, Net P&L (hero), ROI + Win Rate, best/worst row, calendar heatmap (fixed 18px height cells), footer.
+
+### Footer
+- Free tier: PNLCard logo + "PNLCard" text (left), "Daily/Weekly/Monthly Recap" (right).
+- Premium: User's X handle (left), recap type (right).
+
+---
+
+## Feature Gating
+
+### Free
+- Unlimited trade logging
+- Daily cards only
+- Both themes
+- PNLCard watermark on cards
+
+### Premium (₹199/mo or ₹1,499/yr via Razorpay)
+- Remove watermark
+- X handle on cards
+- Weekly + Monthly cards
+- Story format downloads
+
+Check `profiles.plan` field. Simple string comparison. No complex permission system.
+
+---
+
+## Error Handling
+- Use try/catch on all async operations.
+- Show user-friendly toast messages for errors (using shadcn/ui Toast).
+- Log errors server-side. Never expose stack traces to users.
+- Validate all inputs both client-side and server-side.
+- Use Zod for form validation schemas.
+
+---
+
+## Performance
+- Use Server Components by default for zero client JS.
+- Lazy load heavy components (card generator, calendar heatmap).
+- Use `next/dynamic` for components that need client-side only rendering.
+- Optimize images with `next/image`.
+- Keep bundle size minimal — question every npm package before adding.
+
+---
+
+## Security
+- NEVER expose Supabase service_role key to the client.
+- ALWAYS use RLS policies. Never bypass them.
+- Validate Razorpay webhook signatures before processing.
+- Sanitize all user inputs (especially the note field).
+- Use httpOnly cookies for auth sessions via @supabase/ssr.
+
+---
+
+## Git Conventions
+- Commit messages: `feat:`, `fix:`, `refactor:`, `style:`, `docs:`, `chore:`
+- Examples: `feat: add trade entry modal`, `fix: card ROI calculation when no capital`
+- One feature per commit. Keep commits small and focused.
+
+---
+
+## What NOT to Build (V1 Scope)
+- No broker imports
+- No detailed analytics/charts
+- No mobile app
+- No team/social features
+- No AI insights
+- No custom card themes/colors
+- No admin panel (use Supabase dashboard)
+- No international payments (Razorpay only)
+- No capital display on cards
+- No mood tags
+- No verified P&L
