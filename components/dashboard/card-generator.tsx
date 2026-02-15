@@ -71,6 +71,7 @@ function buildMonthlyOgUrl(params: MonthlyCardParams, theme: string): string {
     best: params.best,
     worst: params.worst,
     calendar: JSON.stringify(params.calendar),
+    calendarGrid: JSON.stringify(params.calendarGrid),
     theme,
     currency: params.currency,
   });
@@ -191,12 +192,12 @@ export function CardGenerator({
 
       {ogUrl && (
         <>
-          <Card className="overflow-hidden p-4 flex justify-center bg-muted/30">
+          <Card className="overflow-visible p-4 flex justify-center bg-muted/30">
             <img
               src={getImageUrl(imgSrc, baseUrl)}
               alt="Card preview"
-              className="max-w-full rounded-lg border border-border shadow-lg"
-              style={{ maxHeight: 400 }}
+              className="max-w-full rounded-2xl border border-border shadow-lg object-contain"
+              style={{ maxHeight: 420 }}
               onError={() => {
                 toast.error("Failed to load card preview. Try refreshing.");
               }}

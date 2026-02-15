@@ -54,7 +54,6 @@ export async function GET(request: Request) {
     const s = getOgStyles(isDark, isProfit);
     const hasRoi = roi != null && roi !== "";
     const pnlLabel = `NET P/L (${symbol})`;
-    const bestDayText = `Best day: ${bestDay}`;
 
     // --- Build main children ---
     const mainChildren: React.ReactNode[] = [];
@@ -93,17 +92,17 @@ export async function GET(request: Request) {
       </div>
     );
 
-    if (hasRoi) {
-      mainChildren.push(
-        <div
-          key="stats-row"
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: Math.round(20 * S),
-            marginBottom: Math.round(14 * S),
-          }}
-        >
+    mainChildren.push(
+      <div
+        key="stats-row"
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: Math.round(20 * S),
+          marginBottom: Math.round(14 * S),
+        }}
+      >
+        {hasRoi ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div
               style={{
@@ -131,36 +130,36 @@ export async function GET(request: Request) {
               {roi}
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(10 * S),
-                color: s.text3,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                fontWeight: 500,
-                marginBottom: Math.round(2 * S),
-              }}
-            >
-              {"Win Rate"}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(26 * S),
-                fontWeight: 800,
-                color: s.accent,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-              }}
-            >
-              {winRate}
-            </div>
+        ) : null}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(10 * S),
+              color: s.text3,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              fontWeight: 500,
+              marginBottom: Math.round(2 * S),
+            }}
+          >
+            {"Win Rate"}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(26 * S),
+              fontWeight: 800,
+              color: s.accent,
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+            }}
+          >
+            {winRate}
           </div>
         </div>
-      );
-    }
+      </div>
+    );
 
     // Bar chart
     mainChildren.push(
@@ -225,13 +224,17 @@ export async function GET(request: Request) {
         key="best-day"
         style={{
           display: "flex",
+          flexDirection: "row",
+          alignItems: "baseline",
           marginTop: Math.round(8 * S),
           fontSize: Math.round(11 * S),
-          color: s.text3,
         }}
       >
+        <div style={{ display: "flex", color: s.text3 }}>
+          {"Best day: "}
+        </div>
         <div style={{ display: "flex", color: s.accent, fontWeight: 600 }}>
-          {bestDayText}
+          {bestDay}
         </div>
       </div>
     );

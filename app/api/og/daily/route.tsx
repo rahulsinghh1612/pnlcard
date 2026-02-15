@@ -36,9 +36,6 @@ export async function GET(request: Request) {
     const streak = parseInt(searchParams.get("streak") ?? "0", 10);
     const handle = searchParams.get("handle");
     const theme = searchParams.get("theme") ?? "light";
-    const currency = searchParams.get("currency") ?? "INR";
-    const symbol = currency === "USD" ? "$" : "Rs.";
-
     const isDark = theme === "dark";
     const netPnlNum = parseFloat(netPnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = netPnlNum >= 0;
@@ -46,10 +43,9 @@ export async function GET(request: Request) {
     const hasCharges = charges != null && charges !== "";
     const hasRoi = netRoi != null && netRoi !== "";
 
-    const pnlLabel = hasCharges ? `NET P/L (${symbol})` : `P/L (${symbol})`;
+    const pnlLabel = hasCharges ? "NET P/L" : "P/L";
     const roiLabel = hasCharges ? "NET ROI" : "ROI";
     const tradesText = `${trades} trades`;
-    const chargesText = hasCharges ? `${pnl} · charges ${charges}` : "";
     const streakText = streak >= 5 ? `${streak}d streak` : "";
 
     // --- Build main section children (avoiding JSX conditionals) ---
@@ -61,13 +57,17 @@ export async function GET(request: Request) {
           key="charges"
           style={{
             display: "flex",
+            flexDirection: "row",
+            alignItems: "baseline",
             fontSize: Math.round(13 * S),
-            color: s.text3,
             marginBottom: Math.round(14 * S),
           }}
         >
-          <div style={{ display: "flex", color: s.accentDim, fontWeight: 600 }}>
-            {chargesText}
+          <div style={{ display: "flex", color: s.accent, fontWeight: 600 }}>
+            {pnl}
+          </div>
+          <div style={{ display: "flex", color: s.text3, marginLeft: Math.round(4 * S) }}>
+            {` \u00B7 Charges ${charges}`}
           </div>
         </div>
       );
@@ -78,12 +78,12 @@ export async function GET(request: Request) {
         key="pnl-label"
         style={{
           display: "flex",
-          fontSize: Math.round(10 * S),
+          fontSize: Math.round(11 * S),
           color: s.text3,
           textTransform: "uppercase",
           letterSpacing: "0.1em",
-          fontWeight: 500,
-          marginBottom: Math.round(2 * S),
+          fontWeight: 600,
+          marginBottom: Math.round(4 * S),
         }}
       >
         {pnlLabel}
@@ -96,11 +96,11 @@ export async function GET(request: Request) {
         style={{
           display: "flex",
           fontSize: Math.round(50 * S),
-          fontWeight: 800,
+          fontWeight: 900,
           color: s.accent,
-          letterSpacing: "-0.04em",
+          letterSpacing: "-0.05em",
           lineHeight: 1,
-          marginBottom: Math.round(18 * S),
+          marginBottom: Math.round(20 * S),
         }}
       >
         {netPnl}
@@ -124,12 +124,12 @@ export async function GET(request: Request) {
           key="roi-label"
           style={{
             display: "flex",
-            fontSize: Math.round(10 * S),
+            fontSize: Math.round(11 * S),
             color: s.text3,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
-            fontWeight: 500,
-            marginBottom: Math.round(2 * S),
+            fontWeight: 600,
+            marginBottom: Math.round(4 * S),
           }}
         >
           {roiLabel}
@@ -141,9 +141,9 @@ export async function GET(request: Request) {
           style={{
             display: "flex",
             fontSize: Math.round(42 * S),
-            fontWeight: 800,
+            fontWeight: 900,
             color: s.accent,
-            letterSpacing: "-0.04em",
+            letterSpacing: "-0.05em",
             lineHeight: 1,
           }}
         >
@@ -152,10 +152,11 @@ export async function GET(request: Request) {
       );
     }
 
-    // --- Streak dots ---
+    // --- Streak dots (last dot solid, rest muted to match target) ---
     const streakDots: React.ReactNode[] = [];
     if (streak >= 5) {
       for (let i = 0; i < Math.min(streak, 10); i++) {
+        const isLast = i === Math.min(streak, 10) - 1;
         streakDots.push(
           <div
             key={`dot-${i}`}
@@ -164,7 +165,7 @@ export async function GET(request: Request) {
               height: Math.round(6 * S),
               borderRadius: Math.round(3 * S),
               background: s.accent,
-              opacity: 0.3 + (i / Math.min(streak, 10)) * 0.7,
+              opacity: isLast ? 1 : 0.5,
             }}
           />
         );
@@ -207,11 +208,9 @@ export async function GET(request: Request) {
             width: 1080,
             height: 1080,
             background: s.bg,
-            borderRadius: Math.round(24 * S),
-            padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
+            padding: `${Math.round(32 * S)}px ${Math.round(36 * S)}px ${Math.round(28 * S)}px`,
             display: "flex",
             flexDirection: "column",
-            border: `${Math.round(1 * S)}px solid ${s.cardBorder}`,
             overflow: "hidden",
           }}
         >
@@ -236,7 +235,7 @@ export async function GET(request: Request) {
                 padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
               }}
             >
-              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.text1, fontWeight: 600 }}>
+              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 600 }}>
                 {tradesText}
               </div>
             </div>
@@ -268,7 +267,7 @@ export async function GET(request: Request) {
                 <div style={{ display: "flex", gap: Math.round(3 * S) }}>
                   {streakDots}
                 </div>
-                <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.accent, fontWeight: 600 }}>
+                <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.text3, fontWeight: 500 }}>
                   {streakText}
                 </div>
               </div>

@@ -15,7 +15,9 @@ export const runtime = "edge";
 
 const S = 1080 / 370;
 
-const CALENDAR_DAYS: (number | null)[] = [
+const CELL_HEIGHT = 18;
+
+const DEFAULT_CALENDAR_GRID: (number | null)[] = [
   null, null, null, null, null, null, 1,
   2, 3, 4, 5, 6, 7, 8,
   9, 10, 11, 12, 13, 14, 15,
@@ -36,6 +38,7 @@ export async function GET(request: Request) {
     const best = searchParams.get("best") ?? "16th +24,800";
     const worst = searchParams.get("worst") ?? "4th -8,200";
     const calendarJson = searchParams.get("calendar");
+    const calendarGridJson = searchParams.get("calendarGrid");
     const handle = searchParams.get("handle");
     const theme = searchParams.get("theme") ?? "light";
     const currency = searchParams.get("currency") ?? "INR";
@@ -51,6 +54,16 @@ export async function GET(request: Request) {
       try {
         const parsed = JSON.parse(calendarJson) as Record<string, number>;
         if (parsed && typeof parsed === "object") tradeData = parsed;
+      } catch {
+        /* use default */
+      }
+    }
+
+    let calendarGrid: (number | null)[] = DEFAULT_CALENDAR_GRID;
+    if (calendarGridJson) {
+      try {
+        const parsed = JSON.parse(calendarGridJson) as (number | null)[];
+        if (Array.isArray(parsed) && parsed.length > 0) calendarGrid = parsed;
       } catch {
         /* use default */
       }
@@ -105,8 +118,10 @@ export async function GET(request: Request) {
       </div>
     ));
 
-    // --- Calendar grid rows ---
-    const calRows = [0, 1, 2, 3, 4].map((row) => (
+    const numRows = Math.ceil(calendarGrid.length / 7);
+    const cellHeightPx = Math.round(CELL_HEIGHT * S);
+
+    const calRows = Array.from({ length: numRows }, (_, row) => (
       <div
         key={row}
         style={{
@@ -115,12 +130,12 @@ export async function GET(request: Request) {
           gap: Math.round(3 * S),
         }}
       >
-        {CALENDAR_DAYS.slice(row * 7, row * 7 + 7).map((day, col) => {
+        {calendarGrid.slice(row * 7, row * 7 + 7).map((day, col) => {
           if (day === null) {
             return (
               <div
                 key={`${row}-${col}`}
-                style={{ flex: 1, height: Math.round(22 * S) }}
+                style={{ flex: 1, height: cellHeightPx }}
               />
             );
           }
@@ -130,7 +145,7 @@ export async function GET(request: Request) {
               key={`${row}-${col}`}
               style={{
                 flex: 1,
-                height: Math.round(22 * S),
+                height: cellHeightPx,
                 borderRadius: Math.round(4 * S),
                 background: c,
               }}
@@ -165,7 +180,7 @@ export async function GET(request: Request) {
         key="pnl-value"
         style={{
           display: "flex",
-          fontSize: Math.round(36 * S),
+          fontSize: Math.round(32 * S),
           fontWeight: 800,
           color: s.accent,
           letterSpacing: "-0.04em",
@@ -177,16 +192,16 @@ export async function GET(request: Request) {
       </div>
     );
 
-    if (hasRoi) {
-      heroChildren.push(
-        <div
-          key="stats-row"
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: Math.round(18 * S),
-          }}
-        >
+    heroChildren.push(
+      <div
+        key="stats-row"
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: Math.round(18 * S),
+        }}
+      >
+        {hasRoi ? (
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div
               style={{
@@ -214,36 +229,36 @@ export async function GET(request: Request) {
               {roi}
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(10 * S),
-                color: s.text3,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                fontWeight: 500,
-                marginBottom: Math.round(2 * S),
-              }}
-            >
-              {"Win Rate"}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(20 * S),
-                fontWeight: 800,
-                color: s.accent,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-              }}
-            >
-              {winRate}
-            </div>
+        ) : null}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(10 * S),
+              color: s.text3,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              fontWeight: 500,
+              marginBottom: Math.round(2 * S),
+            }}
+          >
+            {"Win Rate"}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(20 * S),
+              fontWeight: 800,
+              color: s.accent,
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+            }}
+          >
+            {winRate}
           </div>
         </div>
-      );
-    }
+      </div>
+    );
 
     // --- Watermark ---
     const watermarkLeft = !handle ? (

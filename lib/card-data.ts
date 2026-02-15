@@ -14,6 +14,7 @@ import {
   isWithinInterval,
   subDays,
   getDay,
+  getDate,
 } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
@@ -303,6 +304,8 @@ export type MonthlyCardParams = {
   best: string;
   worst: string;
   calendar: Record<string, number>;
+  /** Monday-first grid: null for empty cells, day number (1–31) for cells. Length is multiple of 7. */
+  calendarGrid: (number | null)[];
   handle: string | null;
   theme: string;
   currency: string;
@@ -347,6 +350,14 @@ export function buildMonthlyCardParams(
     calendar[day] = getFinalResult(t);
   }
 
+  const daysInMonth = getDate(end);
+  const firstDayOfMonth = getDay(start);
+  const mondayFirstOffset = (firstDayOfMonth + 6) % 7;
+  const calendarGrid: (number | null)[] = [];
+  for (let i = 0; i < mondayFirstOffset; i++) calendarGrid.push(null);
+  for (let d = 1; d <= daysInMonth; d++) calendarGrid.push(d);
+  while (calendarGrid.length % 7 !== 0) calendarGrid.push(null);
+
   const withResults = monthTrades.map((t) => ({
     trade: t,
     result: getFinalResult(t),
@@ -370,6 +381,7 @@ export function buildMonthlyCardParams(
     best: bestStr,
     worst: worstStr,
     calendar,
+    calendarGrid,
     handle: profile.x_handle,
     theme: profile.card_theme,
     currency: profile.currency,
