@@ -43,7 +43,22 @@ The app supports both `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_SUPABASE_
 
 ---
 
-## What you don’t need to do
+## Service role key (for shareable card links)
+
+The public card page `/card/[id]` fetches trade data to display shared cards. It uses the **service role** key (bypasses RLS) because visitors are not logged in.
+
+1. In Supabase: **Project Settings** → **API**.
+2. Copy the **service_role** key (keep it secret).
+3. In `.env.local`, add:
+   ```bash
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+   ```
+
+Without this key, shareable card links will show 404. The dashboard card generator still works (it uses the authenticated session).
+
+---
+
+## What you don't need to do
 
 - Create tables by hand
 - Write policies manually

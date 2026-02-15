@@ -34,14 +34,14 @@ Single checklist derived from [PNLCard_PRD.md](PNLCard_PRD.md) §15 (Build Timel
 
 ### Day 4–5: Card generation
 
-- [ ] **4.1** Add `@vercel/og` (Satori). Create API route `/api/og/daily` — accepts query params, returns 1080×1080 PNG. Use PRD §3.3 and existing [PNLCard.jsx](PNLCard.jsx) Daily card logic.
-- [ ] **4.2** Create `/api/og/weekly` — 1080×1080 PNG per PRD §3.4.
-- [ ] **4.3** Create `/api/og/monthly` — 1080×1080 PNG per PRD §3.5 (heatmap below hero, 18px cells, green/red/empty).
-- [ ] **4.4** Support dark and light themes and profit/loss variants for all three card types.
-- [ ] **4.5** Dashboard card page `/dashboard/card`: card type toggle (Daily free, Weekly/Monthly with premium lock), theme toggle, live card preview (e.g. via image from API or client preview).
-- [ ] **4.6** “Download as Image” — fetch PNG from API and trigger download (1080×1080).
+- [x] **4.1** Add `@vercel/og` (Satori). Create API route `/api/og/daily` — accepts query params, returns 1080×1080 PNG. Use PRD §3.3 and existing [PNLCard.jsx](PNLCard.jsx) Daily card logic.
+- [x] **4.2** Create `/api/og/weekly` — 1080×1080 PNG per PRD §3.4.
+- [x] **4.3** Create `/api/og/monthly` — 1080×1080 PNG per PRD §3.5 (heatmap below hero, 18px cells, green/red/empty).
+- [x] **4.4** Support dark and light themes and profit/loss variants for all three card types.
+- [x] **4.5** Dashboard card page `/dashboard/card`: card type toggle (Daily free, Weekly/Monthly with premium lock), theme toggle, live card preview (e.g. via image from API or client preview).
+- [x] **4.6** “Download as Image” — fetch PNG from API and trigger download (1080×1080).
 - [ ] **4.7** Shareable link: “Copy Link” → `pnlcard.com/card/[trade_id]` (or appropriate ID). Copy to clipboard.
-- [ ] **4.8** Public page `/card/[id]`: show card full-screen, OG meta tags with `og:image` pointing at `/api/og/daily?...` (or relevant OG route) so X/Instagram show rich preview.
+- [x] **4.8** Public page `/card/[id]`: show card full-screen, OG meta tags with `og:image` pointing at `/api/og/daily?...` (or relevant OG route) so X/Instagram show rich preview.
 
 ### Day 6: Payments and gating
 

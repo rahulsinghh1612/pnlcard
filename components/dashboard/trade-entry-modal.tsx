@@ -26,8 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link";
 import { format } from "date-fns";
-import { ArrowDownToLine } from "lucide-react";
+import { ArrowDownToLine, ImageIcon } from "lucide-react";
 
 const tradeSchema = z.object({
   trade_date: z.string().min(1, "Date is required"),
@@ -381,16 +382,24 @@ export function TradeEntryModal({
               )}
             </div>
 
-            <DialogFooter className="mt-10 gap-2 sm:gap-0">
+            <DialogFooter className="mt-10 gap-2 sm:gap-0 flex-wrap">
               {isEdit && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={isLoading}
-                >
-                  Delete
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" asChild className="mr-auto">
+                    <Link href={`/dashboard/card?date=${form.trade_date}`}>
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Generate Card
+                    </Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={isLoading}
+                  >
+                    Delete
+                  </Button>
+                </>
               )}
               <div className="flex flex-1 justify-end gap-2">
                 <Button

@@ -1,0 +1,304 @@
+/**
+ * API route: GET /api/og/daily
+ *
+ * Generates a 1080×1080 PNG daily recap card for social sharing.
+ *
+ * Query params: date, pnl, charges?, netPnl, netRoi?, trades, streak,
+ *               handle?, theme, currency?
+ *
+ * SATORI RULES (the image generator is very strict):
+ *  - Every element with >1 child MUST have display:"flex"
+ *  - No {var} text patterns — always use template literals {`${var} text`}
+ *  - No CSS Grid, no filter:blur, no box-shadow
+ *  - Use <div> everywhere (no <span>)
+ */
+import { ImageResponse } from "next/og";
+import { getOgStyles } from "@/lib/og-card-styles";
+
+export const runtime = "edge";
+
+/**
+ * Scale factor: The original PNLCard.jsx was designed at 370×370px.
+ * Our OG image is 1080×1080px. So we multiply all sizes by ~2.92.
+ * This keeps the proportions identical to the original mockup.
+ */
+const S = 1080 / 370;
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get("date") ?? "12th Feb, 2026";
+    const pnl = searchParams.get("pnl") ?? "+21,294";
+    const charges = searchParams.get("charges");
+    const netPnl = searchParams.get("netPnl") ?? pnl;
+    const netRoi = searchParams.get("netRoi");
+    const trades = searchParams.get("trades") ?? "3";
+    const streak = parseInt(searchParams.get("streak") ?? "0", 10);
+    const handle = searchParams.get("handle");
+    const theme = searchParams.get("theme") ?? "light";
+    const currency = searchParams.get("currency") ?? "INR";
+    const symbol = currency === "USD" ? "$" : "Rs.";
+
+    const isDark = theme === "dark";
+    const netPnlNum = parseFloat(netPnl.replace(/[^0-9.\-]/g, "")) || 0;
+    const isProfit = netPnlNum >= 0;
+    const s = getOgStyles(isDark, isProfit);
+    const hasCharges = charges != null && charges !== "";
+    const hasRoi = netRoi != null && netRoi !== "";
+
+    const pnlLabel = hasCharges ? `NET P/L (${symbol})` : `P/L (${symbol})`;
+    const roiLabel = hasCharges ? "NET ROI" : "ROI";
+    const tradesText = `${trades} trades`;
+    const chargesText = hasCharges ? `${pnl} · charges ${charges}` : "";
+    const streakText = streak >= 5 ? `${streak}d streak` : "";
+
+    // --- Build main section children (avoiding JSX conditionals) ---
+    const mainChildren: React.ReactNode[] = [];
+
+    if (hasCharges) {
+      mainChildren.push(
+        <div
+          key="charges"
+          style={{
+            display: "flex",
+            fontSize: Math.round(13 * S),
+            color: s.text3,
+            marginBottom: Math.round(14 * S),
+          }}
+        >
+          <div style={{ display: "flex", color: s.accentDim, fontWeight: 600 }}>
+            {chargesText}
+          </div>
+        </div>
+      );
+    }
+
+    mainChildren.push(
+      <div
+        key="pnl-label"
+        style={{
+          display: "flex",
+          fontSize: Math.round(10 * S),
+          color: s.text3,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          fontWeight: 500,
+          marginBottom: Math.round(2 * S),
+        }}
+      >
+        {pnlLabel}
+      </div>
+    );
+
+    mainChildren.push(
+      <div
+        key="pnl-value"
+        style={{
+          display: "flex",
+          fontSize: Math.round(50 * S),
+          fontWeight: 800,
+          color: s.accent,
+          letterSpacing: "-0.04em",
+          lineHeight: 1,
+          marginBottom: Math.round(18 * S),
+        }}
+      >
+        {netPnl}
+      </div>
+    );
+
+    if (hasRoi) {
+      mainChildren.push(
+        <div
+          key="divider"
+          style={{
+            display: "flex",
+            height: Math.round(1 * S),
+            background: s.divider,
+            marginBottom: Math.round(14 * S),
+          }}
+        />
+      );
+      mainChildren.push(
+        <div
+          key="roi-label"
+          style={{
+            display: "flex",
+            fontSize: Math.round(10 * S),
+            color: s.text3,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            fontWeight: 500,
+            marginBottom: Math.round(2 * S),
+          }}
+        >
+          {roiLabel}
+        </div>
+      );
+      mainChildren.push(
+        <div
+          key="roi-value"
+          style={{
+            display: "flex",
+            fontSize: Math.round(42 * S),
+            fontWeight: 800,
+            color: s.accent,
+            letterSpacing: "-0.04em",
+            lineHeight: 1,
+          }}
+        >
+          {netRoi}
+        </div>
+      );
+    }
+
+    // --- Streak dots ---
+    const streakDots: React.ReactNode[] = [];
+    if (streak >= 5) {
+      for (let i = 0; i < Math.min(streak, 10); i++) {
+        streakDots.push(
+          <div
+            key={`dot-${i}`}
+            style={{
+              width: Math.round(6 * S),
+              height: Math.round(6 * S),
+              borderRadius: Math.round(3 * S),
+              background: s.accent,
+              opacity: 0.3 + (i / Math.min(streak, 10)) * 0.7,
+            }}
+          />
+        );
+      }
+    }
+
+    // --- Watermark left side ---
+    const watermarkLeft = !handle ? (
+      <div style={{ display: "flex", alignItems: "center", gap: Math.round(5 * S) }}>
+        <div
+          style={{
+            width: Math.round(15 * S),
+            height: Math.round(15 * S),
+            borderRadius: Math.round(4 * S),
+            background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: Math.round(7 * S),
+            fontWeight: 800,
+            color: "#fff",
+          }}
+        >
+          {"P"}
+        </div>
+        <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.text3, fontWeight: 500 }}>
+          {"PNLCard"}
+        </div>
+      </div>
+    ) : (
+      <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.text3, fontWeight: 500 }}>
+        {handle}
+      </div>
+    );
+
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: 1080,
+            height: 1080,
+            background: s.bg,
+            borderRadius: Math.round(24 * S),
+            padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
+            display: "flex",
+            flexDirection: "column",
+            border: `${Math.round(1 * S)}px solid ${s.cardBorder}`,
+            overflow: "hidden",
+          }}
+        >
+          {/* Header: date + trades pill */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: Math.round(12 * S),
+            }}
+          >
+            <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.text3 }}>
+              {date}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                background: s.pillBg,
+                border: `${Math.round(1 * S)}px solid ${s.pillBorder}`,
+                borderRadius: Math.round(8 * S),
+                padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
+              }}
+            >
+              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.text1, fontWeight: 600 }}>
+                {tradesText}
+              </div>
+            </div>
+          </div>
+
+          {/* Main content */}
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            {mainChildren}
+          </div>
+
+          {/* Footer */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {streak >= 5 && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: Math.round(6 * S),
+                  marginBottom: Math.round(6 * S),
+                }}
+              >
+                <div style={{ display: "flex", gap: Math.round(3 * S) }}>
+                  {streakDots}
+                </div>
+                <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.accent, fontWeight: 600 }}>
+                  {streakText}
+                </div>
+              </div>
+            )}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "auto",
+              }}
+            >
+              {watermarkLeft}
+              <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.text3 }}>
+                {"Daily Recap"}
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      {
+        width: 1080,
+        height: 1080,
+      }
+    );
+  } catch (e) {
+    console.error("OG daily card error:", e);
+    return new Response(
+      `Failed to generate image: ${e instanceof Error ? e.message : "Unknown error"}`,
+      { status: 500 }
+    );
+  }
+}
