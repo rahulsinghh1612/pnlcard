@@ -38,9 +38,44 @@ const tradeSchema = z.object({
   capital_deployed: z.number().positive().nullable(),
 });
 
+/** Round to 2 decimal places for DB storage. */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** Format number with locale-aware commas (INR = en-IN, USD = en-US), up to 2 decimals. */
+function formatWithLocale(value: number, currency: string): string {
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return value.toLocaleString(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
+/** Strip input to a valid number string: optional minus, digits, optional . and up to 2 decimals. */
+function stripToNumberString(value: string, allowNegative: boolean): string {
+  let s = value.replace(/,/g, "").replace(/[^\d.-]/g, "");
+  if (!allowNegative) s = s.replace(/-/g, "");
+  else if (s.startsWith("-")) s = "-" + s.slice(1).replace(/-/g, "");
+  else s = s.replace(/-/g, "");
+  const parts = s.split(".");
+  if (parts.length > 2) s = parts[0] + "." + parts.slice(1).join("");
+  else if (parts.length === 2) s = parts[0] + "." + parts[1].slice(0, 2);
+  return s;
+}
+
+/** Display value for number input: show commas when complete, raw when partial (e.g. "1."). */
+function displayValue(raw: string, currency: string): string {
+  if (raw === "" || raw === "-") return raw;
+  if (raw.endsWith(".") || /\.\d$/.test(raw)) return raw;
+  const n = parseFloat(raw.replace(/,/g, ""));
+  if (Number.isNaN(n)) return raw;
+  return formatWithLocale(n, currency);
+}
+
 type TradeFormData = {
   trade_date: string;
-  num_trades: number;
+  num_trades: string;
   net_pnl: string;
   charges: string;
   capital_deployed: string;
@@ -82,10 +117,10 @@ export function TradeEntryModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [form, setForm] = useState<TradeFormData>({
     trade_date: "",
-    num_trades: 1,
+    num_trades: "1",
     net_pnl: "",
     charges: "",
-    capital_deployed: tradingCapital != null ? String(tradingCapital) : "",
+    capital_deployed: "",
   });
 
   const isEdit = existingTrade != null;
@@ -96,7 +131,7 @@ export function TradeEntryModal({
       if (existingTrade) {
         setForm({
           trade_date: existingTrade.trade_date,
-          num_trades: existingTrade.num_trades,
+          num_trades: String(Math.max(1, existingTrade.num_trades)),
           net_pnl: String(existingTrade.net_pnl),
           charges: existingTrade.charges != null ? String(existingTrade.charges) : "",
           capital_deployed:
@@ -108,10 +143,10 @@ export function TradeEntryModal({
         const today = defaultDate ?? format(new Date(), "yyyy-MM-dd");
         setForm({
           trade_date: today,
-          num_trades: 1,
+          num_trades: "1",
           net_pnl: "",
           charges: "",
-          capital_deployed: tradingCapital != null ? String(tradingCapital) : "",
+          capital_deployed: "",
         });
       }
     }
@@ -136,9 +171,10 @@ export function TradeEntryModal({
       return;
     }
 
+    const numTradesVal = parseInt(form.num_trades, 10);
     const result = tradeSchema.safeParse({
       trade_date: form.trade_date,
-      num_trades: form.num_trades,
+      num_trades: Number.isNaN(numTradesVal) || numTradesVal < 1 ? 1 : numTradesVal,
       net_pnl: pnlNum,
       charges: chargesVal,
       capital_deployed: capitalVal,
@@ -153,9 +189,9 @@ export function TradeEntryModal({
     const payload = {
       trade_date: data.trade_date,
       num_trades: data.num_trades,
-      net_pnl: data.net_pnl,
-      charges: data.charges,
-      capital_deployed: data.capital_deployed,
+      net_pnl: round2(data.net_pnl),
+      charges: data.charges != null ? round2(data.charges) : null,
+      capital_deployed: data.capital_deployed != null ? round2(data.capital_deployed) : null,
       note: null,
     };
 
@@ -270,12 +306,20 @@ export function TradeEntryModal({
               <Label htmlFor="num_trades">Number of trades *</Label>
               <Input
                 id="num_trades"
-                type="number"
-                min={1}
+                type="text"
+                inputMode="numeric"
                 value={form.num_trades}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, num_trades: Number(e.target.value) || 1 }))
-                }
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "");
+                  setForm((f) => ({ ...f, num_trades: digits }));
+                }}
+                onBlur={() => {
+                  const n = parseInt(form.num_trades, 10);
+                  if (!form.num_trades || Number.isNaN(n) || n < 1) {
+                    setForm((f) => ({ ...f, num_trades: "1" }));
+                  }
+                }}
+                placeholder="e.g. 1"
               />
             </div>
 
@@ -283,32 +327,35 @@ export function TradeEntryModal({
               <Label htmlFor="net_pnl">P&L ({symbol}) *</Label>
               <Input
                 id="net_pnl"
-                type="number"
-                step="1"
-                inputMode="numeric"
+                type="text"
+                inputMode="decimal"
                 className="no-spinner"
-                value={form.net_pnl}
+                value={displayValue(form.net_pnl, currency)}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, net_pnl: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    net_pnl: stripToNumberString(e.target.value, true),
+                  }))
                 }
-                placeholder="e.g. 1500 or -500"
+                placeholder="e.g. 1,500.50 or -500"
               />
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="charges">Charges / fees (optional)</Label>
+              <Label htmlFor="charges">Charges & taxes (optional)</Label>
               <Input
                 id="charges"
-                type="number"
-                step="1"
-                min={0}
-                inputMode="numeric"
+                type="text"
+                inputMode="decimal"
                 className="no-spinner"
-                value={form.charges}
+                value={displayValue(form.charges, currency)}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, charges: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    charges: stripToNumberString(e.target.value, false),
+                  }))
                 }
-                placeholder="Brokerage, STT, etc."
+                placeholder="e.g. 200.50"
               />
               {hasCharges && (
                 <p className="text-sm">
@@ -320,10 +367,7 @@ export function TradeEntryModal({
                   >
                     {netPnl >= 0 ? "+" : "-"}
                     {symbol}
-                    {Math.abs(netPnl).toLocaleString("en-IN", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatWithLocale(Math.abs(netPnl), currency)}
                   </span>
                 </p>
               )}
@@ -348,24 +392,23 @@ export function TradeEntryModal({
                   Fill from profile
                   <span className="ml-0.5 opacity-75">
                     · {symbol}
-                    {Number(tradingCapital).toLocaleString("en-IN", {
-                      maximumFractionDigits: 0,
-                    })}
+                    {formatWithLocale(Number(tradingCapital), currency)}
                   </span>
                 </button>
               )}
               <Input
                 id="capital_deployed"
-                type="number"
-                step="1"
-                min={0}
-                inputMode="numeric"
+                type="text"
+                inputMode="decimal"
                 className="no-spinner"
-                value={form.capital_deployed}
+                value={displayValue(form.capital_deployed, currency)}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, capital_deployed: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    capital_deployed: stripToNumberString(e.target.value, false),
+                  }))
                 }
-                placeholder="e.g. 100000"
+                placeholder="e.g. 1,00,000 or 1,00,000.50"
               />
               {roi != null && (
                 <p className="text-sm">

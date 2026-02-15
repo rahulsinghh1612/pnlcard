@@ -24,9 +24,10 @@ function getFinalResult(t: Trade): number {
 function formatPnl(value: number, currency: string): string {
   const symbol = currency === "INR" ? "₹" : "$";
   const abs = Math.abs(value);
-  const formatted = abs.toLocaleString("en-IN", {
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  const formatted = abs.toLocaleString(locale, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   });
   const sign = value >= 0 ? "+" : "-";
   return `${sign}${symbol}${formatted}`;

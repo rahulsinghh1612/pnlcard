@@ -46,11 +46,16 @@ export async function GET(request: Request) {
 
     const pnlLabel = hasCharges ? "NET P/L" : "P/L";
     const roiLabel = hasCharges ? "NET ROI" : "ROI";
-    const tradesText = `${trades} trades`;
+    const tradeCount = trades.trim();
+    const tradesText = tradeCount === "1" ? "1 trade" : `${trades} trades`;
     const streakText = streak >= 5 ? `${streak}d streak` : "";
 
     // --- Build main section children (avoiding JSX conditionals) ---
     const mainChildren: React.ReactNode[] = [];
+
+    const sectionGap = Math.round(14 * S);
+    const labelToValueGap = Math.round(6 * S);
+    const headerToContentGap = Math.round(8 * S);
 
     if (hasCharges) {
       mainChildren.push(
@@ -60,8 +65,8 @@ export async function GET(request: Request) {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            gap: Math.round(8 * S),
-            marginBottom: Math.round(14 * S),
+            justifyContent: "space-between",
+            marginBottom: sectionGap,
           }}
         >
           <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.accent, fontWeight: 700 }}>
@@ -73,12 +78,12 @@ export async function GET(request: Request) {
               alignItems: "center",
               background: s.pillBg,
               border: `${Math.round(1 * S)}px solid ${s.pillBorder}`,
-              borderRadius: Math.round(6 * S),
-              padding: `${Math.round(2 * S)}px ${Math.round(8 * S)}px`,
+              borderRadius: Math.round(8 * S),
+              padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.text3, fontWeight: 600 }}>
-              {`Charges: ${charges}`}
+            <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 500 }}>
+              {`Charges & taxes: ${charges}`}
             </div>
           </div>
         </div>
@@ -90,12 +95,12 @@ export async function GET(request: Request) {
         key="pnl-label"
         style={{
           display: "flex",
-          fontSize: Math.round(11 * S),
-          color: s.text3,
+          fontSize: Math.round(10 * S),
+          color: s.labelColor,
           textTransform: "uppercase",
           letterSpacing: "0.1em",
-          fontWeight: 600,
-          marginBottom: Math.round(4 * S),
+          fontWeight: 500,
+          marginBottom: labelToValueGap,
         }}
       >
         {pnlLabel}
@@ -108,11 +113,11 @@ export async function GET(request: Request) {
         style={{
           display: "flex",
           fontSize: Math.round(50 * S),
-          fontWeight: 900,
+          fontWeight: 800,
           color: s.accent,
-          letterSpacing: "-0.05em",
+          letterSpacing: "-0.04em",
           lineHeight: 1,
-          marginBottom: Math.round(20 * S),
+          marginBottom: sectionGap,
         }}
       >
         {netPnl}
@@ -127,7 +132,7 @@ export async function GET(request: Request) {
             display: "flex",
             height: Math.round(1 * S),
             background: s.divider,
-            marginBottom: Math.round(14 * S),
+            marginBottom: sectionGap,
           }}
         />
       );
@@ -136,12 +141,12 @@ export async function GET(request: Request) {
           key="roi-label"
           style={{
             display: "flex",
-            fontSize: Math.round(11 * S),
-            color: s.text3,
+            fontSize: Math.round(10 * S),
+            color: s.labelColor,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
-            fontWeight: 600,
-            marginBottom: Math.round(4 * S),
+            fontWeight: 500,
+            marginBottom: labelToValueGap,
           }}
         >
           {roiLabel}
@@ -153,9 +158,9 @@ export async function GET(request: Request) {
           style={{
             display: "flex",
             fontSize: Math.round(42 * S),
-            fontWeight: 900,
+            fontWeight: 800,
             color: s.accent,
-            letterSpacing: "-0.05em",
+            letterSpacing: "-0.04em",
             lineHeight: 1,
           }}
         >
@@ -217,28 +222,28 @@ export async function GET(request: Request) {
 
     return new ImageResponse(
       (
-        <div
-          style={{
-            width: 1080,
-            height: 1080,
-            fontFamily: "Inter",
-            background: s.bg,
-            padding: `${Math.round(32 * S)}px ${Math.round(36 * S)}px ${Math.round(28 * S)}px`,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          {/* Header: date + trades pill */}
+      <div
+        style={{
+          width: 1080,
+          height: 1080,
+          fontFamily: "Inter",
+          background: s.bg,
+          padding: `${Math.round(24 * S)}px ${Math.round(36 * S)}px ${Math.round(24 * S)}px`,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+          {/* Header: date + trades pill — tighter gap so P&L/charges line sits closer */}
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: Math.round(12 * S),
+              marginBottom: headerToContentGap,
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.text3 }}>
+            <div style={{ display: "flex", fontSize: Math.round(14 * S), color: s.dateColor, fontWeight: 500 }}>
               {date}
             </div>
             <div
@@ -250,19 +255,20 @@ export async function GET(request: Request) {
                 padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
               }}
             >
-              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 600 }}>
+              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 500 }}>
                 {tradesText}
               </div>
             </div>
           </div>
 
-          {/* Main content */}
+          {/* Main content — centered in remaining space so vertical gap is even top & bottom */}
           <div
             style={{
               flex: 1,
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
+              minHeight: 0,
             }}
           >
             {mainChildren}
@@ -292,7 +298,6 @@ export async function GET(request: Request) {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginTop: "auto",
               }}
             >
               {watermarkLeft}
