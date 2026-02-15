@@ -28,22 +28,20 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-page">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 font-semibold text-zinc-900"
+            className="flex items-center gap-2 font-semibold text-foreground"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 text-sm font-bold text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-logo text-sm font-bold text-white shadow-md">
               P
             </div>
             PNLCard
           </Link>
 
-          <DashboardNav
-            displayName={profile?.display_name ?? "User"}
-          />
+          <DashboardNav displayName={profile?.display_name ?? "User"} />
         </div>
       </header>
 

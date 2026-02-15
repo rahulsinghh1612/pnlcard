@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Settings, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DashboardNavProps {
   displayName: string;
@@ -19,21 +21,22 @@ export function DashboardNav({ displayName }: DashboardNavProps) {
   };
 
   return (
-    <nav className="flex items-center gap-4">
-      <span className="text-sm text-zinc-600">{displayName}</span>
-      <Link
-        href="/dashboard/settings"
-        className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
-      >
-        Settings
-      </Link>
-      <button
-        type="button"
+    <nav className="flex items-center gap-3">
+      <span className="text-sm text-muted-foreground">{displayName}</span>
+      <Button variant="ghost" size="icon" asChild>
+        <Link href="/dashboard/settings" aria-label="Settings">
+          <Settings className="h-4 w-4" />
+        </Link>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={handleSignOut}
-        className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+        className="text-muted-foreground"
       >
+        <LogOut className="h-4 w-4" />
         Sign out
-      </button>
+      </Button>
     </nav>
   );
 }

@@ -129,4 +129,13 @@
   .bg-logo {
     @apply bg-gradient-to-br from-zinc-900 to-zinc-700;
   }
+  /* Hide number input spinners for cleaner look */
+  .no-spinner::-webkit-inner-spin-button,
+  .no-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-spinner {
+    -moz-appearance: textfield;
+  }
 }
