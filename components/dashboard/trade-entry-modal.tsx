@@ -101,6 +101,8 @@ type TradeEntryModalProps = {
   existingTrade: TradeEntry | null;
   /** Default date when creating (e.g. today) */
   defaultDate?: string;
+  /** Dates that already have a trade logged (used to warn on duplicates in create mode). */
+  existingTradeDates?: Set<string>;
 };
 
 export function TradeEntryModal({
@@ -111,6 +113,7 @@ export function TradeEntryModal({
   tradingCapital,
   existingTrade,
   defaultDate,
+  existingTradeDates,
 }: TradeEntryModalProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -256,6 +259,12 @@ export function TradeEntryModal({
   const todayStr = format(new Date(), "yyyy-MM-dd");
   const isFutureDate = form.trade_date > todayStr;
 
+  // In create mode, check if the selected date already has a trade logged
+  const isDuplicateDate =
+    !isEdit &&
+    !!existingTradeDates &&
+    existingTradeDates.has(form.trade_date);
+
   const hasCharges =
     form.charges.trim() !== "" && !isNaN(Number(form.charges)) && Number(form.charges) >= 0;
   const chargesNum = hasCharges ? Number(form.charges) : 0;
@@ -321,6 +330,11 @@ export function TradeEntryModal({
               {isFutureDate && (
                 <p className="text-xs text-destructive">
                   Cannot log future dates.
+                </p>
+              )}
+              {isDuplicateDate && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                  A trade already exists for this date. Tap the date on the calendar to edit it.
                 </p>
               )}
             </div>
@@ -451,7 +465,7 @@ export function TradeEntryModal({
             </div>
 
             <DialogFooter className="mt-10">
-              <Button type="submit" className="w-full" disabled={isLoading || isFutureDate}>
+              <Button type="submit" className="w-full" disabled={isLoading || isFutureDate || isDuplicateDate}>
                 {isLoading
                   ? "Saving…"
                   : isEdit

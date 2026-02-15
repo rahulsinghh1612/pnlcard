@@ -155,6 +155,7 @@ export function DashboardContent({
         tradingCapital={tradingCapital}
         existingTrade={modalExistingTrade}
         defaultDate={modalDefaultDate}
+        existingTradeDates={new Set(trades.map((t) => t.trade_date))}
       />
     </>
   );
