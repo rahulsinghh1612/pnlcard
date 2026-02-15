@@ -43,6 +43,26 @@ function isWin(t: TradeForCard): boolean {
  * "Failed to load dynamic font" errors. The card labels already show
  * the currency, so the value doesn't need the symbol.
  */
+/**
+ * Format a number with locale-aware commas (no sign prefix).
+ * INR: Indian grouping (1,00,000). USD: US grouping (100,000).
+ *
+ * Why separate from formatPnl: P&L always needs a +/- sign,
+ * but charges and other values just need clean comma formatting.
+ */
+export function formatNumber(value: number, currency: string): string {
+  const abs = Math.abs(value);
+  return currency === "INR"
+    ? abs.toLocaleString("en-IN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })
+    : abs.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+}
+
 export function formatPnl(value: number, currency: string): string {
   const abs = Math.abs(value);
   const formatted =
@@ -180,7 +200,7 @@ export function buildDailyCardParams(
   return {
     date: formatDateForCard(trade.trade_date),
     pnl: pnlFormatted,
-    charges: trade.charges != null ? String(trade.charges) : null,
+    charges: trade.charges != null ? formatNumber(trade.charges, profile.currency) : null,
     netPnl: netPnlFormatted,
     netRoi: roiFormatted,
     trades: String(trade.num_trades),

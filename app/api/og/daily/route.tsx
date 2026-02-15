@@ -14,6 +14,7 @@
  */
 import { ImageResponse } from "next/og";
 import { getOgStyles } from "@/lib/og-card-styles";
+import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
@@ -58,16 +59,27 @@ export async function GET(request: Request) {
           style={{
             display: "flex",
             flexDirection: "row",
-            alignItems: "baseline",
-            fontSize: Math.round(13 * S),
+            alignItems: "center",
+            gap: Math.round(8 * S),
             marginBottom: Math.round(14 * S),
           }}
         >
-          <div style={{ display: "flex", color: s.accent, fontWeight: 600 }}>
+          <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.accent, fontWeight: 700 }}>
             {pnl}
           </div>
-          <div style={{ display: "flex", color: s.text3, marginLeft: Math.round(4 * S) }}>
-            {` \u00B7 Charges ${charges}`}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              background: s.pillBg,
+              border: `${Math.round(1 * S)}px solid ${s.pillBorder}`,
+              borderRadius: Math.round(6 * S),
+              padding: `${Math.round(2 * S)}px ${Math.round(8 * S)}px`,
+            }}
+          >
+            <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.text3, fontWeight: 600 }}>
+              {`Charges: ${charges}`}
+            </div>
           </div>
         </div>
       );
@@ -201,12 +213,15 @@ export async function GET(request: Request) {
       </div>
     );
 
+    const fonts = await getOgFonts();
+
     return new ImageResponse(
       (
         <div
           style={{
             width: 1080,
             height: 1080,
+            fontFamily: "Inter",
             background: s.bg,
             padding: `${Math.round(32 * S)}px ${Math.round(36 * S)}px ${Math.round(28 * S)}px`,
             display: "flex",
@@ -291,6 +306,7 @@ export async function GET(request: Request) {
       {
         width: 1080,
         height: 1080,
+        fonts,
       }
     );
   } catch (e) {

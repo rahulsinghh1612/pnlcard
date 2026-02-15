@@ -10,6 +10,7 @@
  */
 import { ImageResponse } from "next/og";
 import { getOgStyles } from "@/lib/og-card-styles";
+import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
@@ -42,7 +43,8 @@ export async function GET(request: Request) {
     const handle = searchParams.get("handle");
     const theme = searchParams.get("theme") ?? "light";
     const currency = searchParams.get("currency") ?? "INR";
-    const symbol = currency === "USD" ? "$" : "Rs.";
+    // INR: no symbol (redundant for Indian users). USD: show "$".
+    const symbol = currency === "USD" ? "$" : "";
 
     let tradeData: Record<string, number> = {
       2: 8400, 3: 12600, 4: -3200, 5: 5800, 6: 15200,
@@ -80,7 +82,7 @@ export async function GET(request: Request) {
     const isProfit = pnlNum >= 0;
     const s = getOgStyles(isDark, isProfit);
     const hasRoi = roi != null && roi !== "";
-    const pnlLabel = `NET P/L (${symbol})`;
+    const pnlLabel = symbol ? `NET P/L (${symbol})` : "NET P/L";
 
     const getCellColor = (day: number): string => {
       const pnlVal = tradeData[day];
@@ -181,7 +183,7 @@ export async function GET(request: Request) {
         style={{
           display: "flex",
           fontSize: Math.round(32 * S),
-          fontWeight: 800,
+          fontWeight: 900,
           color: s.accent,
           letterSpacing: "-0.04em",
           lineHeight: 1,
@@ -220,7 +222,7 @@ export async function GET(request: Request) {
               style={{
                 display: "flex",
                 fontSize: Math.round(20 * S),
-                fontWeight: 800,
+                fontWeight: 900,
                 color: s.accent,
                 letterSpacing: "-0.03em",
                 lineHeight: 1,
@@ -248,7 +250,7 @@ export async function GET(request: Request) {
             style={{
               display: "flex",
               fontSize: Math.round(20 * S),
-              fontWeight: 800,
+              fontWeight: 900,
               color: s.accent,
               letterSpacing: "-0.03em",
               lineHeight: 1,
@@ -289,18 +291,19 @@ export async function GET(request: Request) {
       </div>
     );
 
+    const fonts = await getOgFonts();
+
     return new ImageResponse(
       (
         <div
           style={{
             width: 1080,
             height: 1080,
+            fontFamily: "Inter",
             background: s.bg,
-            borderRadius: Math.round(24 * S),
             padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
             display: "flex",
             flexDirection: "column",
-            border: `${Math.round(1 * S)}px solid ${s.cardBorder}`,
             overflow: "hidden",
           }}
         >
@@ -449,7 +452,7 @@ export async function GET(request: Request) {
           </div>
         </div>
       ),
-      { width: 1080, height: 1080 }
+      { width: 1080, height: 1080, fonts }
     );
   } catch (e) {
     console.error("OG monthly card error:", e);
