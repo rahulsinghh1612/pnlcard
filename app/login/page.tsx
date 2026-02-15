@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { LoginForm } from "./login-form";
 
 export const metadata = {
@@ -9,30 +10,33 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-zinc-50">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-sm">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-zinc-900 font-semibold mb-8"
+          className="inline-flex items-center gap-2 text-foreground font-semibold mb-8"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold">
+          <div className="w-8 h-8 rounded-lg bg-logo flex items-center justify-center text-white text-sm font-bold shadow-md">
             P
           </div>
           PNLCard
         </Link>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-          <h1 className="text-xl font-semibold text-zinc-900">Welcome back</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Sign in to log your trades and generate cards
-          </p>
+        <Card className="p-8">
+          <CardHeader className="p-0">
+            <h1 className="text-xl font-semibold text-foreground">Welcome back</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Sign in to log your trades and generate cards
+            </p>
+          </CardHeader>
+          <CardContent className="p-0 pt-6">
+            <Suspense fallback={<div className="h-48 animate-pulse rounded-lg bg-muted" />}>
+              <LoginForm />
+            </Suspense>
+          </CardContent>
+        </Card>
 
-          <Suspense fallback={<div className="h-48 animate-pulse rounded-lg bg-zinc-100" />}>
-            <LoginForm />
-          </Suspense>
-        </div>
-
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account? Sign up with Google or email above.
         </p>
       </div>

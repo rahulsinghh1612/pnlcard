@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface OnboardingFormProps {
   userId: string;
@@ -75,92 +78,82 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <div
-          className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
           role="alert"
         >
           {error}
         </div>
       )}
 
-      <div>
-        <label htmlFor="displayName" className="block text-sm font-medium text-zinc-700">
-          Display name <span className="text-red-500">*</span>
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="displayName">
+          Display name <span className="text-destructive">*</span>
+        </Label>
+        <Input
           id="displayName"
           type="text"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="How should we call you?"
-          className="mt-1.5 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           required
         />
       </div>
 
-      <div>
-        <label htmlFor="currency" className="block text-sm font-medium text-zinc-700">
-          Currency <span className="text-red-500">*</span>
-        </label>
-        <div className="mt-1.5 flex gap-3">
+      <div className="space-y-2">
+        <Label htmlFor="currency">
+          Currency <span className="text-destructive">*</span>
+        </Label>
+        <div className="flex gap-3">
           {(["INR", "USD"] as const).map((c) => (
-            <button
+            <Button
               key={c}
               type="button"
+              variant={currency === c ? "default" : "outline"}
+              className="flex-1"
               onClick={() => setCurrency(c)}
-              className={`flex-1 rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                currency === c
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                  : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
-              }`}
             >
               {c}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      <div>
-        <label htmlFor="tradingCapital" className="block text-sm font-medium text-zinc-700">
-          Trading capital <span className="text-zinc-400">(optional)</span>
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="tradingCapital">
+          Trading capital <span className="text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
           id="tradingCapital"
           type="text"
           value={tradingCapital}
           onChange={(e) => setTradingCapital(e.target.value)}
           placeholder="e.g. 100000"
           inputMode="numeric"
-          className="mt-1.5 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Used for ROI calculations. You can add this later in settings.
         </p>
       </div>
 
-      <div>
-        <label htmlFor="xHandle" className="block text-sm font-medium text-zinc-700">
-          X handle <span className="text-zinc-400">(optional)</span>
-        </label>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="xHandle">
+          X handle <span className="text-muted-foreground">(optional)</span>
+        </Label>
+        <Input
           id="xHandle"
           type="text"
           value={xHandle}
           onChange={(e) => setXHandle(e.target.value)}
           placeholder="@yourhandle"
-          className="mt-1.5 w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        <p className="mt-1 text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           Shown on premium cards. Add later if you skip.
         </p>
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={isLoading} className="w-full" size="lg">
         {isLoading ? "Setting up…" : "Get started"}
-      </button>
+      </Button>
     </form>
   );
 }

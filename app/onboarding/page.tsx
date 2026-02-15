@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Card } from "@/components/ui/card";
 import { OnboardingForm } from "./onboarding-form";
 
 export const metadata = {
@@ -29,23 +30,23 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-zinc-50">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 items-center justify-center text-white text-xl font-bold mb-4">
+          <div className="inline-flex w-12 h-12 rounded-xl bg-logo items-center justify-center text-white text-xl font-bold mb-4 shadow-md">
             P
           </div>
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Set up your profile
           </h1>
-          <p className="mt-2 text-zinc-500">
+          <p className="mt-2 text-muted-foreground">
             A few quick details to get you started
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <Card className="p-8">
           <OnboardingForm userId={user.id} />
-        </div>
+        </Card>
       </div>
     </main>
   );

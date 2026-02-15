@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const router = useRouter();
@@ -114,21 +117,22 @@ export function LoginForm() {
   };
 
   return (
-    <div className="mt-6 space-y-5">
+    <div className="space-y-5">
       {error && (
         <div
-          className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800"
+          className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive"
           role="alert"
         >
           {error}
         </div>
       )}
 
-      <button
+      <Button
         type="button"
+        variant="outline"
+        className="w-full"
         onClick={handleGoogleSignIn}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:opacity-60"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24">
           <path
@@ -149,62 +153,57 @@ export function LoginForm() {
           />
         </svg>
         Continue with Google
-      </button>
+      </Button>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-zinc-200" />
+          <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-white px-2 text-zinc-500">or</span>
+          <span className="bg-card px-2 text-muted-foreground">or</span>
         </div>
       </div>
 
       <form onSubmit={handleEmailSignIn} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="sr-only">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="sr-only">
             Email
-          </label>
-          <input
+          </Label>
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             autoComplete="email"
-            className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
-        <div>
-          <label htmlFor="password" className="sr-only">
+        <div className="space-y-2">
+          <Label htmlFor="password" className="sr-only">
             Password
-          </label>
-          <input
+          </Label>
+          <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             autoComplete="current-password"
-            className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60"
-          >
+          <Button type="submit" disabled={isLoading} className="flex-1">
             Sign in
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            onClick={handleEmailSignUp}
+            variant="outline"
             disabled={isLoading}
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-60"
+            className="flex-1"
+            onClick={handleEmailSignUp}
           >
             Sign up
-          </button>
+          </Button>
         </div>
       </form>
     </div>
