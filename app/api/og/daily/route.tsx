@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const pnlLabel = hasCharges ? "NET P/L" : "P/L";
     const roiLabel = hasCharges ? "NET ROI" : "ROI";
     const tradeCount = trades.trim();
-    const tradesText = tradeCount === "1" ? "1 trade" : `${trades} trades`;
+    const tradesText = tradeCount === "1" ? "1 Trade" : `${trades} Trades`;
     const streakText = streak >= 5 ? `${streak}d streak` : "";
 
     // --- Build main section children (avoiding JSX conditionals) ---

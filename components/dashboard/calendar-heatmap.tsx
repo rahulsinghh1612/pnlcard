@@ -8,20 +8,13 @@ import {
   eachDayOfInterval,
   addMonths,
   subMonths,
+  addDays,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/**
- * Calendar Heatmap shows a monthly grid where:
- * - Green = profit day (darker = bigger profit)
- * - Red = loss day (darker = bigger loss)
- * - Gray = no trade logged
- * - Breakeven (0) treated as light green, no separate color
- *
- * Clicking a day triggers onDayClick so the parent can open the trade modal.
- */
 type TradeForHeatmap = {
   id: string;
   trade_date: string;
@@ -34,6 +27,7 @@ type TradeForHeatmap = {
 
 type CalendarHeatmapProps = {
   trades: TradeForHeatmap[];
+  currency: string;
   onDayClick: (date: string, existingTrade: TradeForHeatmap | null) => void;
 };
 
@@ -41,11 +35,23 @@ function getFinalResult(t: TradeForHeatmap): number {
   return t.charges != null ? t.net_pnl - t.charges : t.net_pnl;
 }
 
+function formatCompact(value: number, currency: string): string {
+  const abs = Math.abs(value);
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  const formatted = abs.toLocaleString(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  return value >= 0 ? `+${formatted}` : `-${formatted}`;
+}
+
 export function CalendarHeatmap({
   trades,
+  currency,
   onDayClick,
 }: CalendarHeatmapProps) {
   const [viewDate, setViewDate] = useState(new Date());
+  const router = useRouter();
 
   const tradesByDate = new Map<string, TradeForHeatmap>();
   for (const t of trades) {
@@ -55,7 +61,6 @@ export function CalendarHeatmap({
   const monthStart = startOfMonth(viewDate);
   const monthEnd = endOfMonth(viewDate);
 
-  // Compute max profit and max loss in this month for heatmap intensity
   const monthTrades = trades.filter((t) => {
     const d = t.trade_date;
     return d >= format(monthStart, "yyyy-MM-dd") && d <= format(monthEnd, "yyyy-MM-dd");
@@ -65,33 +70,93 @@ export function CalendarHeatmap({
   const maxProfit = profits.length > 0 ? Math.max(...profits) : 1;
   const maxLoss = losses.length > 0 ? Math.max(...losses.map((r) => Math.abs(r))) : 1;
 
-  const getProfitShade = (result: number): string => {
+  const getProfitClasses = (result: number): string => {
     const ratio = result / maxProfit;
-    if (ratio >= 0.66) return "bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800";
-    if (ratio >= 0.33) return "bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700";
-    return "bg-gradient-to-br from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600";
+    if (ratio >= 0.66) return "bg-emerald-100 dark:bg-emerald-900/40";
+    if (ratio >= 0.33) return "bg-emerald-50 dark:bg-emerald-900/25";
+    return "bg-emerald-50 dark:bg-emerald-950/20";
   };
 
-  const getLossShade = (result: number): string => {
+  const getLossClasses = (result: number): string => {
     const ratio = Math.abs(result) / maxLoss;
-    if (ratio >= 0.66) return "bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800";
-    if (ratio >= 0.33) return "bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700";
-    return "bg-gradient-to-br from-red-400 to-red-500 hover:from-red-500 hover:to-red-600";
+    if (ratio >= 0.66) return "bg-red-100 dark:bg-red-900/40";
+    if (ratio >= 0.33) return "bg-red-50/80 dark:bg-red-900/25";
+    return "bg-red-50 dark:bg-red-950/20";
   };
 
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Pad start so first day aligns with Monday (week starts on Monday per PRD)
+  // Pad so first day aligns with Monday (ISO week starts Monday)
   const startPadding = (monthStart.getDay() + 6) % 7;
   const paddedDays: (Date | null)[] = [
     ...Array(startPadding).fill(null),
     ...days,
   ];
+  // Pad end so total is a multiple of 7
+  while (paddedDays.length % 7 !== 0) {
+    paddedDays.push(null);
+  }
+
+  // Group into week rows (7 days each)
+  const weekRows: (Date | null)[][] = [];
+  for (let i = 0; i < paddedDays.length; i += 7) {
+    weekRows.push(paddedDays.slice(i, i + 7));
+  }
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
+  // Compute week summaries over the full Mon-Sun range (even if it
+  // crosses month boundaries) so the totals match the weekly card.
+  type WeekSummary = {
+    totalPnl: number;
+    totalTrades: number;
+    mondayStr: string;
+    rangeLabel: string;
+  };
+
+  const weekSummaries: WeekSummary[] = weekRows.map((row) => {
+    // Find the Monday of this row from the first non-null day
+    let monday: Date | null = null;
+    for (const day of row) {
+      if (day) {
+        const dayOfWeek = (day.getDay() + 6) % 7; // 0=Mon
+        monday = new Date(day);
+        monday.setDate(monday.getDate() - dayOfWeek);
+        break;
+      }
+    }
+
+    if (!monday) {
+      return { totalPnl: 0, totalTrades: 0, mondayStr: "", rangeLabel: "" };
+    }
+
+    const mondayStr = format(monday, "yyyy-MM-dd");
+    const sunday = addDays(monday, 6);
+
+    // Sum trades across all 7 days (Mon-Sun), including days outside the month
+    let totalPnl = 0;
+    let totalTrades = 0;
+    for (let d = 0; d < 7; d++) {
+      const dateStr = format(addDays(monday, d), "yyyy-MM-dd");
+      const trade = tradesByDate.get(dateStr);
+      if (trade) {
+        totalPnl += getFinalResult(trade);
+        totalTrades += trade.num_trades;
+      }
+    }
+
+    // Build range label: "27–2" when crossing months, "3–9" normally
+    const monDay = monday.getDate();
+    const sunDay = sunday.getDate();
+    const rangeLabel =
+      monDay === sunDay ? `${monDay}` : `${monDay}–${sunDay}`;
+
+    return { totalPnl, totalTrades, mondayStr, rangeLabel };
+  });
+
   return (
-    <div className="mx-auto w-full max-w-[340px] sm:max-w-[400px] overflow-hidden rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-5 shadow-sm">
+    <div className="w-full overflow-hidden rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm">
+      {/* Month navigation */}
       <div className="mb-4 flex items-center justify-center gap-1">
         <Button
           variant="ghost"
@@ -116,87 +181,171 @@ export function CalendarHeatmap({
         </Button>
       </div>
 
-      {/* Weekday headers */}
-      <div className="mb-2 grid grid-cols-7 gap-1 text-center">
-        {["M", "T", "W", "T", "F", "S", "S"].map((d) => (
+      {/* Header: 7 day columns + weekly summary column */}
+      <div className="mb-1.5 grid grid-cols-[repeat(7,1fr)_minmax(60px,1.2fr)] gap-1 text-center">
+        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
           <span
-            key={d}
+            key={`${d}-${i}`}
             className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
           >
             {d}
           </span>
         ))}
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Wk
+        </span>
       </div>
 
-      {/* Day grid - balanced size: readable without dominating */}
-      <div className="grid grid-cols-7 gap-1">
-        {paddedDays.map((day, i) => {
-          if (day === null) {
-            return <div key={`pad-${i}`} className="h-9 w-full min-w-0" />;
-          }
-
-          const dateStr = format(day, "yyyy-MM-dd");
-          const trade = tradesByDate.get(dateStr);
-          const isFuture = dateStr > todayStr;
-
-          let cellColor = "bg-muted/60"; // gray = no trade
-          if (trade) {
-            const result = getFinalResult(trade);
-            // Treat breakeven (0) as light green; no separate breakeven color
-            cellColor =
-              result >= 0
-                ? `${getProfitShade(result)} text-white shadow-sm`
-                : `${getLossShade(result)} text-white shadow-sm`;
-          }
+      {/* Week rows */}
+      <div className="flex flex-col gap-1">
+        {weekRows.map((row, rowIdx) => {
+          const summary = weekSummaries[rowIdx];
 
           return (
-            <button
-              key={dateStr}
-              type="button"
-              onClick={() => {
-                if (isFuture) return;
-                onDayClick(dateStr, trade ?? null);
-              }}
-              disabled={isFuture}
-              className={cn(
-                "h-9 min-w-0 rounded-lg text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                cellColor,
-                isFuture && "cursor-not-allowed opacity-40"
-              )}
-              title={
-                isFuture
-                  ? "Cannot log future dates"
-                  : trade
-                    ? `${dateStr}: ${getFinalResult(trade) >= 0 ? "Profit" : "Loss"}`
-                    : `Log trade for ${dateStr}`
-              }
+            <div
+              key={`week-${rowIdx}`}
+              className="grid grid-cols-[repeat(7,1fr)_minmax(60px,1.2fr)] gap-1"
             >
-              {format(day, "d")}
-            </button>
+              {/* Day cells */}
+              {row.map((day, colIdx) => {
+                if (day === null) {
+                  return (
+                    <div
+                      key={`pad-${rowIdx}-${colIdx}`}
+                      className="aspect-square min-w-0 rounded-lg"
+                    />
+                  );
+                }
+
+                const dateStr = format(day, "yyyy-MM-dd");
+                const trade = tradesByDate.get(dateStr);
+                const isFuture = dateStr > todayStr;
+
+                let bgClass = "bg-muted/40";
+                let textClass = "text-muted-foreground";
+                if (trade) {
+                  const result = getFinalResult(trade);
+                  if (result >= 0) {
+                    bgClass = getProfitClasses(result);
+                    textClass = "text-emerald-700 dark:text-emerald-400";
+                  } else {
+                    bgClass = getLossClasses(result);
+                    textClass = "text-red-700 dark:text-red-400";
+                  }
+                }
+
+                return (
+                  <button
+                    key={dateStr}
+                    type="button"
+                    onClick={() => {
+                      if (isFuture) return;
+                      onDayClick(dateStr, trade ?? null);
+                    }}
+                    disabled={isFuture}
+                    className={cn(
+                      "relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                      bgClass,
+                      textClass,
+                      isFuture && "cursor-not-allowed opacity-40"
+                    )}
+                    title={
+                      isFuture
+                        ? "Cannot log future dates"
+                        : trade
+                          ? `${dateStr}: ${formatCompact(getFinalResult(trade), currency)}`
+                          : `Log trade for ${dateStr}`
+                    }
+                  >
+                    {/* Day number in top-left corner only when trade data is shown */}
+                    {trade && (
+                      <span className="absolute top-0.5 left-1 sm:top-1 sm:left-1.5 text-[8px] sm:text-[9px] font-medium leading-none opacity-70">
+                        {format(day, "d")}
+                      </span>
+                    )}
+                    {trade ? (
+                      <>
+                        <span className="text-[10px] sm:text-[12px] font-bold leading-tight truncate max-w-full">
+                          {formatCompact(getFinalResult(trade), currency)}
+                        </span>
+                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-75 mt-0.5">
+                          {trade.num_trades === 1
+                            ? "1 Trade"
+                            : `${trade.num_trades} Trades`}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[11px] sm:text-xs font-medium">
+                        {format(day, "d")}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Weekly summary column */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (summary.totalTrades > 0) {
+                    router.push(`/dashboard/card?date=${summary.mondayStr}`);
+                  }
+                }}
+                className={cn(
+                  "aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                  summary.totalTrades === 0
+                    ? "bg-muted/30 text-muted-foreground cursor-default"
+                    : summary.totalPnl >= 0
+                      ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30"
+                      : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 cursor-pointer border border-red-200/50 dark:border-red-800/30"
+                )}
+                title={
+                  summary.totalTrades > 0
+                    ? `${summary.rangeLabel}: ${formatCompact(summary.totalPnl, currency)} — Click to generate weekly card`
+                    : `${summary.rangeLabel}: No trades`
+                }
+              >
+                <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70">
+                  {summary.rangeLabel}
+                </span>
+                {summary.totalTrades > 0 ? (
+                  <>
+                    <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
+                      {formatCompact(summary.totalPnl, currency)}
+                    </span>
+                    <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
+                      {`${summary.totalTrades} trades`}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[8px] sm:text-[9px] leading-none opacity-50">—</span>
+                )}
+              </button>
+            </div>
           );
         })}
       </div>
 
-      {/* Legend - shows intensity: darker = bigger profit/loss */}
+      {/* Legend */}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="flex gap-0.5">
-            <span className="h-3 w-3 rounded bg-emerald-400" />
-            <span className="h-3 w-3 rounded bg-emerald-500" />
-            <span className="h-3 w-3 rounded bg-emerald-600" />
+            <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30" />
+            <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
+            <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200/60 dark:border-emerald-800/30" />
           </span>
           Profit
         </span>
         <span className="flex items-center gap-1.5">
           <span className="flex gap-0.5">
-            <span className="h-3 w-3 rounded bg-red-400" />
-            <span className="h-3 w-3 rounded bg-red-500" />
-            <span className="h-3 w-3 rounded bg-red-600" />
+            <span className="h-3 w-3 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/30" />
+            <span className="h-3 w-3 rounded bg-red-50/80 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
+            <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/40 border border-red-200/60 dark:border-red-800/30" />
           </span>
           Loss
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-muted" />
+          <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
           No trade
         </span>
       </div>

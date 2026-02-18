@@ -116,8 +116,7 @@ export function DashboardContent({
           </Card>
         ) : (
           <>
-            <div className="flex justify-center">
-              <CalendarHeatmap
+            <CalendarHeatmap
               trades={trades.map((t) => ({
                 id: t.id,
                 trade_date: t.trade_date,
@@ -127,11 +126,11 @@ export function DashboardContent({
                 capital_deployed: t.capital_deployed,
                 note: t.note,
               }))}
+              currency={currency}
               onDayClick={(date, existingTrade) =>
                 openEditModal(date, existingTrade)
               }
-              />
-            </div>
+            />
 
             <RecentEntries
               trades={trades.map((t) => ({

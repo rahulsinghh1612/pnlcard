@@ -7,10 +7,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CardGenerator } from "@/components/dashboard/card-generator";
+import { parseISO, isWithinInterval } from "date-fns";
 import {
   buildDailyCardParams,
   buildWeeklyCardParams,
   buildMonthlyCardParams,
+  getWeekBoundsForDate,
 } from "@/lib/card-data";
 
 export const metadata = {
@@ -76,7 +78,18 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
     timezone: profile.timezone ?? "Asia/Kolkata",
   };
 
-  const tradeForDate = tradesForCard.find((t) => t.trade_date === dateParam);
+  let tradeForDate = tradesForCard.find((t) => t.trade_date === dateParam);
+
+  // If no trade on the exact date, find the first trade in the same week.
+  // This handles the case where the weekly column passes a Monday that has no trade.
+  if (!tradeForDate) {
+    const tz = profileForCard.timezone ?? "Asia/Kolkata";
+    const { start, end } = getWeekBoundsForDate(dateParam, tz);
+    const weekTrades = tradesForCard
+      .filter((t) => isWithinInterval(parseISO(t.trade_date), { start, end }))
+      .sort((a, b) => a.trade_date.localeCompare(b.trade_date));
+    tradeForDate = weekTrades[0] ?? null;
+  }
 
   if (!tradeForDate) {
     return (
