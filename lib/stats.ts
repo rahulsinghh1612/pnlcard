@@ -1,6 +1,8 @@
 import {
   startOfWeek,
   endOfWeek,
+  startOfMonth,
+  endOfMonth,
   format,
   parseISO,
   isWithinInterval,
@@ -43,6 +45,26 @@ function isWin(t: TradeForStats): boolean {
 
 function isLoss(t: TradeForStats): boolean {
   return getFinalResult(t) < 0;
+}
+
+export function getMonthBounds(timezone: string): { start: Date; end: Date } {
+  const now = new Date();
+  const zonedNow = toZonedTime(now, timezone);
+  const start = startOfMonth(zonedNow);
+  const end = endOfMonth(zonedNow);
+  return { start, end };
+}
+
+export function getMonthPnl(
+  trades: TradeForStats[],
+  monthStart: Date,
+  monthEnd: Date
+): number {
+  return trades.reduce((sum, t) => {
+    const d = parseISO(t.trade_date);
+    if (!isWithinInterval(d, { start: monthStart, end: monthEnd })) return sum;
+    return sum + getFinalResult(t);
+  }, 0);
 }
 
 /**

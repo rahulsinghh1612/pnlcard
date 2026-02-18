@@ -2,18 +2,12 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { QuickStats } from "@/components/dashboard/quick-stats";
 import { LogTradeButton } from "@/components/dashboard/log-trade-button";
 import { RecentEntries } from "@/components/dashboard/recent-entries";
 import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { BarChart3 } from "lucide-react";
 
-/**
- * DashboardContent is the interactive client wrapper for the dashboard.
- * It owns the trade modal state so both "Log today's trade" and calendar
- * day clicks can open the same modal (create or edit mode).
- */
 type Trade = {
   id: string;
   trade_date: string;
@@ -26,20 +20,28 @@ type Trade = {
 
 type DashboardContentProps = {
   displayName: string;
-  weekPnl: number;
-  weekWinRate: number | null;
-  streak: number;
+  monthPnl: number;
   currency: string;
   userId: string;
   tradingCapital: number | null;
   trades: Trade[];
 };
 
+function formatPnl(value: number, currency: string): string {
+  const symbol = currency === "INR" ? "\u20B9" : "$";
+  const abs = Math.abs(value);
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  const formatted = abs.toLocaleString(locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  const sign = value >= 0 ? "+" : "-";
+  return `${sign}${symbol}${formatted}`;
+}
+
 export function DashboardContent({
   displayName,
-  weekPnl,
-  weekWinRate,
-  streak,
+  monthPnl,
   currency,
   userId,
   tradingCapital,
@@ -52,6 +54,15 @@ export function DashboardContent({
   const [modalDefaultDate, setModalDefaultDate] = useState<string | undefined>();
 
   const hasTrades = trades.length > 0;
+  const pnlPositive = monthPnl >= 0;
+
+  // Dynamic gradient intensity for the hero card (0.0 – 0.18 range).
+  // Uses log scale so it works across ₹1K to ₹50L+ without hard thresholds.
+  const absPnl = Math.abs(monthPnl);
+  const intensity = absPnl === 0 ? 0 : Math.min(0.18, Math.log10(absPnl + 1) / 40);
+  const heroGradient = pnlPositive
+    ? `linear-gradient(135deg, rgba(16,185,129,${intensity}) 0%, rgba(255,255,255,0) 60%)`
+    : `linear-gradient(135deg, rgba(239,68,68,${intensity}) 0%, rgba(255,255,255,0) 60%)`;
 
   const openCreateModal = (defaultDate?: string) => {
     setModalExistingTrade(null);
@@ -67,36 +78,50 @@ export function DashboardContent({
 
   return (
     <>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">
-            Hi, {displayName}
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            {hasTrades
-              ? "Here's your trading recap."
-              : "Log your first trade to get started."}
-          </p>
+      <div className="space-y-6">
+        {/* Hero section: greeting + month P&L */}
+        <div
+          className="rounded-2xl border border-border p-6 sm:p-8 shadow-sm transition-all duration-500"
+          style={{ background: `${heroGradient}, linear-gradient(135deg, #fff 0%, #f8fafc 100%)` }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold text-muted-foreground">
+                Hi, {displayName}
+              </h1>
+            </div>
+            <div className="sm:text-right">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                This month&apos;s P&L
+              </p>
+              <p
+                className={`mt-1 text-3xl sm:text-4xl font-bold tracking-tight ${
+                  pnlPositive
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                }`}
+              >
+                {formatPnl(monthPnl, currency)}
+              </p>
+            </div>
+          </div>
+
         </div>
 
-        <QuickStats
-          weekPnl={weekPnl}
-          weekWinRate={weekWinRate}
-          streak={streak}
-          currency={currency}
-        />
-
-        <LogTradeButton
-          userId={userId}
-          currency={currency}
-          tradingCapital={tradingCapital}
-          className="w-full sm:w-auto"
-          onOpenCreate={openCreateModal}
-        />
+        {/* Log trade CTA */}
+        <div className="flex justify-center">
+          <LogTradeButton
+            userId={userId}
+            currency={currency}
+            tradingCapital={tradingCapital}
+            className="w-full sm:w-auto"
+            onOpenCreate={openCreateModal}
+          />
+        </div>
 
         {!hasTrades ? (
-          <Card className="overflow-hidden border-dashed border-2 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/50 dark:from-slate-900/30 dark:via-card dark:to-slate-900/20 p-12 text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-slate-200/80 to-slate-300/60 dark:from-slate-700/40 dark:to-slate-600/30">
+          <Card className="overflow-hidden border-dashed border-2 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/50 p-12 text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-slate-200/80 to-slate-300/60">
               <BarChart3 className="h-12 w-12 text-muted-foreground" />
             </div>
             <h2 className="text-lg font-medium text-foreground">

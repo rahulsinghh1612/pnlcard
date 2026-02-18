@@ -25,6 +25,7 @@ export async function GET(request: Request) {
     const roi = searchParams.get("roi");
     const winRate = searchParams.get("winRate") ?? "60%";
     const wl = searchParams.get("wl") ?? "3W - 2L";
+    const totalTrades = parseInt(searchParams.get("totalTrades") ?? "0", 10) || 0;
     const daysJson = searchParams.get("days");
     const bestDay = searchParams.get("bestDay") ?? "Thu +21,294";
     const handle = searchParams.get("handle");
@@ -39,6 +40,8 @@ export async function GET(request: Request) {
       { day: "W", pnl: 8900, win: true },
       { day: "T", pnl: 21294, win: true },
       { day: "F", pnl: -1800, win: false },
+      { day: "S", pnl: 0, win: false },
+      { day: "S", pnl: 0, win: false },
     ];
     if (daysJson) {
       try {
@@ -49,7 +52,9 @@ export async function GET(request: Request) {
       }
     }
 
-    const maxPnl = Math.max(...days.map((d) => Math.abs(d.pnl)), 1);
+    const tradedDays = days.filter((d) => d.pnl !== 0);
+    const maxAbsPnl = Math.max(...tradedDays.map((d) => Math.abs(d.pnl)), 1);
+    const maxSqrt = Math.sqrt(maxAbsPnl);
     const isDark = theme === "dark";
     const pnlNum = parseFloat(pnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = pnlNum >= 0;
@@ -87,7 +92,7 @@ export async function GET(request: Request) {
           color: s.accent,
           letterSpacing: "-0.04em",
           lineHeight: 1,
-          marginBottom: Math.round(8 * S),
+          marginBottom: Math.round(26 * S),
         }}
       >
         {pnl}
@@ -100,8 +105,8 @@ export async function GET(request: Request) {
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: Math.round(20 * S),
-          marginBottom: Math.round(14 * S),
+          gap: Math.round(28 * S),
+          marginBottom: Math.round(22 * S),
         }}
       >
         {hasRoi ? (
@@ -163,7 +168,16 @@ export async function GET(request: Request) {
       </div>
     );
 
-    // Bar chart
+    // Bar chart with sqrt scale and P&L values
+    const formatBarPnl = (v: number): string => {
+      if (v === 0) return "—";
+      const abs = Math.abs(v);
+      const formatted = currency === "INR"
+        ? abs.toLocaleString("en-IN", { maximumFractionDigits: 0 })
+        : abs.toLocaleString("en-US", { maximumFractionDigits: 0 });
+      return v >= 0 ? `+${formatted}` : `-${formatted}`;
+    };
+
     mainChildren.push(
       <div
         key="bars"
@@ -171,13 +185,41 @@ export async function GET(request: Request) {
           display: "flex",
           alignItems: "flex-end",
           gap: Math.round(8 * S),
-          height: Math.round(44 * S),
+          height: Math.round(56 * S),
         }}
       >
         {days.map((day, i) => {
+          const hasData = day.pnl !== 0;
+
+          if (!hasData) {
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  flex: 1,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    fontSize: Math.round(9 * S),
+                    color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+                    fontWeight: 500,
+                  }}
+                >
+                  {day.day}
+                </div>
+              </div>
+            );
+          }
+
           const height = Math.max(
-            (Math.abs(day.pnl) / maxPnl) * Math.round(36 * S),
-            Math.round(4 * S)
+            (Math.sqrt(Math.abs(day.pnl)) / maxSqrt) * Math.round(36 * S),
+            Math.round(6 * S)
           );
           const barColor = day.win
             ? isDark
@@ -186,6 +228,9 @@ export async function GET(request: Request) {
             : isDark
               ? "rgba(239,68,68,0.5)"
               : "rgba(220,38,38,0.4)";
+          const valColor = day.win
+            ? isDark ? "#22c55e" : "#16a34a"
+            : isDark ? "#ef4444" : "#dc2626";
           return (
             <div
               key={i}
@@ -193,10 +238,21 @@ export async function GET(request: Request) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: Math.round(3 * S),
+                gap: Math.round(2 * S),
                 flex: 1,
               }}
             >
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: Math.round(7 * S),
+                  fontWeight: 600,
+                  color: valColor,
+                  lineHeight: 1,
+                }}
+              >
+                {formatBarPnl(day.pnl)}
+              </div>
               <div
                 style={{
                   width: "100%",
@@ -221,25 +277,6 @@ export async function GET(request: Request) {
       </div>
     );
 
-    mainChildren.push(
-      <div
-        key="best-day"
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "baseline",
-          marginTop: Math.round(8 * S),
-          fontSize: Math.round(11 * S),
-        }}
-      >
-        <div style={{ display: "flex", color: s.text3 }}>
-          {"Best day: "}
-        </div>
-        <div style={{ display: "flex", color: s.accent, fontWeight: 600 }}>
-          {bestDay}
-        </div>
-      </div>
-    );
 
     // --- Watermark ---
     const watermarkLeft = !handle ? (
@@ -307,8 +344,8 @@ export async function GET(request: Request) {
                 padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
               }}
             >
-              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.text1, fontWeight: 600 }}>
-                {wl}
+              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 500 }}>
+                {totalTrades === 1 ? "1 Trade" : `${totalTrades} Trades`}
               </div>
             </div>
           </div>

@@ -1,23 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { TradeEntryModal } from "./trade-entry-modal";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type LogTradeButtonProps = {
   userId: string;
   currency: string;
   tradingCapital: number | null;
-  variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
-  size?: "default" | "sm" | "lg" | "icon";
   className?: string;
   children?: React.ReactNode;
-  /**
-   * When provided, the button calls this instead of opening its own modal.
-   * Use when the parent controls the trade modal (e.g. dashboard with calendar).
-   */
   onOpenCreate?: (defaultDate?: string) => void;
 };
 
@@ -25,8 +19,6 @@ export function LogTradeButton({
   userId,
   currency,
   tradingCapital,
-  variant = "default",
-  size = "lg",
   className,
   children,
   onOpenCreate,
@@ -43,19 +35,25 @@ export function LogTradeButton({
 
   return (
     <>
-      <Button
-        variant={variant}
-        size={size}
-        className={className}
+      <button
+        type="button"
         onClick={handleClick}
+        className={cn(
+          "group relative inline-flex items-center justify-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold text-white",
+          "bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900",
+          "shadow-lg shadow-slate-900/25 hover:shadow-xl hover:shadow-slate-900/30",
+          "transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2",
+          className
+        )}
       >
         {children ?? (
           <>
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
             Log today&apos;s trade
           </>
         )}
-      </Button>
+      </button>
       {!onOpenCreate && (
         <TradeEntryModal
           open={open}

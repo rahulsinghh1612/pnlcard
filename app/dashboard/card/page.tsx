@@ -21,12 +21,13 @@ export const metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; type?: string }>;
 };
 
 export default async function CardGeneratorPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const dateParam = params.date;
+  const cardTypeParam = params.type as "daily" | "weekly" | "monthly" | undefined;
 
   if (!dateParam) {
     redirect("/dashboard");
@@ -64,7 +65,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
     trade_date: t.trade_date,
     net_pnl: Number(t.net_pnl),
     charges: t.charges != null ? Number(t.charges) : null,
-    num_trades: t.num_trades,
+    num_trades: Number(t.num_trades),
     capital_deployed:
       t.capital_deployed != null ? Number(t.capital_deployed) : null,
   }));
@@ -139,6 +140,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
         monthlyParams={monthlyParams}
         isPremium={isPremium}
         baseUrl={baseUrl}
+        defaultCardType={cardTypeParam}
       />
     </div>
   );

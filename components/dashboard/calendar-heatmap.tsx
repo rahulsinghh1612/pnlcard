@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   format,
   startOfMonth,
@@ -51,7 +51,20 @@ export function CalendarHeatmap({
   onDayClick,
 }: CalendarHeatmapProps) {
   const [viewDate, setViewDate] = useState(new Date());
+  const [showWeekly, setShowWeekly] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const stored = localStorage.getItem("pnlcard-show-weekly");
+    if (stored !== null) setShowWeekly(stored === "true");
+  }, []);
+
+  const toggleWeekly = () => {
+    setShowWeekly((prev) => {
+      localStorage.setItem("pnlcard-show-weekly", String(!prev));
+      return !prev;
+    });
+  };
 
   const tradesByDate = new Map<string, TradeForHeatmap>();
   for (const t of trades) {
@@ -190,8 +203,13 @@ export function CalendarHeatmap({
         </Button>
       </div>
 
-      {/* Header: 7 day columns + weekly summary column */}
-      <div className="mb-1.5 grid grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)] gap-1 text-center">
+      {/* Header: 7 day columns + optional weekly summary column */}
+      <div className={cn(
+        "mb-1.5 grid gap-1 text-center",
+        showWeekly
+          ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+          : "grid-cols-[repeat(7,1fr)]"
+      )}>
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
           <span
             key={`${d}-${i}`}
@@ -200,11 +218,18 @@ export function CalendarHeatmap({
             {d}
           </span>
         ))}
-        {/* Spacer */}
-        <span />
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          Wk
-        </span>
+        {showWeekly && (
+          <>
+            <span />
+            <button
+              type="button"
+              onClick={toggleWeekly}
+              className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground hover:underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              Wk
+            </button>
+          </>
+        )}
       </div>
 
       {/* Week rows */}
@@ -215,7 +240,12 @@ export function CalendarHeatmap({
           return (
             <div
               key={`week-${rowIdx}`}
-              className="grid grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)] gap-1"
+              className={cn(
+                "grid gap-1",
+                showWeekly
+                  ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+                  : "grid-cols-[repeat(7,1fr)]"
+              )}
             >
               {/* Day cells */}
               {row.map((day, colIdx) => {
@@ -294,49 +324,53 @@ export function CalendarHeatmap({
                 );
               })}
 
-              {/* Separator between days and weekly summary */}
-              <div className="flex items-center justify-center">
-                <div className="h-3/4 border-l border-dashed border-border" />
-              </div>
+              {showWeekly && (
+                <>
+                  {/* Separator between days and weekly summary */}
+                  <div className="flex items-center justify-center">
+                    <div className="h-3/4 border-l border-dashed border-border" />
+                  </div>
 
-              {/* Weekly summary column */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (summary.totalTrades > 0) {
-                    router.push(`/dashboard/card?date=${summary.mondayStr}`);
-                  }
-                }}
-                className={cn(
-                  "aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                  summary.totalTrades === 0
-                    ? "bg-muted/30 text-muted-foreground cursor-default"
-                    : summary.totalPnl >= 0
-                      ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 hover:brightness-95 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30")
-                      : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 hover:brightness-95 cursor-pointer border border-red-200/50 dark:border-red-800/30")
-                )}
-                title={
-                  summary.totalTrades > 0
-                    ? `${summary.rangeLabel}: ${formatCompact(summary.totalPnl, currency)} — Click to generate weekly card`
-                    : `${summary.rangeLabel}: No trades`
-                }
-              >
-                <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70">
-                  {summary.rangeLabel}
-                </span>
-                {summary.totalTrades > 0 ? (
-                  <>
-                    <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
-                      {formatCompact(summary.totalPnl, currency)}
+                  {/* Weekly summary column */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (summary.totalTrades > 0) {
+                        router.push(`/dashboard/card?date=${summary.mondayStr}&type=weekly`);
+                      }
+                    }}
+                    className={cn(
+                      "aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                      summary.totalTrades === 0
+                        ? "bg-muted/30 text-muted-foreground cursor-default"
+                        : summary.totalPnl >= 0
+                          ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 hover:brightness-95 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30")
+                          : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 hover:brightness-95 cursor-pointer border border-red-200/50 dark:border-red-800/30")
+                    )}
+                    title={
+                      summary.totalTrades > 0
+                        ? `${summary.rangeLabel}: ${formatCompact(summary.totalPnl, currency)} — Click to generate weekly card`
+                        : `${summary.rangeLabel}: No trades`
+                    }
+                  >
+                    <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70">
+                      {summary.rangeLabel}
                     </span>
-                    <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
-                      {`${summary.totalTrades} trades`}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[8px] sm:text-[9px] leading-none opacity-50">—</span>
-                )}
-              </button>
+                    {summary.totalTrades > 0 ? (
+                      <>
+                        <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
+                          {formatCompact(summary.totalPnl, currency)}
+                        </span>
+                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
+                          {`${summary.totalTrades} trades`}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[8px] sm:text-[9px] leading-none opacity-50">—</span>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           );
         })}
@@ -364,6 +398,15 @@ export function CalendarHeatmap({
           <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
           No trade
         </span>
+        {!showWeekly && (
+          <button
+            type="button"
+            onClick={toggleWeekly}
+            className="text-muted-foreground/40 hover:text-muted-foreground hover:underline underline-offset-2 transition-colors cursor-pointer"
+          >
+            Show weekly
+          </button>
+        )}
       </div>
     </div>
   );

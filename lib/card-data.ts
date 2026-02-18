@@ -218,6 +218,7 @@ export type WeeklyCardParams = {
   roi: string | null;
   winRate: string;
   wl: string;
+  totalTrades: number;
   days: Array<{ day: string; pnl: number; win: boolean }>;
   bestDay: string;
   handle: string | null;
@@ -231,6 +232,8 @@ const WEEKDAY_LABELS: Record<number, string> = {
   3: "W",
   4: "T",
   5: "F",
+  6: "S",
+  7: "S",
 };
 
 export function buildWeeklyCardParams(
@@ -266,15 +269,13 @@ export function buildWeeklyCardParams(
       ? (totalPnl / capital) * 100
       : null;
 
-  const dayOrder = [1, 2, 3, 4, 5]; // Mon–Fri
+  const dayOrder = [1, 2, 3, 4, 5, 6, 7]; // Mon–Sun
   const byWeekday = new Map<number, TradeForCard>();
   for (const t of weekTrades) {
     const d = parseISO(t.trade_date);
-    const day = getDay(d);
-    const monFri = day === 0 ? 7 : day;
-    if (monFri >= 1 && monFri <= 5) {
-      byWeekday.set(monFri, t);
-    }
+    const dow = getDay(d);
+    const isoDay = dow === 0 ? 7 : dow;
+    byWeekday.set(isoDay, t);
   }
 
   const days: Array<{ day: string; pnl: number; win: boolean }> = dayOrder.map(
@@ -301,12 +302,15 @@ export function buildWeeklyCardParams(
 
   const range = `${format(start, "d MMM")} – ${format(end, "d MMM, yyyy")}`;
 
+  const totalTrades = weekTrades.reduce((sum, t) => sum + t.num_trades, 0);
+
   return {
     range,
     pnl: formatPnl(totalPnl, profile.currency),
     roi: roi != null ? `${roi >= 0 ? "+" : ""}${roi.toFixed(2)}%` : null,
     winRate: `${winRate}%`,
     wl: `${wins}W · ${losses}L`,
+    totalTrades,
     days,
     bestDay,
     handle: profile.x_handle,

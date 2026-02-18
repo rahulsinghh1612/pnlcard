@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps) {
       trade_date: t.trade_date,
       net_pnl: Number(t.net_pnl),
       charges: t.charges != null ? Number(t.charges) : null,
-      num_trades: t.num_trades,
+      num_trades: Number(t.num_trades),
       capital_deployed: t.capital_deployed != null ? Number(t.capital_deployed) : null,
     };
 
@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: PageProps) {
       trade_date: tr.trade_date,
       net_pnl: Number(tr.net_pnl),
       charges: tr.charges != null ? Number(tr.charges) : null,
-      num_trades: tr.num_trades,
+      num_trades: Number(tr.num_trades),
       capital_deployed: tr.capital_deployed != null ? Number(tr.capital_deployed) : null,
     }));
   } catch {
@@ -149,7 +149,7 @@ export default async function CardPage({ params }: PageProps) {
       trade_date: t.trade_date,
       net_pnl: Number(t.net_pnl),
       charges: t.charges != null ? Number(t.charges) : null,
-      num_trades: t.num_trades,
+      num_trades: Number(t.num_trades),
       capital_deployed: t.capital_deployed != null ? Number(t.capital_deployed) : null,
     };
 
@@ -179,7 +179,7 @@ export default async function CardPage({ params }: PageProps) {
       trade_date: tr.trade_date,
       net_pnl: Number(tr.net_pnl),
       charges: tr.charges != null ? Number(tr.charges) : null,
-      num_trades: tr.num_trades,
+      num_trades: Number(tr.num_trades),
       capital_deployed: tr.capital_deployed != null ? Number(tr.capital_deployed) : null,
     }));
   } catch {

@@ -2,10 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import {
-  getWeekBounds,
-  getWeekPnl,
-  getWeekWinRate,
-  getCurrentStreak,
+  getMonthBounds,
+  getMonthPnl,
 } from "@/lib/stats";
 
 export const metadata = {
@@ -36,7 +34,7 @@ export default async function DashboardPage() {
   const timezone = profile.timezone ?? "Asia/Kolkata";
   const currency = profile.currency ?? "INR";
 
-  const { start: weekStart, end: weekEnd } = getWeekBounds(timezone);
+  const { start: monthStart, end: monthEnd } = getMonthBounds(timezone);
 
   const { data: trades } = await supabase
     .from("trades")
@@ -50,16 +48,14 @@ export default async function DashboardPage() {
     charges: t.charges != null ? Number(t.charges) : null,
   }));
 
-  const weekPnl = getWeekPnl(tradesForStats, weekStart, weekEnd);
-  const weekWinRate = getWeekWinRate(tradesForStats, weekStart, weekEnd);
-  const streak = getCurrentStreak(tradesForStats);
+  const monthPnl = getMonthPnl(tradesForStats, monthStart, monthEnd);
 
   const tradesForClient = (trades ?? []).map((t) => ({
     id: t.id,
     trade_date: t.trade_date,
     net_pnl: Number(t.net_pnl),
     charges: t.charges != null ? Number(t.charges) : null,
-    num_trades: t.num_trades,
+    num_trades: Number(t.num_trades),
     capital_deployed:
       t.capital_deployed != null ? Number(t.capital_deployed) : null,
     note: t.note ?? null,
@@ -68,9 +64,7 @@ export default async function DashboardPage() {
   return (
     <DashboardContent
       displayName={profile.display_name}
-      weekPnl={weekPnl}
-      weekWinRate={weekWinRate}
-      streak={streak}
+      monthPnl={monthPnl}
       currency={currency}
       userId={user.id}
       tradingCapital={

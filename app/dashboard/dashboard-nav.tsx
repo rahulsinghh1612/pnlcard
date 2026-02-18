@@ -22,7 +22,6 @@ export function DashboardNav({ displayName }: DashboardNavProps) {
 
   return (
     <nav className="flex items-center gap-3">
-      <span className="text-sm text-muted-foreground">{displayName}</span>
       <Button variant="ghost" size="icon" asChild>
         <Link href="/dashboard/settings" aria-label="Settings">
           <Settings className="h-4 w-4" />

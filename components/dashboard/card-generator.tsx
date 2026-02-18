@@ -21,6 +21,7 @@ type CardGeneratorProps = {
   monthlyParams: MonthlyCardParams | null;
   isPremium: boolean;
   baseUrl: string;
+  defaultCardType?: "daily" | "weekly" | "monthly";
 };
 
 /** Use absolute URL for img src so it loads reliably across environments */
@@ -52,6 +53,7 @@ function buildWeeklyOgUrl(params: WeeklyCardParams, theme: string): string {
     pnl: params.pnl,
     winRate: params.winRate,
     wl: params.wl,
+    totalTrades: String(params.totalTrades ?? 0),
     bestDay: params.bestDay,
     days: JSON.stringify(params.days),
     theme,
@@ -86,10 +88,13 @@ export function CardGenerator({
   monthlyParams,
   isPremium,
   baseUrl,
+  defaultCardType,
 }: CardGeneratorProps) {
   const [theme, setTheme] = useState(dailyParams.theme);
   const [cardType, setCardType] = useState<"daily" | "weekly" | "monthly">(
-    "daily"
+    defaultCardType && ["daily", "weekly", "monthly"].includes(defaultCardType)
+      ? defaultCardType
+      : "daily"
   );
 
   const canUseWeekly = isPremium && weeklyParams != null;
