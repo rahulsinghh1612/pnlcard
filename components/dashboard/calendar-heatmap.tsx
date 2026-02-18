@@ -65,24 +65,6 @@ export function CalendarHeatmap({
     const d = t.trade_date;
     return d >= format(monthStart, "yyyy-MM-dd") && d <= format(monthEnd, "yyyy-MM-dd");
   });
-  const profits = monthTrades.map((t) => getFinalResult(t)).filter((r) => r > 0);
-  const losses = monthTrades.map((t) => getFinalResult(t)).filter((r) => r < 0);
-  const maxProfit = profits.length > 0 ? Math.max(...profits) : 1;
-  const maxLoss = losses.length > 0 ? Math.max(...losses.map((r) => Math.abs(r))) : 1;
-
-  const getProfitClasses = (result: number): string => {
-    const ratio = result / maxProfit;
-    if (ratio >= 0.66) return "bg-emerald-100 dark:bg-emerald-900/40";
-    if (ratio >= 0.33) return "bg-emerald-50 dark:bg-emerald-900/25";
-    return "bg-emerald-50 dark:bg-emerald-950/20";
-  };
-
-  const getLossClasses = (result: number): string => {
-    const ratio = Math.abs(result) / maxLoss;
-    if (ratio >= 0.66) return "bg-red-100 dark:bg-red-900/40";
-    if (ratio >= 0.33) return "bg-red-50/80 dark:bg-red-900/25";
-    return "bg-red-50 dark:bg-red-950/20";
-  };
 
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
@@ -154,6 +136,33 @@ export function CalendarHeatmap({
     return { totalPnl, totalTrades, mondayStr, rangeLabel };
   });
 
+  // Unified scale: combine daily P&L values and weekly totals so both
+  // daily cells and weekly cells are colored on the same scale.
+  const dailyResults = monthTrades.map((t) => getFinalResult(t));
+  const weeklyResults = weekSummaries
+    .filter((s) => s.totalTrades > 0)
+    .map((s) => s.totalPnl);
+  const allResults = [...dailyResults, ...weeklyResults];
+
+  const allProfits = allResults.filter((r) => r > 0);
+  const allLosses = allResults.filter((r) => r < 0);
+  const maxProfit = allProfits.length > 0 ? Math.max(...allProfits) : 1;
+  const maxLoss = allLosses.length > 0 ? Math.max(...allLosses.map((r) => Math.abs(r))) : 1;
+
+  const getProfitClasses = (value: number): string => {
+    const ratio = value / maxProfit;
+    if (ratio >= 0.66) return "bg-emerald-200 dark:bg-emerald-900/40";
+    if (ratio >= 0.33) return "bg-emerald-100 dark:bg-emerald-900/25";
+    return "bg-emerald-50 dark:bg-emerald-950/20";
+  };
+
+  const getLossClasses = (value: number): string => {
+    const ratio = Math.abs(value) / maxLoss;
+    if (ratio >= 0.66) return "bg-red-200 dark:bg-red-900/40";
+    if (ratio >= 0.33) return "bg-red-100 dark:bg-red-900/25";
+    return "bg-red-50 dark:bg-red-950/20";
+  };
+
   return (
     <div className="w-full overflow-hidden rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm">
       {/* Month navigation */}
@@ -182,7 +191,7 @@ export function CalendarHeatmap({
       </div>
 
       {/* Header: 7 day columns + weekly summary column */}
-      <div className="mb-1.5 grid grid-cols-[repeat(7,1fr)_minmax(60px,1.2fr)] gap-1 text-center">
+      <div className="mb-1.5 grid grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)] gap-1 text-center">
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
           <span
             key={`${d}-${i}`}
@@ -191,6 +200,8 @@ export function CalendarHeatmap({
             {d}
           </span>
         ))}
+        {/* Spacer */}
+        <span />
         <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           Wk
         </span>
@@ -204,7 +215,7 @@ export function CalendarHeatmap({
           return (
             <div
               key={`week-${rowIdx}`}
-              className="grid grid-cols-[repeat(7,1fr)_minmax(60px,1.2fr)] gap-1"
+              className="grid grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)] gap-1"
             >
               {/* Day cells */}
               {row.map((day, colIdx) => {
@@ -283,6 +294,11 @@ export function CalendarHeatmap({
                 );
               })}
 
+              {/* Separator between days and weekly summary */}
+              <div className="flex items-center justify-center">
+                <div className="h-3/4 border-l border-dashed border-border" />
+              </div>
+
               {/* Weekly summary column */}
               <button
                 type="button"
@@ -296,8 +312,8 @@ export function CalendarHeatmap({
                   summary.totalTrades === 0
                     ? "bg-muted/30 text-muted-foreground cursor-default"
                     : summary.totalPnl >= 0
-                      ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30"
-                      : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 cursor-pointer border border-red-200/50 dark:border-red-800/30"
+                      ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 hover:brightness-95 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30")
+                      : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 hover:brightness-95 cursor-pointer border border-red-200/50 dark:border-red-800/30")
                 )}
                 title={
                   summary.totalTrades > 0
@@ -331,16 +347,16 @@ export function CalendarHeatmap({
         <span className="flex items-center gap-1.5">
           <span className="flex gap-0.5">
             <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30" />
-            <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
-            <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200/60 dark:border-emerald-800/30" />
+            <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
+            <span className="h-3 w-3 rounded bg-emerald-200 dark:bg-emerald-900/40 border border-emerald-300/60 dark:border-emerald-800/30" />
           </span>
           Profit
         </span>
         <span className="flex items-center gap-1.5">
           <span className="flex gap-0.5">
             <span className="h-3 w-3 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/30" />
-            <span className="h-3 w-3 rounded bg-red-50/80 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
-            <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/40 border border-red-200/60 dark:border-red-800/30" />
+            <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
+            <span className="h-3 w-3 rounded bg-red-200 dark:bg-red-900/40 border border-red-300/60 dark:border-red-800/30" />
           </span>
           Loss
         </span>
