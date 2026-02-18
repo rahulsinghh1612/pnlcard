@@ -10,7 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, Pencil, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { buildDailyCardParams, type TradeForCard } from "@/lib/card-data";
+import {
+  buildDailyCardParams,
+  buildWeeklyCardParams,
+  type TradeForCard,
+  type DailyCardParams,
+  type WeeklyCardParams,
+} from "@/lib/card-data";
 
 type Trade = {
   id: string;
@@ -25,7 +31,9 @@ type Trade = {
 type CardPreviewModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  cardType: "daily" | "weekly";
   trade: Trade | null;
+  weekMondayStr?: string | null;
   allTrades: Trade[];
   profile: {
     x_handle: string | null;
@@ -37,8 +45,8 @@ type CardPreviewModalProps = {
   onEditTrade: (trade: Trade) => void;
 };
 
-function buildOgUrl(
-  params: ReturnType<typeof buildDailyCardParams>,
+function buildDailyOgUrl(
+  params: DailyCardParams,
   theme: string,
   showRoi: boolean
 ): string {
@@ -57,10 +65,33 @@ function buildOgUrl(
   return `/api/og/daily?${search.toString()}`;
 }
 
+function buildWeeklyOgUrl(
+  params: WeeklyCardParams,
+  theme: string,
+  showRoi: boolean
+): string {
+  const search = new URLSearchParams({
+    range: params.range,
+    pnl: params.pnl,
+    winRate: params.winRate,
+    wl: params.wl,
+    totalTrades: String(params.totalTrades ?? 0),
+    bestDay: params.bestDay,
+    days: JSON.stringify(params.days),
+    theme,
+    currency: params.currency,
+  });
+  if (showRoi && params.roi) search.set("roi", params.roi);
+  if (params.handle) search.set("handle", params.handle);
+  return `/api/og/weekly?${search.toString()}`;
+}
+
 export function CardPreviewModal({
   open,
   onOpenChange,
+  cardType,
   trade,
+  weekMondayStr,
   allTrades,
   profile,
   onEditTrade,
@@ -81,8 +112,8 @@ export function CardPreviewModal({
     [allTrades]
   );
 
-  const params = useMemo(() => {
-    if (!trade) return null;
+  const dailyParams = useMemo(() => {
+    if (cardType !== "daily" || !trade) return null;
     const tradeForCard: TradeForCard = {
       id: trade.id,
       trade_date: trade.trade_date,
@@ -92,12 +123,27 @@ export function CardPreviewModal({
       capital_deployed: trade.capital_deployed,
     };
     return buildDailyCardParams(tradeForCard, tradesForCard, profile);
-  }, [trade, tradesForCard, profile]);
+  }, [cardType, trade, tradesForCard, profile]);
+
+  const weeklyParams = useMemo(() => {
+    if (cardType !== "weekly" || !weekMondayStr) return null;
+    return buildWeeklyCardParams(tradesForCard, weekMondayStr, profile);
+  }, [cardType, weekMondayStr, tradesForCard, profile]);
+
+  const hasRoi =
+    cardType === "daily"
+      ? dailyParams?.netRoi != null
+      : weeklyParams?.roi != null;
 
   const ogUrl = useMemo(() => {
-    if (!params) return "";
-    return buildOgUrl(params, theme, showRoi);
-  }, [params, theme, showRoi]);
+    if (cardType === "daily" && dailyParams) {
+      return buildDailyOgUrl(dailyParams, theme, showRoi);
+    }
+    if (cardType === "weekly" && weeklyParams) {
+      return buildWeeklyOgUrl(weeklyParams, theme, showRoi);
+    }
+    return "";
+  }, [cardType, dailyParams, weeklyParams, theme, showRoi]);
 
   const imgSrc = useMemo(() => {
     if (!ogUrl) return "";
@@ -105,8 +151,18 @@ export function CardPreviewModal({
     return `${origin}${ogUrl}`;
   }, [ogUrl]);
 
+  const downloadFilename = useMemo(() => {
+    if (cardType === "daily" && dailyParams) {
+      return `pnlcard-daily-${dailyParams.date.replace(/\s/g, "-")}.png`;
+    }
+    if (cardType === "weekly" && weeklyParams) {
+      return `pnlcard-weekly-${weeklyParams.range.replace(/\s/g, "-")}.png`;
+    }
+    return "pnlcard.png";
+  }, [cardType, dailyParams, weeklyParams]);
+
   const handleDownload = useCallback(async () => {
-    if (!ogUrl || !params) return;
+    if (!ogUrl) return;
     try {
       const res = await fetch(ogUrl);
       if (!res.ok) throw new Error("Failed to generate image");
@@ -114,14 +170,14 @@ export function CardPreviewModal({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `pnlcard-daily-${params.date.replace(/\s/g, "-")}.png`;
+      a.download = downloadFilename;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Card downloaded!");
     } catch {
       toast.error("Failed to download card");
     }
-  }, [ogUrl, params]);
+  }, [ogUrl, downloadFilename]);
 
   const handleEdit = useCallback(() => {
     if (!trade) return;
@@ -129,14 +185,20 @@ export function CardPreviewModal({
     setTimeout(() => onEditTrade(trade), 150);
   }, [trade, onOpenChange, onEditTrade]);
 
-  if (!trade || !params) return null;
+  const isReady =
+    (cardType === "daily" && dailyParams != null) ||
+    (cardType === "weekly" && weeklyParams != null);
+
+  if (!isReady) return null;
+
+  const title = cardType === "daily" ? "Daily Card" : "Weekly Card";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">
-            Daily Card
+            {title}
           </DialogTitle>
         </DialogHeader>
 
@@ -169,7 +231,7 @@ export function CardPreviewModal({
           </div>
 
           {/* ROI toggle */}
-          {params.netRoi && (
+          {hasRoi && (
             <button
               onClick={() => setShowRoi((v) => !v)}
               className={`flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors ${
@@ -194,7 +256,7 @@ export function CardPreviewModal({
             {imgSrc && (
               <img
                 src={imgSrc}
-                alt="Daily card preview"
+                alt={`${title} preview`}
                 className="w-full h-auto"
                 onError={() =>
                   toast.error("Failed to load preview. Try refreshing.")
@@ -210,14 +272,16 @@ export function CardPreviewModal({
             <Download className="mr-1.5 h-3.5 w-3.5" />
             Download
           </Button>
-          <Button
-            onClick={handleEdit}
-            variant="outline"
-            size="sm"
-          >
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />
-            Edit Trade
-          </Button>
+          {cardType === "daily" && trade && (
+            <Button
+              onClick={handleEdit}
+              variant="outline"
+              size="sm"
+            >
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Edit Trade
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

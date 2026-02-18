@@ -11,7 +11,6 @@ import {
   addDays,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +28,7 @@ type CalendarHeatmapProps = {
   trades: TradeForHeatmap[];
   currency: string;
   onDayClick: (date: string, existingTrade: TradeForHeatmap | null) => void;
+  onWeekClick?: (mondayStr: string) => void;
 };
 
 function getFinalResult(t: TradeForHeatmap): number {
@@ -49,10 +49,10 @@ export function CalendarHeatmap({
   trades,
   currency,
   onDayClick,
+  onWeekClick,
 }: CalendarHeatmapProps) {
   const [viewDate, setViewDate] = useState(new Date());
   const [showWeekly, setShowWeekly] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     const stored = localStorage.getItem("pnlcard-show-weekly");
@@ -335,8 +335,8 @@ export function CalendarHeatmap({
                   <button
                     type="button"
                     onClick={() => {
-                      if (summary.totalTrades > 0) {
-                        router.push(`/dashboard/card?date=${summary.mondayStr}&type=weekly`);
+                      if (summary.totalTrades > 0 && onWeekClick) {
+                        onWeekClick(summary.mondayStr);
                       }
                     }}
                     className={cn(

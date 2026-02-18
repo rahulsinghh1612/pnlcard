@@ -66,7 +66,7 @@ export async function GET(request: Request) {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: sectionGap,
+            marginBottom: Math.round(32 * S),
           }}
         >
           <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.accent, fontWeight: 700 }}>

@@ -62,6 +62,8 @@ export function DashboardContent({
 
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
   const [cardPreviewTrade, setCardPreviewTrade] = useState<Trade | null>(null);
+  const [cardPreviewType, setCardPreviewType] = useState<"daily" | "weekly">("daily");
+  const [cardPreviewWeekMonday, setCardPreviewWeekMonday] = useState<string | null>(null);
 
   const hasTrades = trades.length > 0;
   const pnlPositive = monthPnl >= 0;
@@ -166,12 +168,20 @@ export function DashboardContent({
                 if (existingTrade) {
                   const fullTrade = trades.find((t) => t.id === existingTrade.id);
                   if (fullTrade) {
+                    setCardPreviewType("daily");
                     setCardPreviewTrade(fullTrade);
+                    setCardPreviewWeekMonday(null);
                     setCardPreviewOpen(true);
                     return;
                   }
                 }
                 openEditModal(date, null);
+              }}
+              onWeekClick={(mondayStr) => {
+                setCardPreviewType("weekly");
+                setCardPreviewTrade(null);
+                setCardPreviewWeekMonday(mondayStr);
+                setCardPreviewOpen(true);
               }}
             />
 
@@ -203,7 +213,9 @@ export function DashboardContent({
       <CardPreviewModal
         open={cardPreviewOpen}
         onOpenChange={setCardPreviewOpen}
+        cardType={cardPreviewType}
         trade={cardPreviewTrade}
+        weekMondayStr={cardPreviewWeekMonday}
         allTrades={trades}
         profile={{
           x_handle: xHandle,

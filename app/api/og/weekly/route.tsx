@@ -75,7 +75,7 @@ export async function GET(request: Request) {
           textTransform: "uppercase",
           letterSpacing: "0.1em",
           fontWeight: 500,
-          marginBottom: Math.round(2 * S),
+          marginBottom: Math.round(4 * S),
         }}
       >
         {pnlLabel}
@@ -92,7 +92,7 @@ export async function GET(request: Request) {
           color: s.accent,
           letterSpacing: "-0.04em",
           lineHeight: 1,
-          marginBottom: Math.round(26 * S),
+          marginBottom: Math.round(hasRoi ? 20 * S : 40 * S),
         }}
       >
         {pnl}
