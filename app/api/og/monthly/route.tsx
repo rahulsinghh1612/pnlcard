@@ -142,6 +142,10 @@ export async function GET(request: Request) {
             );
           }
           const c = getCellColor(day);
+          const hasTrade = tradeData[day] != null;
+          const dayNumColor = hasTrade
+            ? isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)"
+            : isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.2)";
           return (
             <div
               key={`${row}-${col}`}
@@ -150,8 +154,23 @@ export async function GET(request: Request) {
                 height: cellHeightPx,
                 borderRadius: Math.round(4 * S),
                 background: c,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
+            >
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: Math.round(7 * S),
+                  fontWeight: 500,
+                  color: dayNumColor,
+                  lineHeight: 1,
+                }}
+              >
+                {`${day}`}
+              </div>
+            </div>
           );
         })}
       </div>
@@ -166,11 +185,11 @@ export async function GET(request: Request) {
         style={{
           display: "flex",
           fontSize: Math.round(10 * S),
-          color: s.text3,
+          color: s.labelColor,
           textTransform: "uppercase",
           letterSpacing: "0.1em",
           fontWeight: 500,
-          marginBottom: Math.round(2 * S),
+          marginBottom: Math.round(4 * S),
         }}
       >
         {pnlLabel}
@@ -187,7 +206,7 @@ export async function GET(request: Request) {
           color: s.accent,
           letterSpacing: "-0.04em",
           lineHeight: 1,
-          marginBottom: Math.round(6 * S),
+          marginBottom: Math.round(12 * S),
         }}
       >
         {pnl}
@@ -200,7 +219,7 @@ export async function GET(request: Request) {
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: Math.round(18 * S),
+          gap: Math.round(24 * S),
         }}
       >
         {hasRoi ? (
@@ -209,11 +228,11 @@ export async function GET(request: Request) {
               style={{
                 display: "flex",
                 fontSize: Math.round(10 * S),
-                color: s.text3,
+                color: s.labelColor,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 fontWeight: 500,
-                marginBottom: Math.round(2 * S),
+                marginBottom: Math.round(3 * S),
               }}
             >
               {"Net ROI"}
@@ -237,11 +256,11 @@ export async function GET(request: Request) {
             style={{
               display: "flex",
               fontSize: Math.round(10 * S),
-              color: s.text3,
+              color: s.labelColor,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
               fontWeight: 500,
-              marginBottom: Math.round(2 * S),
+              marginBottom: Math.round(3 * S),
             }}
           >
             {"Win Rate"}
@@ -313,10 +332,10 @@ export async function GET(request: Request) {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: Math.round(8 * S),
+              marginBottom: Math.round(14 * S),
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(14 * S), color: s.text1, fontWeight: 600 }}>
+            <div style={{ display: "flex", fontSize: Math.round(14 * S), color: s.dateColor, fontWeight: 500 }}>
               {month}
             </div>
             <div
@@ -328,112 +347,58 @@ export async function GET(request: Request) {
                 padding: `${Math.round(2 * S)}px ${Math.round(9 * S)}px`,
               }}
             >
-              <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.text1, fontWeight: 600 }}>
+              <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.pillText, fontWeight: 500 }}>
                 {wl}
               </div>
             </div>
           </div>
 
-          {/* Calendar heatmap */}
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: Math.round(4 * S) }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                marginBottom: Math.round(3 * S),
-              }}
-            >
-              {calHeaderCells}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: Math.round(3 * S),
-              }}
-            >
-              {calRows}
-            </div>
-            {/* Best/Worst legend */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: Math.round(5 * S),
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: Math.round(4 * S),
-                }}
-              >
-                <div
-                  style={{
-                    width: Math.round(8 * S),
-                    height: Math.round(8 * S),
-                    borderRadius: Math.round(2 * S),
-                    background: isDark
-                      ? "rgba(34,197,94,0.7)"
-                      : "rgba(22,163,74,0.6)",
-                  }}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    fontSize: Math.round(10 * S),
-                    color: isDark ? "#22c55e" : "#16a34a",
-                    fontWeight: 600,
-                  }}
-                >
-                  {`Best: ${best}`}
-                </div>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: Math.round(4 * S),
-                }}
-              >
-                <div
-                  style={{
-                    width: Math.round(8 * S),
-                    height: Math.round(8 * S),
-                    borderRadius: Math.round(2 * S),
-                    background: isDark
-                      ? "rgba(239,68,68,0.7)"
-                      : "rgba(220,38,38,0.6)",
-                  }}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    fontSize: Math.round(10 * S),
-                    color: isDark ? "#ef4444" : "#dc2626",
-                    fontWeight: 600,
-                  }}
-                >
-                  {`Worst: ${worst}`}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
+          {/* Main content — centered vertically like daily/weekly cards */}
           <div
             style={{
+              flex: 1,
               display: "flex",
-              height: Math.round(1 * S),
-              background: s.divider,
-              marginBottom: Math.round(8 * S),
+              flexDirection: "column",
+              justifyContent: "center",
+              minHeight: 0,
             }}
-          />
+          >
+            {/* Calendar heatmap */}
+            <div style={{ display: "flex", flexDirection: "column", marginBottom: Math.round(10 * S) }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  marginBottom: Math.round(3 * S),
+                }}
+              >
+                {calHeaderCells}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: Math.round(3 * S),
+                }}
+              >
+                {calRows}
+              </div>
+            </div>
 
-          {/* Hero numbers */}
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: Math.round(4 * S) }}>
-            {heroChildren}
+            {/* Divider */}
+            <div
+              style={{
+                display: "flex",
+                height: Math.round(1 * S),
+                background: s.divider,
+                marginBottom: Math.round(8 * S),
+              }}
+            />
+
+            {/* Hero numbers */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {heroChildren}
+            </div>
           </div>
 
           {/* Footer */}
@@ -442,7 +407,6 @@ export async function GET(request: Request) {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: "auto",
             }}
           >
             {watermarkLeft}

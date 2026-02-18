@@ -55,11 +55,11 @@ export function formatNumber(value: number, currency: string): string {
   return currency === "INR"
     ? abs.toLocaleString("en-IN", {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 0,
       })
     : abs.toLocaleString("en-US", {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 0,
       });
 }
 
@@ -69,11 +69,11 @@ export function formatPnl(value: number, currency: string): string {
     currency === "INR"
       ? abs.toLocaleString("en-IN", {
           minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
+          maximumFractionDigits: 0,
         })
       : abs.toLocaleString("en-US", {
           minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
+          maximumFractionDigits: 0,
         });
   const sign = value >= 0 ? "+" : "-";
   return `${sign}${formatted}`;

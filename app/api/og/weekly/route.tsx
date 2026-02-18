@@ -99,46 +99,16 @@ export async function GET(request: Request) {
       </div>
     );
 
-    mainChildren.push(
-      <div
-        key="stats-row"
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: Math.round(28 * S),
-          marginBottom: Math.round(22 * S),
-        }}
-      >
-        {hasRoi ? (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(10 * S),
-                color: s.text3,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                fontWeight: 500,
-                marginBottom: Math.round(2 * S),
-              }}
-            >
-              {"Net ROI"}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(26 * S),
-                fontWeight: 900,
-                color: s.accent,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-              }}
-            >
-              {roi}
-            </div>
-          </div>
-        ) : null}
-        <div style={{ display: "flex", flexDirection: "column" }}>
+    if (hasRoi) {
+      mainChildren.push(
+        <div
+          key="roi-section"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            marginBottom: Math.round(22 * S),
+          }}
+        >
           <div
             style={{
               display: "flex",
@@ -150,7 +120,7 @@ export async function GET(request: Request) {
               marginBottom: Math.round(2 * S),
             }}
           >
-            {"Win Rate"}
+            {"Net ROI"}
           </div>
           <div
             style={{
@@ -162,11 +132,11 @@ export async function GET(request: Request) {
               lineHeight: 1,
             }}
           >
-            {winRate}
+            {roi}
           </div>
         </div>
-      </div>
-    );
+      );
+    }
 
     // Bar chart with sqrt scale and P&L values
     const formatBarPnl = (v: number): string => {

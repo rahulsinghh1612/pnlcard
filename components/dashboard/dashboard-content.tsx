@@ -6,6 +6,7 @@ import { LogTradeButton } from "@/components/dashboard/log-trade-button";
 import { RecentEntries } from "@/components/dashboard/recent-entries";
 import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
+import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
 import { BarChart3 } from "lucide-react";
 
 type Trade = {
@@ -22,8 +23,11 @@ type DashboardContentProps = {
   displayName: string;
   monthPnl: number;
   currency: string;
+  timezone: string;
   userId: string;
   tradingCapital: number | null;
+  xHandle: string | null;
+  cardTheme: string;
   trades: Trade[];
 };
 
@@ -43,8 +47,11 @@ export function DashboardContent({
   displayName,
   monthPnl,
   currency,
+  timezone,
   userId,
   tradingCapital,
+  xHandle,
+  cardTheme,
   trades,
 }: DashboardContentProps) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -52,6 +59,9 @@ export function DashboardContent({
     null
   );
   const [modalDefaultDate, setModalDefaultDate] = useState<string | undefined>();
+
+  const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
+  const [cardPreviewTrade, setCardPreviewTrade] = useState<Trade | null>(null);
 
   const hasTrades = trades.length > 0;
   const pnlPositive = monthPnl >= 0;
@@ -152,9 +162,17 @@ export function DashboardContent({
                 note: t.note,
               }))}
               currency={currency}
-              onDayClick={(date, existingTrade) =>
-                openEditModal(date, existingTrade)
-              }
+              onDayClick={(date, existingTrade) => {
+                if (existingTrade) {
+                  const fullTrade = trades.find((t) => t.id === existingTrade.id);
+                  if (fullTrade) {
+                    setCardPreviewTrade(fullTrade);
+                    setCardPreviewOpen(true);
+                    return;
+                  }
+                }
+                openEditModal(date, null);
+              }}
             />
 
             <RecentEntries
@@ -180,6 +198,25 @@ export function DashboardContent({
         existingTrade={modalExistingTrade}
         defaultDate={modalDefaultDate}
         existingTradeDates={new Set(trades.map((t) => t.trade_date))}
+      />
+
+      <CardPreviewModal
+        open={cardPreviewOpen}
+        onOpenChange={setCardPreviewOpen}
+        trade={cardPreviewTrade}
+        allTrades={trades}
+        profile={{
+          x_handle: xHandle,
+          trading_capital: tradingCapital,
+          card_theme: cardTheme,
+          currency,
+          timezone,
+        }}
+        onEditTrade={(trade) => {
+          setModalExistingTrade(trade);
+          setModalDefaultDate(undefined);
+          setModalOpen(true);
+        }}
       />
     </>
   );
