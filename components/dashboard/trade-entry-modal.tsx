@@ -26,7 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import Link from "next/link";
 import { format } from "date-fns";
 import { ArrowDownToLine, Upload, Trash2 } from "lucide-react";
 
@@ -97,12 +96,11 @@ type TradeEntryModalProps = {
   userId: string;
   currency: string;
   tradingCapital: number | null;
-  /** Pre-filled trade for edit mode. If null, create mode. */
   existingTrade: TradeEntry | null;
-  /** Default date when creating (e.g. today) */
   defaultDate?: string;
-  /** Dates that already have a trade logged (used to warn on duplicates in create mode). */
   existingTradeDates?: Set<string>;
+  onEditExisting?: (date: string) => void;
+  onGenerateCard?: () => void;
 };
 
 export function TradeEntryModal({
@@ -114,6 +112,8 @@ export function TradeEntryModal({
   existingTrade,
   defaultDate,
   existingTradeDates,
+  onEditExisting,
+  onGenerateCard,
 }: TradeEntryModalProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -143,9 +143,8 @@ export function TradeEntryModal({
               : "",
         });
       } else {
-        const today = defaultDate ?? format(new Date(), "yyyy-MM-dd");
         setForm({
-          trade_date: today,
+          trade_date: defaultDate ?? "",
           num_trades: "1",
           net_pnl: "",
           charges: "",
@@ -300,17 +299,21 @@ export function TradeEntryModal({
                   <Trash2 className="h-4 w-4" />
                 </button>
                 <DialogTitle>Edit trade</DialogTitle>
-                <Link
-                  href={`/dashboard/card?date=${form.trade_date}`}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onGenerateCard?.();
+                  }}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   title="Generate Card"
                 >
                   <Upload className="h-4 w-4" />
-                </Link>
+                </button>
               </div>
             ) : (
               <DialogTitle className="text-center">
-                Log today&apos;s trade
+                Log a trade
               </DialogTitle>
             )}
           </DialogHeader>
@@ -333,9 +336,18 @@ export function TradeEntryModal({
                 </p>
               )}
               {isDuplicateDate && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                  A trade already exists for this date. Tap the date on the calendar to edit it.
-                </p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Trade already logged.</span>
+                  {onEditExisting && (
+                    <button
+                      type="button"
+                      onClick={() => onEditExisting(form.trade_date)}
+                      className="font-medium text-foreground underline underline-offset-2 hover:text-foreground/80 transition-colors"
+                    >
+                      Edit it
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 

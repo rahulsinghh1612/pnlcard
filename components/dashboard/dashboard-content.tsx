@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card";
 import { LogTradeButton } from "@/components/dashboard/log-trade-button";
 import { RecentEntries } from "@/components/dashboard/recent-entries";
 import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
+import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
-import { BarChart3, Sparkles, ArrowRight, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
   format,
@@ -194,8 +195,8 @@ export function DashboardContent({
               </h1>
             </div>
             <div className="sm:text-right">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                This month&apos;s P&L
+              <p className="text-xs font-medium tracking-wider text-muted-foreground">
+                This Month&apos;s P&L
               </p>
               <p
                 className={`mt-1 text-3xl sm:text-4xl font-bold tracking-tight ${
@@ -208,7 +209,7 @@ export function DashboardContent({
               </p>
               {hasTrades && (
                 <span
-                  className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 opacity-60 group-hover:opacity-100 ${
+                  className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold tracking-widest transition-all duration-300 opacity-60 group-hover:opacity-100 ${
                     pnlPositive
                       ? "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
                       : "bg-red-100 text-red-700 group-hover:bg-red-200"
@@ -216,7 +217,6 @@ export function DashboardContent({
                 >
                   <Sparkles className="h-3 w-3" />
                   Generate Monthly Card
-                  <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </span>
               )}
             </div>
@@ -494,6 +494,17 @@ export function DashboardContent({
               </div>
             </div>
 
+            <PnlTicker
+              trades={trades.map((t) => ({
+                id: t.id,
+                trade_date: t.trade_date,
+                net_pnl: t.net_pnl,
+                charges: t.charges,
+                num_trades: t.num_trades,
+              }))}
+              currency={currency}
+            />
+
             <RecentEntries
               trades={trades.map((t) => ({
                 id: t.id,
@@ -526,6 +537,22 @@ export function DashboardContent({
         existingTrade={modalExistingTrade}
         defaultDate={modalDefaultDate}
         existingTradeDates={new Set(trades.map((t) => t.trade_date))}
+        onEditExisting={(date) => {
+          const trade = trades.find((t) => t.trade_date === date);
+          if (trade) {
+            setModalExistingTrade(trade);
+            setModalDefaultDate(undefined);
+          }
+        }}
+        onGenerateCard={() => {
+          if (modalExistingTrade) {
+            setCardPreviewType("daily");
+            setCardPreviewTrade(modalExistingTrade);
+            setCardPreviewWeekMonday(null);
+            setCardPreviewMonthDate(null);
+            setCardPreviewOpen(true);
+          }
+        }}
       />
 
       <CardPreviewModal

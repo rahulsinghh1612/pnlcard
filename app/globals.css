@@ -145,4 +145,16 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+  .ticker-scroll {
+    animation: ticker-slide 30s linear infinite;
+  }
+}
+
+@keyframes ticker-slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }

@@ -27,7 +27,7 @@ export function LogTradeButton({
 
   const handleClick = () => {
     if (onOpenCreate) {
-      onOpenCreate(format(new Date(), "yyyy-MM-dd"));
+      onOpenCreate();
     } else {
       setOpen(true);
     }
@@ -39,18 +39,18 @@ export function LogTradeButton({
         type="button"
         onClick={handleClick}
         className={cn(
-          "group relative inline-flex items-center justify-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold text-white",
-          "bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900",
-          "shadow-lg shadow-slate-900/25 hover:shadow-xl hover:shadow-slate-900/30",
-          "transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2",
+          "group relative inline-flex items-center justify-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold",
+          "border border-slate-300 bg-white text-slate-900 hover:bg-slate-900 hover:text-white hover:border-slate-900",
+          "shadow-sm hover:shadow-lg hover:shadow-slate-900/20",
+          "transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
           className
         )}
       >
         {children ?? (
           <>
             <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
-            Log today&apos;s trade
+            Log a trade
           </>
         )}
       </button>

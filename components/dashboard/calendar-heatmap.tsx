@@ -10,7 +10,7 @@ import {
   subMonths,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -198,7 +198,7 @@ export function CalendarHeatmap({
               const dateInMonth = format(monthStart, "yyyy-MM-dd");
               onMonthClick(dateInMonth);
             }}
-            className="min-w-[140px] text-center text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer hover:underline underline-offset-4 decoration-primary/40"
+            className="min-w-[140px] text-center text-sm font-semibold text-foreground hover:text-primary transition-all duration-200 cursor-pointer rounded-md px-2 py-0.5 hover:bg-primary/5 active:scale-95"
             title="Generate monthly card"
           >
             {format(viewDate, "MMMM yyyy")}
@@ -240,9 +240,11 @@ export function CalendarHeatmap({
             <button
               type="button"
               onClick={toggleWeekly}
-              className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground hover:text-foreground hover:underline underline-offset-2 transition-colors cursor-pointer"
+              className="group/wk inline-flex items-center justify-center gap-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground rounded-full px-1.5 py-0.5 transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-90 cursor-pointer"
+              title="Hide weekly summary"
             >
-              Wk
+              <span className="group-hover/wk:hidden">Wk</span>
+              <X className="h-3 w-3 hidden group-hover/wk:block" />
             </button>
           </>
         )}
@@ -257,7 +259,7 @@ export function CalendarHeatmap({
             <div
               key={`week-${rowIdx}`}
               className={cn(
-                "grid gap-1",
+                "grid gap-1 rounded-lg px-0.5 -mx-0.5 transition-colors duration-150 hover:bg-muted/20",
                 showWeekly
                   ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
                   : "grid-cols-[repeat(7,1fr)]"
@@ -291,6 +293,9 @@ export function CalendarHeatmap({
                   }
                 }
 
+                const result = trade ? getFinalResult(trade) : 0;
+                const isProfit = trade && result >= 0;
+
                 return (
                   <button
                     key={dateStr}
@@ -301,38 +306,43 @@ export function CalendarHeatmap({
                     }}
                     disabled={isFuture}
                     className={cn(
-                      "relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                      "group/day relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                       bgClass,
                       textClass,
-                      isFuture && "cursor-not-allowed opacity-40"
+                      isFuture
+                        ? "cursor-not-allowed opacity-40"
+                        : trade
+                          ? "hover:scale-110 hover:z-10 hover:shadow-lg active:scale-95 cursor-pointer"
+                          : "hover:scale-105 hover:bg-muted/70 hover:shadow-sm active:scale-95 cursor-pointer",
+                      trade && isProfit && "hover:shadow-emerald-200/50 hover:ring-1 hover:ring-emerald-300/40",
+                      trade && !isProfit && "hover:shadow-red-200/50 hover:ring-1 hover:ring-red-300/40"
                     )}
                     title={
                       isFuture
                         ? "Cannot log future dates"
                         : trade
-                          ? `${dateStr}: ${formatCompact(getFinalResult(trade), currency)}`
+                          ? `${dateStr}: ${formatCompact(result, currency)}`
                           : `Log trade for ${dateStr}`
                     }
                   >
-                    {/* Day number in top-left corner only when trade data is shown */}
                     {trade && (
-                      <span className="absolute top-0.5 left-1 sm:top-1 sm:left-1.5 text-[8px] sm:text-[9px] font-medium leading-none opacity-70">
+                      <span className="absolute top-0.5 left-1 sm:top-1 sm:left-1.5 text-[8px] sm:text-[9px] font-medium leading-none opacity-70 group-hover/day:opacity-100 transition-opacity">
                         {format(day, "d")}
                       </span>
                     )}
                     {trade ? (
                       <>
-                        <span className="text-[10px] sm:text-[12px] font-bold leading-tight truncate max-w-full">
-                          {formatCompact(getFinalResult(trade), currency)}
+                        <span className="text-[10px] sm:text-[12px] font-bold leading-tight truncate max-w-full transition-transform duration-200 group-hover/day:scale-105">
+                          {formatCompact(result, currency)}
                         </span>
-                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-75 mt-0.5">
+                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-75 mt-0.5 transition-opacity duration-200 group-hover/day:opacity-100">
                           {trade.num_trades === 1
                             ? "1 Trade"
                             : `${trade.num_trades} Trades`}
                         </span>
                       </>
                     ) : (
-                      <span className="text-[11px] sm:text-xs font-medium">
+                      <span className="text-[11px] sm:text-xs font-medium transition-all duration-200 group-hover/day:text-foreground">
                         {format(day, "d")}
                       </span>
                     )}
@@ -356,12 +366,12 @@ export function CalendarHeatmap({
                       }
                     }}
                     className={cn(
-                      "aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                      "group/wk-cell aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                       summary.totalTrades === 0
                         ? "bg-muted/30 text-muted-foreground cursor-default"
                         : summary.totalPnl >= 0
-                          ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 hover:brightness-95 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30")
-                          : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 hover:brightness-95 cursor-pointer border border-red-200/50 dark:border-red-800/30")
+                          ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30 hover:scale-110 hover:z-10 hover:shadow-lg hover:shadow-emerald-200/50 hover:ring-1 hover:ring-emerald-300/40 active:scale-95")
+                          : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 cursor-pointer border border-red-200/50 dark:border-red-800/30 hover:scale-110 hover:z-10 hover:shadow-lg hover:shadow-red-200/50 hover:ring-1 hover:ring-red-300/40 active:scale-95")
                     )}
                     title={
                       summary.totalTrades > 0
@@ -369,15 +379,15 @@ export function CalendarHeatmap({
                         : `${summary.rangeLabel}: No trades`
                     }
                   >
-                    <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70">
+                    <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70 transition-opacity group-hover/wk-cell:opacity-100">
                       {summary.rangeLabel}
                     </span>
                     {summary.totalTrades > 0 ? (
                       <>
-                        <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
+                        <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full transition-transform duration-200 group-hover/wk-cell:scale-105">
                           {formatCompact(summary.totalPnl, currency)}
                         </span>
-                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
+                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70 transition-opacity group-hover/wk-cell:opacity-100">
                           {`${summary.totalTrades} trades`}
                         </span>
                       </>
@@ -418,8 +428,9 @@ export function CalendarHeatmap({
           <button
             type="button"
             onClick={toggleWeekly}
-            className="text-muted-foreground/40 hover:text-muted-foreground hover:underline underline-offset-2 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
           >
+            <BarChart3 className="h-3 w-3" />
             Show weekly
           </button>
         )}
