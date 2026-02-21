@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -15,6 +14,7 @@ type Trade = {
 type RecentEntriesProps = {
   trades: Trade[];
   currency: string;
+  onGenerateCard?: (tradeId: string) => void;
 };
 
 function getFinalResult(t: Trade): number {
@@ -33,7 +33,7 @@ function formatPnl(value: number, currency: string): string {
   return `${sign}${symbol}${formatted}`;
 }
 
-export function RecentEntries({ trades, currency }: RecentEntriesProps) {
+export function RecentEntries({ trades, currency, onGenerateCard }: RecentEntriesProps) {
   if (trades.length === 0) return null;
 
   return (
@@ -65,11 +65,13 @@ export function RecentEntries({ trades, currency }: RecentEntriesProps) {
               >
                 {formatPnl(result, currency)}
               </p>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/dashboard/card?date=${t.trade_date}`}>
-                  <ImageIcon className="h-4 w-4" />
-                  Generate Card
-                </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onGenerateCard?.(t.id)}
+              >
+                <ImageIcon className="h-4 w-4" />
+                View Card
               </Button>
             </li>
           );

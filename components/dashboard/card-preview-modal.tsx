@@ -13,9 +13,11 @@ import { toast } from "sonner";
 import {
   buildDailyCardParams,
   buildWeeklyCardParams,
+  buildMonthlyCardParams,
   type TradeForCard,
   type DailyCardParams,
   type WeeklyCardParams,
+  type MonthlyCardParams,
 } from "@/lib/card-data";
 
 type Trade = {
@@ -31,9 +33,10 @@ type Trade = {
 type CardPreviewModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cardType: "daily" | "weekly";
+  cardType: "daily" | "weekly" | "monthly";
   trade: Trade | null;
   weekMondayStr?: string | null;
+  monthDateStr?: string | null;
   allTrades: Trade[];
   profile: {
     x_handle: string | null;
@@ -86,12 +89,35 @@ function buildWeeklyOgUrl(
   return `/api/og/weekly?${search.toString()}`;
 }
 
+function buildMonthlyOgUrl(
+  params: MonthlyCardParams,
+  theme: string,
+  showRoi: boolean
+): string {
+  const search = new URLSearchParams({
+    month: params.month,
+    pnl: params.pnl,
+    winRate: params.winRate,
+    wl: params.wl,
+    best: params.best,
+    worst: params.worst,
+    calendar: JSON.stringify(params.calendar),
+    calendarGrid: JSON.stringify(params.calendarGrid),
+    theme,
+    currency: params.currency,
+  });
+  if (showRoi && params.roi) search.set("roi", params.roi);
+  if (params.handle) search.set("handle", params.handle);
+  return `/api/og/monthly?${search.toString()}`;
+}
+
 export function CardPreviewModal({
   open,
   onOpenChange,
   cardType,
   trade,
   weekMondayStr,
+  monthDateStr,
   allTrades,
   profile,
   onEditTrade,
@@ -130,10 +156,17 @@ export function CardPreviewModal({
     return buildWeeklyCardParams(tradesForCard, weekMondayStr, profile);
   }, [cardType, weekMondayStr, tradesForCard, profile]);
 
+  const monthlyParams = useMemo(() => {
+    if (cardType !== "monthly" || !monthDateStr) return null;
+    return buildMonthlyCardParams(tradesForCard, monthDateStr, profile);
+  }, [cardType, monthDateStr, tradesForCard, profile]);
+
   const hasRoi =
     cardType === "daily"
       ? dailyParams?.netRoi != null
-      : weeklyParams?.roi != null;
+      : cardType === "weekly"
+        ? weeklyParams?.roi != null
+        : monthlyParams?.roi != null;
 
   const ogUrl = useMemo(() => {
     if (cardType === "daily" && dailyParams) {
@@ -142,8 +175,11 @@ export function CardPreviewModal({
     if (cardType === "weekly" && weeklyParams) {
       return buildWeeklyOgUrl(weeklyParams, theme, showRoi);
     }
+    if (cardType === "monthly" && monthlyParams) {
+      return buildMonthlyOgUrl(monthlyParams, theme, showRoi);
+    }
     return "";
-  }, [cardType, dailyParams, weeklyParams, theme, showRoi]);
+  }, [cardType, dailyParams, weeklyParams, monthlyParams, theme, showRoi]);
 
   const imgSrc = useMemo(() => {
     if (!ogUrl) return "";
@@ -158,8 +194,11 @@ export function CardPreviewModal({
     if (cardType === "weekly" && weeklyParams) {
       return `pnlcard-weekly-${weeklyParams.range.replace(/\s/g, "-")}.png`;
     }
+    if (cardType === "monthly" && monthlyParams) {
+      return `pnlcard-monthly-${monthlyParams.month.replace(/\s/g, "-")}.png`;
+    }
     return "pnlcard.png";
-  }, [cardType, dailyParams, weeklyParams]);
+  }, [cardType, dailyParams, weeklyParams, monthlyParams]);
 
   const handleDownload = useCallback(async () => {
     if (!ogUrl) return;
@@ -187,11 +226,17 @@ export function CardPreviewModal({
 
   const isReady =
     (cardType === "daily" && dailyParams != null) ||
-    (cardType === "weekly" && weeklyParams != null);
+    (cardType === "weekly" && weeklyParams != null) ||
+    (cardType === "monthly" && monthlyParams != null);
 
   if (!isReady) return null;
 
-  const title = cardType === "daily" ? "Daily Card" : "Weekly Card";
+  const title =
+    cardType === "daily"
+      ? "Daily Card"
+      : cardType === "weekly"
+        ? "Weekly Card"
+        : "Monthly Card";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

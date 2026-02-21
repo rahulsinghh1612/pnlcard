@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { LogTradeButton } from "@/components/dashboard/log-trade-button";
 import { RecentEntries } from "@/components/dashboard/recent-entries";
 import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Sparkles, ArrowRight, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
+
+import {
+  format,
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  addDays,
+} from "date-fns";
 
 type Trade = {
   id: string;
@@ -62,8 +72,13 @@ export function DashboardContent({
 
   const [cardPreviewOpen, setCardPreviewOpen] = useState(false);
   const [cardPreviewTrade, setCardPreviewTrade] = useState<Trade | null>(null);
-  const [cardPreviewType, setCardPreviewType] = useState<"daily" | "weekly">("daily");
+  const [cardPreviewType, setCardPreviewType] = useState<"daily" | "weekly" | "monthly">("daily");
   const [cardPreviewWeekMonday, setCardPreviewWeekMonday] = useState<string | null>(null);
+  const [cardPreviewMonthDate, setCardPreviewMonthDate] = useState<string | null>(null);
+
+  const [dailyIdx, setDailyIdx] = useState(0);
+  const [weeklyIdx, setWeeklyIdx] = useState(0);
+  const [monthlyIdx, setMonthlyIdx] = useState(0);
 
   const hasTrades = trades.length > 0;
   const pnlPositive = monthPnl >= 0;
@@ -75,6 +90,55 @@ export function DashboardContent({
   const heroGradient = pnlPositive
     ? `linear-gradient(135deg, rgba(16,185,129,${intensity}) 0%, rgba(255,255,255,0) 60%)`
     : `linear-gradient(135deg, rgba(239,68,68,${intensity}) 0%, rgba(255,255,255,0) 60%)`;
+
+  // Compute chip data for the Generate Cards section
+  const getFinalResult = (t: Trade) =>
+    t.charges != null ? t.net_pnl - t.charges : t.net_pnl;
+
+  const dailyChips = useMemo(() =>
+    trades.map((t) => ({
+      trade: t,
+      label: format(parseISO(t.trade_date), "MMM d"),
+      pnl: getFinalResult(t),
+    })),
+    [trades]
+  );
+
+  const weeklyChips = useMemo(() => {
+    const weekMap = new Map<string, { mondayStr: string; label: string; pnl: number; count: number }>();
+    for (const t of trades) {
+      const d = parseISO(t.trade_date);
+      const monday = startOfWeek(d, { weekStartsOn: 1 });
+      const mondayStr = format(monday, "yyyy-MM-dd");
+      if (!weekMap.has(mondayStr)) {
+        const sunday = addDays(monday, 6);
+        const label = `${format(monday, "d")}–${format(sunday, "d MMM")}`;
+        weekMap.set(mondayStr, { mondayStr, label, pnl: 0, count: 0 });
+      }
+      const entry = weekMap.get(mondayStr)!;
+      entry.pnl += getFinalResult(t);
+      entry.count += 1;
+    }
+    return Array.from(weekMap.values()).sort((a, b) => b.mondayStr.localeCompare(a.mondayStr));
+  }, [trades]);
+
+  const monthlyChips = useMemo(() => {
+    const monthMap = new Map<string, { dateStr: string; label: string; pnl: number; count: number }>();
+    for (const t of trades) {
+      const d = parseISO(t.trade_date);
+      const ms = startOfMonth(d);
+      const key = format(ms, "yyyy-MM");
+      if (!monthMap.has(key)) {
+        const dateStr = format(ms, "yyyy-MM-dd");
+        const label = format(ms, "MMM yyyy");
+        monthMap.set(key, { dateStr, label, pnl: 0, count: 0 });
+      }
+      const entry = monthMap.get(key)!;
+      entry.pnl += getFinalResult(t);
+      entry.count += 1;
+    }
+    return Array.from(monthMap.values()).sort((a, b) => b.dateStr.localeCompare(a.dateStr));
+  }, [trades]);
 
   const openCreateModal = (defaultDate?: string) => {
     setModalExistingTrade(null);
@@ -93,8 +157,35 @@ export function DashboardContent({
       <div className="space-y-6">
         {/* Hero section: greeting + month P&L */}
         <div
-          className="rounded-2xl border border-border p-6 sm:p-8 shadow-sm transition-all duration-500"
+          className={`rounded-2xl border p-6 sm:p-8 shadow-sm transition-all duration-300 group ${
+            hasTrades
+              ? "cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.995] border-border hover:border-primary/20"
+              : "border-border"
+          }`}
           style={{ background: `${heroGradient}, linear-gradient(135deg, #fff 0%, #f8fafc 100%)` }}
+          onClick={() => {
+            if (!hasTrades) return;
+            const todayStr = format(new Date(), "yyyy-MM-dd");
+            setCardPreviewType("monthly");
+            setCardPreviewTrade(null);
+            setCardPreviewWeekMonday(null);
+            setCardPreviewMonthDate(todayStr);
+            setCardPreviewOpen(true);
+          }}
+          role={hasTrades ? "button" : undefined}
+          tabIndex={hasTrades ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (!hasTrades) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              const todayStr = format(new Date(), "yyyy-MM-dd");
+              setCardPreviewType("monthly");
+              setCardPreviewTrade(null);
+              setCardPreviewWeekMonday(null);
+              setCardPreviewMonthDate(todayStr);
+              setCardPreviewOpen(true);
+            }
+          }}
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -115,9 +206,21 @@ export function DashboardContent({
               >
                 {formatPnl(monthPnl, currency)}
               </p>
+              {hasTrades && (
+                <span
+                  className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-all duration-300 opacity-60 group-hover:opacity-100 ${
+                    pnlPositive
+                      ? "bg-emerald-100 text-emerald-700 group-hover:bg-emerald-200"
+                      : "bg-red-100 text-red-700 group-hover:bg-red-200"
+                  }`}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Generate Monthly Card
+                  <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </span>
+              )}
             </div>
           </div>
-
         </div>
 
         {/* Log trade CTA */}
@@ -171,6 +274,7 @@ export function DashboardContent({
                     setCardPreviewType("daily");
                     setCardPreviewTrade(fullTrade);
                     setCardPreviewWeekMonday(null);
+                    setCardPreviewMonthDate(null);
                     setCardPreviewOpen(true);
                     return;
                   }
@@ -181,9 +285,214 @@ export function DashboardContent({
                 setCardPreviewType("weekly");
                 setCardPreviewTrade(null);
                 setCardPreviewWeekMonday(mondayStr);
+                setCardPreviewMonthDate(null);
+                setCardPreviewOpen(true);
+              }}
+              onMonthClick={(monthDateStr) => {
+                setCardPreviewType("monthly");
+                setCardPreviewTrade(null);
+                setCardPreviewWeekMonday(null);
+                setCardPreviewMonthDate(monthDateStr);
                 setCardPreviewOpen(true);
               }}
             />
+
+            {/* Generate Cards section */}
+            <div>
+              <h2 className="text-sm font-medium text-foreground mb-3">
+                Generate cards
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Daily card */}
+                {(() => {
+                  const current = dailyChips[dailyIdx];
+                  const hasPrev = dailyIdx < dailyChips.length - 1;
+                  const hasNext = dailyIdx > 0;
+                  return (
+                    <div
+                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-4 transition-all duration-200 ${
+                        current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
+                      }`}
+                      onClick={() => {
+                        if (!current) return;
+                        setCardPreviewType("daily");
+                        setCardPreviewTrade(current.trade);
+                        setCardPreviewWeekMonday(null);
+                        setCardPreviewMonthDate(null);
+                        setCardPreviewOpen(true);
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                          <CalendarDays className="h-4 w-4" />
+                        </div>
+                        {dailyChips.length > 1 && (
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              disabled={!hasPrev}
+                              onClick={(e) => { e.stopPropagation(); setDailyIdx((i) => i + 1); }}
+                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!hasNext}
+                              onClick={(e) => { e.stopPropagation(); setDailyIdx((i) => i - 1); }}
+                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Daily
+                      </p>
+                      {current ? (
+                        <>
+                          <p className={`mt-1 text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {formatPnl(current.pnl, currency)}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {format(parseISO(current.trade.trade_date), "EEE, MMM d")}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="mt-1 text-sm text-muted-foreground">No trades yet</p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Weekly card */}
+                {(() => {
+                  const current = weeklyChips[weeklyIdx];
+                  const hasPrev = weeklyIdx < weeklyChips.length - 1;
+                  const hasNext = weeklyIdx > 0;
+                  return (
+                    <div
+                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-4 transition-all duration-200 ${
+                        current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
+                      }`}
+                      onClick={() => {
+                        if (!current) return;
+                        setCardPreviewType("weekly");
+                        setCardPreviewTrade(null);
+                        setCardPreviewWeekMonday(current.mondayStr);
+                        setCardPreviewMonthDate(null);
+                        setCardPreviewOpen(true);
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400">
+                          <CalendarRange className="h-4 w-4" />
+                        </div>
+                        {weeklyChips.length > 1 && (
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              disabled={!hasPrev}
+                              onClick={(e) => { e.stopPropagation(); setWeeklyIdx((i) => i + 1); }}
+                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!hasNext}
+                              onClick={(e) => { e.stopPropagation(); setWeeklyIdx((i) => i - 1); }}
+                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Weekly
+                      </p>
+                      {current ? (
+                        <>
+                          <p className={`mt-1 text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {formatPnl(current.pnl, currency)}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {current.label}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="mt-1 text-sm text-muted-foreground">No trades this week</p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Monthly card */}
+                {(() => {
+                  const current = monthlyChips[monthlyIdx];
+                  const hasPrev = monthlyIdx < monthlyChips.length - 1;
+                  const hasNext = monthlyIdx > 0;
+                  return (
+                    <div
+                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-4 transition-all duration-200 ${
+                        current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
+                      }`}
+                      onClick={() => {
+                        if (!current) return;
+                        setCardPreviewType("monthly");
+                        setCardPreviewTrade(null);
+                        setCardPreviewWeekMonday(null);
+                        setCardPreviewMonthDate(current.dateStr);
+                        setCardPreviewOpen(true);
+                      }}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                          <CalendarCheck className="h-4 w-4" />
+                        </div>
+                        {monthlyChips.length > 1 && (
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              disabled={!hasPrev}
+                              onClick={(e) => { e.stopPropagation(); setMonthlyIdx((i) => i + 1); }}
+                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ChevronLeft className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!hasNext}
+                              onClick={(e) => { e.stopPropagation(); setMonthlyIdx((i) => i - 1); }}
+                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Monthly
+                      </p>
+                      {current ? (
+                        <>
+                          <p className={`mt-1 text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {formatPnl(current.pnl, currency)}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {current.label}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="mt-1 text-sm text-muted-foreground">No trades this month</p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
 
             <RecentEntries
               trades={trades.map((t) => ({
@@ -194,6 +503,15 @@ export function DashboardContent({
                 num_trades: t.num_trades,
               }))}
               currency={currency}
+              onGenerateCard={(tradeId) => {
+                const trade = trades.find((t) => t.id === tradeId);
+                if (!trade) return;
+                setCardPreviewType("daily");
+                setCardPreviewTrade(trade);
+                setCardPreviewWeekMonday(null);
+                setCardPreviewMonthDate(null);
+                setCardPreviewOpen(true);
+              }}
             />
           </>
         )}
@@ -216,6 +534,7 @@ export function DashboardContent({
         cardType={cardPreviewType}
         trade={cardPreviewTrade}
         weekMondayStr={cardPreviewWeekMonday}
+        monthDateStr={cardPreviewMonthDate}
         allTrades={trades}
         profile={{
           x_handle: xHandle,

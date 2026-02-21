@@ -29,6 +29,7 @@ type CalendarHeatmapProps = {
   currency: string;
   onDayClick: (date: string, existingTrade: TradeForHeatmap | null) => void;
   onWeekClick?: (mondayStr: string) => void;
+  onMonthClick?: (monthDateStr: string) => void;
 };
 
 function getFinalResult(t: TradeForHeatmap): number {
@@ -50,6 +51,7 @@ export function CalendarHeatmap({
   currency,
   onDayClick,
   onWeekClick,
+  onMonthClick,
 }: CalendarHeatmapProps) {
   const [viewDate, setViewDate] = useState(new Date());
   const [showWeekly, setShowWeekly] = useState(true);
@@ -189,9 +191,23 @@ export function CalendarHeatmap({
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="min-w-[140px] text-center text-sm font-semibold text-foreground">
-          {format(viewDate, "MMMM yyyy")}
-        </span>
+        {monthTrades.length > 0 && onMonthClick ? (
+          <button
+            type="button"
+            onClick={() => {
+              const dateInMonth = format(monthStart, "yyyy-MM-dd");
+              onMonthClick(dateInMonth);
+            }}
+            className="min-w-[140px] text-center text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer hover:underline underline-offset-4 decoration-primary/40"
+            title="Generate monthly card"
+          >
+            {format(viewDate, "MMMM yyyy")}
+          </button>
+        ) : (
+          <span className="min-w-[140px] text-center text-sm font-semibold text-foreground">
+            {format(viewDate, "MMMM yyyy")}
+          </span>
+        )}
         <Button
           variant="ghost"
           size="icon"
