@@ -12,14 +12,12 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-sm">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-foreground font-semibold mb-8"
-        >
-          <div className="w-8 h-8 rounded-lg bg-logo flex items-center justify-center text-white text-sm font-bold shadow-md">
-            P
+        <Link href="/" className="inline-block mb-8">
+          <div className="logo-capsule px-4 py-1.5 text-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/logo-graph.png" alt="" className="h-3.5 w-3.5 object-contain" />
+            Pnl Card
           </div>
-          PNLCard
         </Link>
 
         <Card className="p-8">

@@ -33,8 +33,10 @@ export default async function OnboardingPage() {
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="inline-flex w-12 h-12 rounded-xl bg-logo items-center justify-center text-white text-xl font-bold mb-4 shadow-md">
-            P
+          <div className="logo-capsule px-5 py-2 text-lg mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/logo-graph.png" alt="" className="h-4 w-4 object-contain" />
+            Pnl Card
           </div>
           <h1 className="text-2xl font-semibold text-foreground">
             Set up your profile

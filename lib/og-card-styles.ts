@@ -22,6 +22,9 @@ export type OgStyles = {
   divider: string;
   cardBorder: string;
   lbl: Record<string, unknown>;
+  logoBg: string;
+  logoText: string;
+  logoBorder: string;
 };
 
 export function getOgStyles(isDark: boolean, isProfit: boolean): OgStyles {
@@ -80,6 +83,9 @@ export function getOgStyles(isDark: boolean, isProfit: boolean): OgStyles {
       ? "rgba(239,68,68,0.85)"
       : "#b91c1c";
   const dateColor = isDark ? "#a1a1aa" : "#3f3f46";
+  const logoBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)";
+  const logoText = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)";
+  const logoBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
   /** Scaled from original 10px at 370px → ~29px at 1080px */
   const lbl = {
     display: "flex" as const,
@@ -105,6 +111,9 @@ export function getOgStyles(isDark: boolean, isProfit: boolean): OgStyles {
     divider,
     cardBorder,
     lbl,
+    logoBg,
+    logoText,
+    logoBorder,
   };
 }
 

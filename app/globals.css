@@ -129,6 +129,9 @@
   .bg-logo {
     @apply bg-gradient-to-br from-zinc-900 to-zinc-700;
   }
+  .logo-capsule {
+    @apply inline-flex items-center gap-1.5 rounded-full font-bold tracking-tight border border-border bg-white text-foreground;
+  }
   /* Hide number input spinners for cleaner look */
   .no-spinner::-webkit-inner-spin-button,
   .no-spinner::-webkit-outer-spin-button {
@@ -148,6 +151,18 @@
   .ticker-scroll {
     animation: ticker-slide 30s linear infinite;
   }
+  .ticker-scroll-reverse {
+    animation: ticker-slide-reverse 30s linear infinite;
+  }
+  .ticker-landing-1 {
+    animation: ticker-slide 35s linear infinite;
+  }
+  .ticker-landing-2 {
+    animation: ticker-slide-reverse 28s linear infinite;
+  }
+  .ticker-landing-3 {
+    animation: ticker-slide 40s linear infinite;
+  }
 }
 
 @keyframes ticker-slide {
@@ -157,4 +172,40 @@
   100% {
     transform: translateX(-50%);
   }
+}
+
+@keyframes ticker-slide-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out both;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fade-in-up 0.6s ease-out 0.1s both;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fade-in-up 0.6s ease-out 0.2s both;
+}
+
+.animate-fade-in-up-delay-3 {
+  animation: fade-in-up 0.6s ease-out 0.3s both;
 }
