@@ -127,17 +127,6 @@ export async function GET(request: Request) {
     if (hasRoi) {
       mainChildren.push(
         <div
-          key="divider"
-          style={{
-            display: "flex",
-            height: Math.round(1 * S),
-            background: s.divider,
-            marginBottom: sectionGap,
-          }}
-        />
-      );
-      mainChildren.push(
-        <div
           key="roi-label"
           style={{
             display: "flex",

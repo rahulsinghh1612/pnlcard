@@ -130,7 +130,21 @@
     @apply bg-gradient-to-br from-zinc-900 to-zinc-700;
   }
   .logo-capsule {
-    @apply inline-flex items-center gap-1.5 rounded-full font-bold tracking-tight border border-border bg-white text-foreground;
+    @apply inline-flex items-center gap-1.5 rounded-full font-bold tracking-tight border border-border bg-white text-foreground transition-all duration-500;
+  }
+  .logo-capsule:hover {
+    background: linear-gradient(
+      120deg,
+      rgba(74, 222, 128, 0.15),
+      rgba(134, 239, 172, 0.25),
+      rgba(252, 165, 165, 0.25),
+      rgba(248, 113, 113, 0.15),
+      rgba(74, 222, 128, 0.15)
+    );
+    background-size: 300% 100%;
+    animation: gradient-flow 4s ease infinite;
+    border-color: rgba(74, 222, 128, 0.35);
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.1), 0 0 12px rgba(248, 113, 113, 0.1);
   }
   /* Hide number input spinners for cleaner look */
   .no-spinner::-webkit-inner-spin-button,
@@ -208,4 +222,54 @@
 
 .animate-fade-in-up-delay-3 {
   animation: fade-in-up 0.6s ease-out 0.3s both;
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.btn-gradient-flow {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.5s ease;
+}
+.btn-gradient-flow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    rgba(74, 222, 128, 0.2),
+    rgba(134, 239, 172, 0.35),
+    rgba(252, 165, 165, 0.35),
+    rgba(248, 113, 113, 0.2),
+    rgba(74, 222, 128, 0.2)
+  );
+  background-size: 300% 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+}
+.btn-gradient-flow:hover::before {
+  opacity: 1;
+  animation: gradient-flow 4s ease infinite;
+}
+.btn-gradient-flow:hover {
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.12), 0 4px 20px rgba(248, 113, 113, 0.12);
+  color: #1e293b;
+  background: transparent;
+}
+.btn-gradient-flow > * {
+  position: relative;
+  z-index: 1;
 }

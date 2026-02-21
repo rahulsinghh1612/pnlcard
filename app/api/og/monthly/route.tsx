@@ -381,16 +381,6 @@ export async function GET(request: Request) {
               </div>
             </div>
 
-            {/* Divider */}
-            <div
-              style={{
-                display: "flex",
-                height: Math.round(1 * S),
-                background: s.divider,
-                marginBottom: Math.round(8 * S),
-              }}
-            />
-
             {/* Hero numbers */}
             <div style={{ display: "flex", flexDirection: "column" }}>
               {heroChildren}

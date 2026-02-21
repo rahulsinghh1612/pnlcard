@@ -37,55 +37,55 @@ export function getOgStyles(isDark: boolean, isProfit: boolean): OgStyles {
       : "#dc2626";
   const accentDim = isProfit
     ? isDark
-      ? "rgba(34,197,94,0.5)"
+      ? "rgba(34,197,94,0.55)"
       : "rgba(22,163,74,0.3)"
     : isDark
-      ? "rgba(239,68,68,0.5)"
+      ? "rgba(239,68,68,0.55)"
       : "rgba(220,38,38,0.3)";
   const subtleGlow = isProfit
     ? isDark
-      ? "rgba(34,197,94,0.08)"
+      ? "rgba(34,197,94,0.14)"
       : "rgba(22,163,74,0.06)"
     : isDark
-      ? "rgba(239,68,68,0.08)"
+      ? "rgba(239,68,68,0.14)"
       : "rgba(220,38,38,0.06)";
   const pillBg = isProfit
     ? isDark
-      ? "rgba(34,197,94,0.06)"
+      ? "rgba(34,197,94,0.10)"
       : "rgba(22,163,74,0.08)"
     : isDark
-      ? "rgba(239,68,68,0.06)"
+      ? "rgba(239,68,68,0.10)"
       : "rgba(220,38,38,0.08)";
   const pillBorder = isProfit
     ? isDark
-      ? "rgba(34,197,94,0.12)"
+      ? "rgba(34,197,94,0.20)"
       : "rgba(22,163,74,0.14)"
     : isDark
-      ? "rgba(239,68,68,0.12)"
+      ? "rgba(239,68,68,0.20)"
       : "rgba(220,38,38,0.14)";
   const bg = isDark
     ? isProfit
-      ? "linear-gradient(155deg, #09090b 0%, #071a0e 35%, #0a2a14 65%, #09090b 100%)"
-      : "linear-gradient(155deg, #09090b 0%, #1a0708 35%, #2a0a0d 65%, #09090b 100%)"
+      ? "linear-gradient(155deg, #0d0f13 0%, #0b2618 26%, #104a28 50%, #0b2618 74%, #0d0f13 100%)"
+      : "linear-gradient(155deg, #0d0f13 0%, #260b10 26%, #4a1019 50%, #260b10 74%, #0d0f13 100%)"
     : isProfit
       ? "linear-gradient(155deg, #fafcfb 0%, #e8faf0 35%, #c8f4d4 60%, #a7e9b8 100%)"
       : "linear-gradient(155deg, #fafcfb 0%, #fef2f2 35%, #fde2e4 65%, #fafcfb 100%)";
-  const text1 = isDark ? "#e4e4e7" : "#18181b";
-  const text3 = isDark ? "#71717a" : "#52525b";
-  const labelColor = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
-  const divider = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-  const cardBorder = isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)";
+  const text1 = isDark ? "#ececef" : "#18181b";
+  const text3 = isDark ? "#8a8a94" : "#52525b";
+  const labelColor = isDark ? "rgba(255,255,255,0.50)" : "rgba(0,0,0,0.4)";
+  const divider = isDark ? "rgba(255,255,255,0.09)" : "rgba(0,0,0,0.06)";
+  const cardBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
   const pillText = isProfit
     ? isDark
-      ? "rgba(34,197,94,0.85)"
+      ? "rgba(34,197,94,0.90)"
       : "#15803d"
     : isDark
-      ? "rgba(239,68,68,0.85)"
+      ? "rgba(239,68,68,0.90)"
       : "#b91c1c";
-  const dateColor = isDark ? "#a1a1aa" : "#3f3f46";
-  const logoBg = isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.55)";
-  const logoText = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)";
-  const logoBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
+  const dateColor = isDark ? "#b4b4bc" : "#3f3f46";
+  const logoBg = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.55)";
+  const logoText = isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)";
+  const logoBorder = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
   /** Scaled from original 10px at 370px → ~29px at 1080px */
   const lbl = {
     display: "flex" as const,

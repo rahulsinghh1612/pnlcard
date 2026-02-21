@@ -1,0 +1,202 @@
+{
+  "trades": [
+    {
+      "id": "496ad102-f9e5-483b-a4a3-b296a578f202",
+      "trade_date": "2026-01-01",
+      "net_pnl": -3000,
+      "charges": 150,
+      "num_trades": 2,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "e9632507-0c4b-4a92-877c-63c1fee173e3",
+      "trade_date": "2026-01-02",
+      "net_pnl": 2000,
+      "charges": 200,
+      "num_trades": 2,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "ede5e3b8-e638-44cb-9a44-d69289aae150",
+      "trade_date": "2026-01-03",
+      "net_pnl": -1300,
+      "charges": 200,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "c5fa0ac8-bb1d-4b8c-851a-4e626d7853cb",
+      "trade_date": "2026-01-05",
+      "net_pnl": 3650,
+      "charges": 250,
+      "num_trades": 2,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "9d51f767-8e8c-412c-b918-ec6b0abeb4c0",
+      "trade_date": "2026-01-06",
+      "net_pnl": 3777,
+      "charges": 150,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "b93ce240-d4ad-4dcd-a973-18716efe0c3d",
+      "trade_date": "2026-01-07",
+      "net_pnl": -500,
+      "charges": 50,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "55d1890b-9332-4ad7-af37-9ac182606b59",
+      "trade_date": "2026-01-08",
+      "net_pnl": 1884,
+      "charges": 345,
+      "num_trades": 3,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "08af031a-ada9-4407-b33f-4fc7d1d0b694",
+      "trade_date": "2026-01-09",
+      "net_pnl": 1450,
+      "charges": 330,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "a356bd1e-15b3-4d1c-b778-a2188fa10177",
+      "trade_date": "2026-01-10",
+      "net_pnl": -1600,
+      "charges": 200,
+      "num_trades": 2,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "9a31bf03-81d2-4c9b-8d47-ffaf22e3745f",
+      "trade_date": "2026-01-13",
+      "net_pnl": -1200,
+      "charges": 300,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "74901a49-d2f5-4e67-9fdd-6ccc0197e4ea",
+      "trade_date": "2026-01-14",
+      "net_pnl": 3100,
+      "charges": 90,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "8f112185-58f2-4ad2-979a-329dde8d74e4",
+      "trade_date": "2026-01-15",
+      "net_pnl": 2500,
+      "charges": 250,
+      "num_trades": 2,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "b7ba3d5d-bfb9-4572-a691-c754743d498e",
+      "trade_date": "2026-01-16",
+      "net_pnl": 3000,
+      "charges": 300,
+      "num_trades": 3,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "ebb69db6-387c-4dfa-ba42-2257709326fb",
+      "trade_date": "2026-01-17",
+      "net_pnl": -1000,
+      "charges": 100,
+      "num_trades": 2,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "aed1a3f2-5b9d-4b49-a435-536529aa3ec5",
+      "trade_date": "2026-01-20",
+      "net_pnl": 1400,
+      "charges": 150,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "796a382b-12e9-4a4a-aee4-820f457603b7",
+      "trade_date": "2026-01-21",
+      "net_pnl": -3000,
+      "charges": 200,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "23891621-9114-44d5-9879-1a31b07c1008",
+      "trade_date": "2026-01-22",
+      "net_pnl": 1100,
+      "charges": 200,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "9efa8f9f-a240-45d7-8648-6708c930535f",
+      "trade_date": "2026-01-23",
+      "net_pnl": -1200,
+      "charges": 200,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "098a00cd-cd49-4519-a57e-bbd3b00fb687",
+      "trade_date": "2026-01-24",
+      "net_pnl": 2000,
+      "charges": 150,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "c8c4187c-809e-47ee-b84c-9ca8ac8f5121",
+      "trade_date": "2026-01-27",
+      "net_pnl": 2000,
+      "charges": 200,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "8e681ccc-53c1-4477-984b-7ab3b25a2a72",
+      "trade_date": "2026-01-28",
+      "net_pnl": -1300,
+      "charges": 130,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "e40bf655-b633-4b02-bc15-1d3f3946d16d",
+      "trade_date": "2026-01-29",
+      "net_pnl": -2000,
+      "charges": 200,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "ee091c4c-fa37-4255-b68c-2f42460d2522",
+      "trade_date": "2026-01-30",
+      "net_pnl": 2400,
+      "charges": 240,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    },
+    {
+      "id": "d6eacdb1-6c7c-484f-bfc6-06b44f89fcfe",
+      "trade_date": "2026-01-31",
+      "net_pnl": 1000,
+      "charges": 100,
+      "num_trades": 1,
+      "capital_deployed": 1000000
+    }
+  ],
+  "profile": {
+    "trading_capital": 1000000,
+    "x_handle": null,
+    "currency": "INR"
+  },
+  "error": null
+}
