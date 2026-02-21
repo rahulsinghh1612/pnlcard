@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   TrendingUp,
@@ -9,7 +9,6 @@ import {
   Sparkles,
   Share2,
   Check,
-  ArrowRight,
   Sun,
   Moon,
 } from "lucide-react";
@@ -136,64 +135,100 @@ function TickerChip({ date, pnl }: { date: string; pnl: number }) {
 }
 
 // ─── Candlestick data for animated chart ─────────────────────────
-// Each candle: open, close, high, low (relative 0-100 scale)
+// Realistic price action with trends, dojis, big moves, and varying wicks.
+// Values on a shared 0-100 price scale so candles move up and down together.
 const CANDLES = [
-  { o: 40, c: 65, h: 72, l: 35 },
-  { o: 65, c: 55, h: 70, l: 48 },
-  { o: 55, c: 75, h: 80, l: 50 },
-  { o: 75, c: 60, h: 82, l: 55 },
-  { o: 60, c: 78, h: 85, l: 55 },
-  { o: 78, c: 68, h: 83, l: 62 },
-  { o: 68, c: 82, h: 90, l: 65 },
-  { o: 82, c: 70, h: 88, l: 65 },
-  { o: 70, c: 85, h: 92, l: 68 },
-  { o: 85, c: 72, h: 90, l: 68 },
-  { o: 72, c: 58, h: 78, l: 52 },
-  { o: 58, c: 45, h: 62, l: 40 },
-  { o: 45, c: 62, h: 68, l: 40 },
-  { o: 62, c: 50, h: 66, l: 44 },
-  { o: 50, c: 70, h: 76, l: 45 },
-  { o: 70, c: 80, h: 88, l: 65 },
-  { o: 80, c: 65, h: 85, l: 60 },
-  { o: 65, c: 55, h: 70, l: 50 },
-  { o: 55, c: 72, h: 78, l: 50 },
-  { o: 72, c: 60, h: 76, l: 55 },
-  { o: 60, c: 48, h: 65, l: 42 },
-  { o: 48, c: 68, h: 74, l: 44 },
-  { o: 68, c: 78, h: 84, l: 62 },
-  { o: 78, c: 62, h: 82, l: 58 },
+  // Rally phase
+  { o: 30, c: 38, h: 40, l: 28 },
+  { o: 38, c: 36, h: 41, l: 35 },
+  { o: 37, c: 48, h: 50, l: 36 },
+  { o: 48, c: 46, h: 52, l: 44 },
+  { o: 46, c: 55, h: 58, l: 45 },
+  { o: 55, c: 62, h: 65, l: 53 },
+  { o: 62, c: 60, h: 66, l: 58 },
+  { o: 60, c: 70, h: 74, l: 58 },
+  { o: 70, c: 68, h: 76, l: 65 },
+  { o: 69, c: 78, h: 82, l: 67 },
+  // Top / reversal
+  { o: 78, c: 80, h: 88, l: 76 },
+  { o: 80, c: 79, h: 85, l: 77 },
+  { o: 79, c: 72, h: 82, l: 70 },
+  // Sell-off
+  { o: 72, c: 60, h: 74, l: 58 },
+  { o: 60, c: 55, h: 63, l: 52 },
+  { o: 55, c: 50, h: 58, l: 48 },
+  { o: 50, c: 52, h: 55, l: 46 },
+  { o: 52, c: 42, h: 54, l: 40 },
+  { o: 42, c: 38, h: 45, l: 35 },
+  // Bottom / bounce
+  { o: 38, c: 35, h: 40, l: 30 },
+  { o: 35, c: 36, h: 38, l: 28 },
+  { o: 36, c: 44, h: 46, l: 34 },
+  { o: 44, c: 42, h: 48, l: 40 },
+  { o: 42, c: 50, h: 52, l: 40 },
+  // Second rally
+  { o: 50, c: 58, h: 60, l: 48 },
+  { o: 58, c: 56, h: 62, l: 54 },
+  { o: 56, c: 65, h: 68, l: 54 },
+  { o: 65, c: 63, h: 70, l: 60 },
+  { o: 63, c: 72, h: 76, l: 62 },
+  { o: 72, c: 70, h: 78, l: 68 },
+  // Consolidation
+  { o: 70, c: 68, h: 73, l: 66 },
+  { o: 68, c: 70, h: 72, l: 66 },
+  { o: 70, c: 66, h: 72, l: 64 },
+  { o: 66, c: 62, h: 68, l: 60 },
+  { o: 62, c: 58, h: 64, l: 56 },
+  { o: 58, c: 52, h: 60, l: 50 },
+  { o: 52, c: 48, h: 54, l: 45 },
+  { o: 48, c: 44, h: 50, l: 42 },
+  { o: 44, c: 40, h: 46, l: 38 },
+  { o: 40, c: 35, h: 42, l: 32 },
 ];
 
-function Candlestick({ candle, index }: { candle: typeof CANDLES[0]; index: number }) {
+// Global scale: all candles share the same Y-axis
+const CHART_H = 120;
+const GLOBAL_MIN = Math.min(...CANDLES.map((c) => c.l));
+const GLOBAL_MAX = Math.max(...CANDLES.map((c) => c.h));
+const GLOBAL_RANGE = GLOBAL_MAX - GLOBAL_MIN || 1;
+
+function priceToY(price: number): number {
+  return ((GLOBAL_MAX - price) / GLOBAL_RANGE) * CHART_H;
+}
+
+function Candlestick({ candle }: { candle: typeof CANDLES[0] }) {
   const bullish = candle.c >= candle.o;
-  const bodyTop = 100 - Math.max(candle.o, candle.c);
-  const bodyHeight = Math.abs(candle.c - candle.o) || 1;
-  const wickTop = 100 - candle.h;
-  const wickHeight = candle.h - candle.l;
   const color = bullish ? "#10b981" : "#ef4444";
-  const bgColor = bullish ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
+
+  const highY = priceToY(candle.h);
+  const lowY = priceToY(candle.l);
+  const bodyTopY = priceToY(Math.max(candle.o, candle.c));
+  const bodyBotY = priceToY(Math.min(candle.o, candle.c));
+  const bodyH = Math.max(bodyBotY - bodyTopY, 2);
 
   return (
-    <div className="relative shrink-0" style={{ width: 18, height: 80 }}>
-      {/* Wick */}
+    <div className="relative shrink-0" style={{ width: 14, height: CHART_H }}>
+      {/* Wick: thin line from high to low */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 rounded-full"
+        className="absolute left-1/2 -translate-x-1/2"
         style={{
-          top: `${wickTop * 0.8}%`,
-          height: `${wickHeight * 0.8}%`,
-          width: 2,
+          top: highY,
+          height: lowY - highY,
+          width: 1.5,
           backgroundColor: color,
+          borderRadius: 1,
         }}
       />
-      {/* Body */}
+      {/* Body: rectangle from open to close */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 rounded-sm"
+        className="absolute left-1/2 -translate-x-1/2"
         style={{
-          top: `${bodyTop * 0.8}%`,
-          height: `${Math.max(bodyHeight * 0.8, 3)}%`,
-          width: 10,
-          backgroundColor: bgColor,
+          top: bodyTopY,
+          height: bodyH,
+          width: 8,
+          backgroundColor: bullish ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)",
           border: `1.5px solid ${color}`,
+          borderRadius: 2,
         }}
       />
     </div>
@@ -237,6 +272,11 @@ export default function LandingPage() {
   const howItWorks = useInView();
   const gallery = useInView();
   const pricing = useInView();
+
+  // Always start from top when landing page loads (prevents scroll restoration to pricing, etc.)
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleHeroClick = (index: number) => {
     heroPositionRef.current = index;
@@ -308,6 +348,12 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-6">
             <a
+              href="#how-it-works"
+              className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              See how it works
+            </a>
+            <a
               href="#gallery"
               className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -346,26 +392,13 @@ export default function LandingPage() {
                 shareable recap cards for X and Instagram.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <a
-                  href="#how-it-works"
-                  className="group inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-base font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  See how it works
-                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-emerald-500" />
-                </a>
                 <Link
                   href="/login"
-                  className="btn-gradient-flow group relative inline-flex items-center justify-center gap-2.5 rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
+                  className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
                 >
-                  <span className="inline-flex items-center gap-2.5">
-                    Start for Free
-                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                  </span>
+                  <span className="relative z-[1]">Start for Free</span>
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Free forever. No credit card required.
-              </p>
             </div>
 
             {/* Hero card carousel — Earth-style revolving (cards around a column) */}
@@ -604,15 +637,14 @@ export default function LandingPage() {
       <DemoSection />
 
       {/* ── Animated Candlestick Chart ─────────────────────── */}
-      <section className="py-6 overflow-hidden" aria-hidden="true">
-        <div className="overflow-hidden">
-          <div className="animate-candlestick-scroll flex items-end gap-1" style={{ width: "200%" }}>
-            {/* Two copies for seamless loop */}
-            {[...CANDLES, ...CANDLES].map((c, i) => (
-              <Candlestick key={`candle-${i}`} candle={c} index={i} />
-            ))}
-            {[...CANDLES, ...CANDLES].map((c, i) => (
-              <Candlestick key={`candle-b-${i}`} candle={c} index={i} />
+      <section className="pt-12 pb-8 overflow-hidden" aria-hidden="true">
+        <div className="overflow-hidden w-full">
+          <div
+            className="animate-candlestick-scroll flex items-end gap-px flex-nowrap"
+            style={{ width: "400%", minWidth: "max-content" }}
+          >
+            {[...CANDLES, ...CANDLES, ...CANDLES, ...CANDLES].map((c, i) => (
+              <Candlestick key={`candle-${i}`} candle={c} />
             ))}
           </div>
         </div>
@@ -872,6 +904,7 @@ export default function LandingPage() {
                 {[
                   "Unlimited trade logging",
                   "Daily recap cards",
+                  "PNG download",
                   "Dark + light themes",
                   "PNLCard branding on cards",
                 ].map((f) => (
@@ -903,7 +936,7 @@ export default function LandingPage() {
                 transitionDelay: pricing.visible ? "300ms" : "0ms",
               }}
             >
-              <div className="absolute -top-3.5 left-8 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
                 POPULAR
               </div>
               <h3 className="text-xl font-bold text-foreground">Premium</h3>
@@ -936,7 +969,6 @@ export default function LandingPage() {
                   "Weekly & monthly cards",
                   "Your X handle on cards",
                   "No PNLCard watermark",
-                  "Story format (1080\u00D71920)",
                 ].map((f) => (
                   <li
                     key={f}
@@ -951,7 +983,7 @@ export default function LandingPage() {
                 href="/login"
                 className="btn-gradient-flow group relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
               >
-                <span className="relative z-[1]">Start Free, Upgrade Anytime</span>
+                <span className="relative z-[1]">Upgrade to Premium</span>
               </Link>
               {billingCycle === "monthly" && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -979,18 +1011,12 @@ export default function LandingPage() {
               today.
             </span>
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Free forever. No credit card required.
-          </p>
           <div className="mt-8 flex justify-center">
             <Link
               href="/login"
-              className="btn-gradient-flow group relative inline-flex items-center justify-center gap-2.5 rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
+              className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
             >
-              <span className="inline-flex items-center gap-2.5">
-                Start for Free
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </span>
+              <span className="relative z-[1]">Start for Free</span>
             </Link>
           </div>
         </div>

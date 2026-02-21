@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Download, Pencil, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -200,23 +199,51 @@ export function CardPreviewModal({
     return "pnlcard.png";
   }, [cardType, dailyParams, weeklyParams, monthlyParams]);
 
-  const handleDownload = useCallback(async () => {
-    if (!ogUrl) return;
+  const fetchCardBlob = useCallback(async (): Promise<Blob | null> => {
+    if (!ogUrl) return null;
     try {
       const res = await fetch(ogUrl);
       if (!res.ok) throw new Error("Failed to generate image");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = downloadFilename;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Card downloaded!");
+      return await res.blob();
     } catch {
-      toast.error("Failed to download card");
+      toast.error("Failed to generate card image");
+      return null;
     }
-  }, [ogUrl, downloadFilename]);
+  }, [ogUrl]);
+
+  const handleDownload = useCallback(async () => {
+    const blob = await fetchCardBlob();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = downloadFilename;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Card downloaded!");
+  }, [fetchCardBlob, downloadFilename]);
+
+  const handleShareX = useCallback(async () => {
+    const blob = await fetchCardBlob();
+    if (!blob) return;
+
+    const file = new File([blob], downloadFilename, { type: "image/png" });
+    const shareText = "Check out my PnL Card! #PnLCard #Trading";
+
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ text: shareText, files: [file] });
+        toast.success("Shared successfully!");
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+      }
+    }
+
+    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+    window.open(tweetUrl, "_blank", "noopener,noreferrer");
+    toast.success("Opening X — download the card first to attach it!");
+  }, [fetchCardBlob, downloadFilename]);
 
   const handleEdit = useCallback(() => {
     if (!trade) return;
@@ -249,14 +276,14 @@ export function CardPreviewModal({
 
         {/* Controls */}
         <div className="flex items-center gap-2 px-5 pb-4">
-          {/* Light / Dark toggle */}
-          <div className="flex rounded-lg border border-border p-0.5">
+          {/* Light / Dark pill toggle */}
+          <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
             <button
               onClick={() => setTheme("light")}
-              className={`flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 theme === "light"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Sun className="h-3 w-3" />
@@ -264,10 +291,10 @@ export function CardPreviewModal({
             </button>
             <button
               onClick={() => setTheme("dark")}
-              className={`flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 theme === "dark"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Moon className="h-3 w-3" />
@@ -275,14 +302,14 @@ export function CardPreviewModal({
             </button>
           </div>
 
-          {/* ROI toggle */}
+          {/* ROI pill toggle */}
           {hasRoi && (
             <button
               onClick={() => setShowRoi((v) => !v)}
-              className={`flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
                 showRoi
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-white border-border text-foreground shadow-sm"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
               }`}
             >
               {showRoi ? (
@@ -313,19 +340,39 @@ export function CardPreviewModal({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 px-5 pb-5">
-          <Button onClick={handleDownload} size="sm" className="flex-1">
-            <Download className="mr-1.5 h-3.5 w-3.5" />
-            Download
-          </Button>
+          <button
+            onClick={handleDownload}
+            className="btn-gradient-flow flex-1 border border-border rounded-lg px-4 py-2 text-sm font-medium"
+          >
+            <span className="flex items-center justify-center gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </span>
+          </button>
+
+          <button
+            onClick={handleShareX}
+            className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
+            title="Share to X"
+          >
+            <span className="flex items-center justify-center gap-1.5">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Share
+            </span>
+          </button>
+
           {cardType === "daily" && trade && (
-            <Button
+            <button
               onClick={handleEdit}
-              variant="outline"
-              size="sm"
+              className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
             >
-              <Pencil className="mr-1.5 h-3.5 w-3.5" />
-              Edit Trade
-            </Button>
+              <span className="flex items-center justify-center gap-1.5">
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </span>
+            </button>
           )}
         </div>
       </DialogContent>

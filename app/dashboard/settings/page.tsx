@@ -82,9 +82,9 @@ export default async function SettingsPage() {
           {plan === "free" && (
             <button
               type="button"
-              className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
             >
-              Upgrade to Premium
+              <span className="relative z-[1]">Upgrade to Premium</span>
             </button>
           )}
         </CardContent>

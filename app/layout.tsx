@@ -11,7 +11,7 @@ const font = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "PNLCard — Beautiful Trading Recap Cards for Social Media",
   description:
-    "Log your daily P&L in 60 seconds and generate stunning shareable cards for X and Instagram. Free forever.",
+    "Log your daily P&L in 60 seconds and generate stunning shareable cards for X and Instagram.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://pnlcard.com"),
   openGraph: {
     title: "PNLCard — Log. Share. Grow.",

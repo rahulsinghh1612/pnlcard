@@ -12,7 +12,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -486,13 +485,15 @@ export function TradeEntryModal({
             </div>
 
             <DialogFooter className="mt-10">
-              <Button type="submit" className="w-full" disabled={isLoading || isFutureDate || isDuplicateDate}>
-                {isLoading
-                  ? "Saving…"
-                  : isEdit
-                    ? "Update"
-                    : "Save"}
-              </Button>
+              <button
+                type="submit"
+                disabled={isLoading || isFutureDate || isDuplicateDate}
+                className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
+              >
+                <span className="relative z-[1]">
+                  {isLoading ? "Saving…" : isEdit ? "Update" : "Save"}
+                </span>
+              </button>
             </DialogFooter>
           </form>
         </DialogContent>

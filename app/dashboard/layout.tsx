@@ -33,8 +33,6 @@ export default async function DashboardLayout({
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
           <Link href="/dashboard">
             <div className="logo-capsule px-4 py-1.5 text-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/logo-graph.png" alt="" className="h-3.5 w-3.5 object-contain" />
               Pnl Card
             </div>
           </Link>

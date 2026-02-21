@@ -42,8 +42,6 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
         <header className="border-b border-border bg-background/95 px-4 py-2.5">
           <div className="flex items-center justify-between">
             <div className="logo-capsule px-3 py-1 text-xs">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/logo-graph.png" alt="" className="h-3 w-3 object-contain" />
               Pnl Card
             </div>
             <div className="h-6 w-6 rounded-lg bg-muted" />

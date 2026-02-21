@@ -14,8 +14,6 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <Link href="/" className="inline-block mb-8">
           <div className="logo-capsule px-4 py-1.5 text-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/logo-graph.png" alt="" className="h-3.5 w-3.5 object-contain" />
             Pnl Card
           </div>
         </Link>

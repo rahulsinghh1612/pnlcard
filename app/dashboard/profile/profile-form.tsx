@@ -4,11 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Check } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 
 interface ProfileFormProps {
   userId: string;
@@ -136,15 +135,18 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
             <Label>Currency</Label>
             <div className="flex gap-3">
               {(["INR", "USD"] as const).map((c) => (
-                <Button
+                <button
                   key={c}
                   type="button"
-                  variant={currency === c ? "default" : "outline"}
-                  className="flex-1"
                   onClick={() => setCurrency(c)}
+                  className={`flex flex-1 items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                    currency === c
+                      ? "border-slate-300 bg-slate-100 text-slate-900 shadow-sm"
+                      : "btn-gradient-flow border-border bg-transparent text-muted-foreground hover:border-slate-300 hover:text-foreground"
+                  }`}
                 >
-                  {c === "INR" ? "₹ INR" : "$ USD"}
-                </Button>
+                  <span className="relative z-[1]">{c === "INR" ? "₹ INR" : "$ USD"}</span>
+                </button>
               ))}
             </div>
           </div>
@@ -186,41 +188,42 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
 
       {/* Card theme */}
       <Card>
-        <CardContent className="pt-6 space-y-4">
-          <h2 className="text-sm font-medium text-foreground">Card theme</h2>
-          <p className="text-xs text-muted-foreground">
-            Default theme for your generated recap cards.
-          </p>
-          <div className="flex gap-3">
-            {(["light", "dark"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setCardTheme(t)}
-                className={`relative flex-1 rounded-lg border-2 p-3 text-center text-sm font-medium transition-all ${
-                  cardTheme === t
-                    ? "border-foreground bg-muted"
-                    : "border-border hover:border-muted-foreground/40"
-                }`}
-              >
-                {cardTheme === t && (
-                  <Check className="absolute top-2 right-2 h-3.5 w-3.5" />
-                )}
-                <div
-                  className={`mx-auto mb-2 h-8 w-full rounded ${
-                    t === "light" ? "bg-white border border-border" : "bg-zinc-900"
+        <CardContent className="pt-6 space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-medium text-foreground">Card theme</h2>
+              <p className="text-xs text-muted-foreground">
+                Default theme for your generated recap cards.
+              </p>
+            </div>
+            <div className="flex items-center rounded-full border border-border bg-muted/50 p-1 shrink-0">
+              {(["light", "dark"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setCardTheme(t)}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                    cardTheme === t
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
-                />
-                {t === "light" ? "Light" : "Dark"}
-              </button>
-            ))}
+                >
+                  {t === "light" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {t === "light" ? "Light" : "Dark"}
+                </button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Button type="submit" disabled={saving} className="w-full" size="lg">
-        {saving ? "Saving…" : "Save changes"}
-      </Button>
+      <button
+        type="submit"
+        disabled={saving}
+        className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
+      >
+        <span className="relative z-[1]">{saving ? "Saving…" : "Save changes"}</span>
+      </button>
     </form>
   );
 }

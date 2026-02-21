@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { CalendarDays, CalendarRange, CalendarCheck } from "lucide-react";
 import { DEMO_TRADES } from "@/lib/demo-trades";
 
 /* ─── Helpers ────────────────────────────────────────────── */
@@ -430,17 +431,79 @@ function DemoCalendar({ active }: { active: boolean }) {
   );
 }
 
+/* ─── DemoCreateCards ───────────────────────────────────── */
+
+const CARD_OPTIONS = [
+  { type: "Daily", pnl: formatCompact(getFinalResult(DEMO_TRADES[DEMO_TRADES.length - 1])), date: "31 Jan 2026", Icon: CalendarDays, iconBg: "bg-blue-50 text-blue-600" },
+  { type: "Weekly", pnl: formatCompact(4360), date: "27 Jan – 2 Feb", Icon: CalendarRange, iconBg: "bg-purple-50 text-purple-600" },
+  { type: "Monthly", pnl: formatCompact(MONTH_PNL), date: "Jan 2026", Icon: CalendarCheck, iconBg: "bg-amber-50 text-amber-600" },
+];
+
+function DemoCreateCards({ active }: { active: boolean }) {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setShow(false);
+      return;
+    }
+    const id = setTimeout(() => setShow(true), 150);
+    return () => clearTimeout(id);
+  }, [active]);
+
+  return (
+    <div className="w-full max-w-lg mx-auto">
+      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 shadow-xl">
+        <h3 className="text-base font-semibold text-foreground text-center mb-6">
+          Generate your card
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {CARD_OPTIONS.map((opt, i) => (
+            <div
+              key={opt.type}
+              className={`rounded-xl border border-border bg-white p-4 transition-all duration-500 ${
+                show ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
+              style={{
+                transitionDelay: show ? `${i * 120}ms` : "0ms",
+              }}
+            >
+              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${opt.iconBg} mb-2`}>
+                <opt.Icon className="h-4 w-4" />
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {opt.type}
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-emerald-600">{opt.pnl}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{opt.date}</p>
+            </div>
+          ))}
+        </div>
+        <div
+          className={`mt-6 transition-all duration-500 ${show ? "opacity-100" : "opacity-0"}`}
+          style={{ transitionDelay: show ? "400ms" : "0ms" }}
+        >
+          <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
+            <span className="relative z-[1]">Generate Daily Card</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main: DemoSection ─────────────────────────────────── */
 
 const STEPS = [
   { id: 0 as const, label: "Log a Trade" },
-  { id: 1 as const, label: "Your Calendar" },
+  { id: 1 as const, label: "Calendar" },
+  { id: 2 as const, label: "Create Cards" },
 ];
 
-const AUTO_MS = 7000;
+const AUTO_MS = 6000;
 
 export function DemoSection() {
-  const [step, setStep] = useState<0 | 1>(0);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setInterval>>();
@@ -461,7 +524,7 @@ export function DemoSection() {
   const startTimer = useCallback(() => {
     clearInterval(timer.current);
     timer.current = setInterval(
-      () => setStep((p) => (p === 0 ? 1 : 0)),
+      () => setStep((p) => (p >= 2 ? 0 : (p + 1) as 0 | 1 | 2)),
       AUTO_MS,
     );
   }, []);
@@ -472,13 +535,13 @@ export function DemoSection() {
     return () => clearInterval(timer.current);
   }, [visible, startTimer]);
 
-  function pickStep(s: 0 | 1) {
+  function pickStep(s: 0 | 1 | 2) {
     setStep(s);
     startTimer();
   }
 
   return (
-    <section ref={ref} className="py-16 sm:py-24">
+    <section ref={ref} className="py-16 sm:py-24 pb-20">
       <div className="mx-auto max-w-5xl px-6">
         {/* Section heading */}
         <div
@@ -546,33 +609,39 @@ export function DemoSection() {
           {/* Soft background glow */}
           <div className="absolute -inset-20 rounded-3xl bg-emerald-200/15 blur-3xl pointer-events-none" />
 
-          <div className="relative min-h-[420px]">
-            {/* Step 1 — Log Trade */}
+          <div className="relative h-[520px]">
+            {/* Both views use absolute positioning so container height stays fixed — prevents layout shift */}
             <div
-              className="transition-all duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
               style={{
                 opacity: step === 0 ? 1 : 0,
                 transform: `translateX(${step === 0 ? 0 : -30}px)`,
-                position: step === 0 ? "relative" : "absolute",
-                inset: step === 0 ? undefined : 0,
                 pointerEvents: step === 0 ? "auto" : "none",
               }}
             >
               <DemoLogTrade active={step === 0 && visible} />
             </div>
 
-            {/* Step 2 — Calendar */}
             <div
-              className="transition-all duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
               style={{
                 opacity: step === 1 ? 1 : 0,
                 transform: `translateX(${step === 1 ? 0 : 30}px)`,
-                position: step === 1 ? "relative" : "absolute",
-                inset: step === 1 ? undefined : 0,
                 pointerEvents: step === 1 ? "auto" : "none",
               }}
             >
               <DemoCalendar active={step === 1 && visible} />
+            </div>
+
+            <div
+              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
+              style={{
+                opacity: step === 2 ? 1 : 0,
+                transform: `translateX(${step === 2 ? 0 : 30}px)`,
+                pointerEvents: step === 2 ? "auto" : "none",
+              }}
+            >
+              <DemoCreateCards active={step === 2 && visible} />
             </div>
           </div>
         </div>

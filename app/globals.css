@@ -180,6 +180,18 @@
   .ticker-landing-3 {
     animation: ticker-slide 40s linear infinite;
   }
+  /* Gradient border for selected states (profile card theme, etc.) */
+  .border-gradient-selected {
+    border: 2px solid transparent;
+    background: linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+      linear-gradient(
+        120deg,
+        rgba(74, 222, 128, 0.7),
+        rgba(248, 113, 113, 0.7),
+        rgba(74, 222, 128, 0.7)
+      )
+      border-box;
+  }
 }
 
 @keyframes ticker-slide {
@@ -288,8 +300,15 @@
 
 @keyframes candlestick-scroll {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-25%); }
+}
+@keyframes candlestick-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 .animate-candlestick-scroll {
   animation: candlestick-scroll 20s linear infinite;
+}
+.animate-candlestick-bob {
+  animation: candlestick-bob 3s ease-in-out infinite;
 }
