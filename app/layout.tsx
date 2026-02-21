@@ -38,8 +38,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${font.variable} scroll-smooth`}>
-      <body className="antialiased font-sans">
+    <html lang="en" className={`${font.variable} scroll-smooth`} suppressHydrationWarning>
+      <body className="antialiased font-sans" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

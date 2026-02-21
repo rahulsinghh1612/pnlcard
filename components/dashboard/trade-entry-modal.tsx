@@ -101,6 +101,8 @@ type TradeEntryModalProps = {
   existingTradeDates?: Set<string>;
   onEditExisting?: (date: string) => void;
   onGenerateCard?: () => void;
+  /** When true, submit shows toast and closes without saving to DB (for landing demo) */
+  demoMode?: boolean;
 };
 
 export function TradeEntryModal({
@@ -114,6 +116,7 @@ export function TradeEntryModal({
   existingTradeDates,
   onEditExisting,
   onGenerateCard,
+  demoMode = false,
 }: TradeEntryModalProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -184,6 +187,12 @@ export function TradeEntryModal({
 
     if (!result.success) {
       toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    if (demoMode) {
+      toast.success("Trade logged.");
+      onOpenChange(false);
       return;
     }
 

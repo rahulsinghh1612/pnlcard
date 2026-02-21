@@ -40,6 +40,14 @@ type DashboardContentProps = {
   xHandle: string | null;
   cardTheme: string;
   trades: Trade[];
+  /** For landing page demo: use these trades instead of props.trades */
+  demoTrades?: Trade[];
+  /** For landing page demo: force modal open (step 1) */
+  forceModalOpen?: boolean;
+  /** For landing page demo: pass to TradeEntryModal to skip DB save */
+  demoMode?: boolean;
+  /** For landing page demo: CalendarHeatmap shows this month (e.g. "2026-01-01") */
+  demoViewDate?: string;
 };
 
 function formatPnl(value: number, currency: string): string {
@@ -64,7 +72,16 @@ export function DashboardContent({
   xHandle,
   cardTheme,
   trades,
+  demoTrades,
+  forceModalOpen,
+  demoMode = false,
+  demoViewDate,
 }: DashboardContentProps) {
+  const effectiveTrades = demoMode && demoTrades ? demoTrades : trades;
+  const effectiveMonthPnl =
+    demoMode && demoTrades
+      ? demoTrades.reduce((sum, t) => sum + (t.charges != null ? t.net_pnl - t.charges : t.net_pnl), 0)
+      : monthPnl;
   const [modalOpen, setModalOpen] = useState(false);
   const [modalExistingTrade, setModalExistingTrade] = useState<Trade | null>(
     null
@@ -81,12 +98,20 @@ export function DashboardContent({
   const [weeklyIdx, setWeeklyIdx] = useState(0);
   const [monthlyIdx, setMonthlyIdx] = useState(0);
 
-  const hasTrades = trades.length > 0;
-  const pnlPositive = monthPnl >= 0;
+  const displayModalOpen = forceModalOpen ?? modalOpen;
+
+  // When forceModalOpen (demo step 1), pre-fill today's date for the create form
+  const effectiveModalDefaultDate =
+    forceModalOpen && !modalExistingTrade
+      ? format(new Date(), "yyyy-MM-dd")
+      : modalDefaultDate;
+
+  const hasTrades = effectiveTrades.length > 0;
+  const pnlPositive = effectiveMonthPnl >= 0;
 
   // Dynamic gradient intensity for the hero card (0.0 – 0.18 range).
   // Uses log scale so it works across ₹1K to ₹50L+ without hard thresholds.
-  const absPnl = Math.abs(monthPnl);
+  const absPnl = Math.abs(effectiveMonthPnl);
   const intensity = absPnl === 0 ? 0 : Math.min(0.18, Math.log10(absPnl + 1) / 40);
   const heroGradient = pnlPositive
     ? `linear-gradient(135deg, rgba(16,185,129,${intensity}) 0%, rgba(255,255,255,0) 60%)`
@@ -97,17 +122,17 @@ export function DashboardContent({
     t.charges != null ? t.net_pnl - t.charges : t.net_pnl;
 
   const dailyChips = useMemo(() =>
-    trades.map((t) => ({
+    effectiveTrades.map((t) => ({
       trade: t,
       label: format(parseISO(t.trade_date), "MMM d"),
       pnl: getFinalResult(t),
     })),
-    [trades]
+    [effectiveTrades]
   );
 
   const weeklyChips = useMemo(() => {
     const weekMap = new Map<string, { mondayStr: string; label: string; pnl: number; count: number }>();
-    for (const t of trades) {
+    for (const t of effectiveTrades) {
       const d = parseISO(t.trade_date);
       const monday = startOfWeek(d, { weekStartsOn: 1 });
       const mondayStr = format(monday, "yyyy-MM-dd");
@@ -121,11 +146,11 @@ export function DashboardContent({
       entry.count += 1;
     }
     return Array.from(weekMap.values()).sort((a, b) => b.mondayStr.localeCompare(a.mondayStr));
-  }, [trades]);
+  }, [effectiveTrades]);
 
   const monthlyChips = useMemo(() => {
     const monthMap = new Map<string, { dateStr: string; label: string; pnl: number; count: number }>();
-    for (const t of trades) {
+    for (const t of effectiveTrades) {
       const d = parseISO(t.trade_date);
       const ms = startOfMonth(d);
       const key = format(ms, "yyyy-MM");
@@ -139,7 +164,7 @@ export function DashboardContent({
       entry.count += 1;
     }
     return Array.from(monthMap.values()).sort((a, b) => b.dateStr.localeCompare(a.dateStr));
-  }, [trades]);
+  }, [effectiveTrades]);
 
   const openCreateModal = (defaultDate?: string) => {
     setModalExistingTrade(null);
@@ -205,7 +230,7 @@ export function DashboardContent({
                     : "text-red-600"
                 }`}
               >
-                {formatPnl(monthPnl, currency)}
+                {formatPnl(effectiveMonthPnl, currency)}
               </p>
               {hasTrades && (
                 <span
@@ -257,7 +282,7 @@ export function DashboardContent({
         ) : (
           <>
             <CalendarHeatmap
-              trades={trades.map((t) => ({
+              trades={effectiveTrades.map((t) => ({
                 id: t.id,
                 trade_date: t.trade_date,
                 net_pnl: t.net_pnl,
@@ -269,7 +294,7 @@ export function DashboardContent({
               currency={currency}
               onDayClick={(date, existingTrade) => {
                 if (existingTrade) {
-                  const fullTrade = trades.find((t) => t.id === existingTrade.id);
+                  const fullTrade = effectiveTrades.find((t) => t.id === existingTrade.id);
                   if (fullTrade) {
                     setCardPreviewType("daily");
                     setCardPreviewTrade(fullTrade);
@@ -295,6 +320,7 @@ export function DashboardContent({
                 setCardPreviewMonthDate(monthDateStr);
                 setCardPreviewOpen(true);
               }}
+              initialViewDate={demoViewDate}
             />
 
             {/* Generate Cards section */}
@@ -495,7 +521,7 @@ export function DashboardContent({
             </div>
 
             <PnlTicker
-              trades={trades.map((t) => ({
+              trades={effectiveTrades.map((t) => ({
                 id: t.id,
                 trade_date: t.trade_date,
                 net_pnl: t.net_pnl,
@@ -506,7 +532,7 @@ export function DashboardContent({
             />
 
             <RecentEntries
-              trades={trades.map((t) => ({
+              trades={effectiveTrades.map((t) => ({
                 id: t.id,
                 trade_date: t.trade_date,
                 net_pnl: t.net_pnl,
@@ -515,7 +541,7 @@ export function DashboardContent({
               }))}
               currency={currency}
               onGenerateCard={(tradeId) => {
-                const trade = trades.find((t) => t.id === tradeId);
+                const trade = effectiveTrades.find((t) => t.id === tradeId);
                 if (!trade) return;
                 setCardPreviewType("daily");
                 setCardPreviewTrade(trade);
@@ -529,16 +555,17 @@ export function DashboardContent({
       </div>
 
       <TradeEntryModal
-        open={modalOpen}
+        open={displayModalOpen}
         onOpenChange={setModalOpen}
         userId={userId}
         currency={currency}
         tradingCapital={tradingCapital}
         existingTrade={modalExistingTrade}
-        defaultDate={modalDefaultDate}
-        existingTradeDates={new Set(trades.map((t) => t.trade_date))}
+        defaultDate={effectiveModalDefaultDate}
+        existingTradeDates={new Set(effectiveTrades.map((t) => t.trade_date))}
+        demoMode={demoMode}
         onEditExisting={(date) => {
-          const trade = trades.find((t) => t.trade_date === date);
+          const trade = effectiveTrades.find((t) => t.trade_date === date);
           if (trade) {
             setModalExistingTrade(trade);
             setModalDefaultDate(undefined);
@@ -562,7 +589,7 @@ export function DashboardContent({
         trade={cardPreviewTrade}
         weekMondayStr={cardPreviewWeekMonday}
         monthDateStr={cardPreviewMonthDate}
-        allTrades={trades}
+        allTrades={effectiveTrades}
         profile={{
           x_handle: xHandle,
           trading_capital: tradingCapital,

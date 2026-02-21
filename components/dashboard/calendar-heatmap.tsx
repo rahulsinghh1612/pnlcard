@@ -30,6 +30,8 @@ type CalendarHeatmapProps = {
   onDayClick: (date: string, existingTrade: TradeForHeatmap | null) => void;
   onWeekClick?: (mondayStr: string) => void;
   onMonthClick?: (monthDateStr: string) => void;
+  /** For demo: show this month instead of current (e.g. "2026-01-01" for Jan 2026) */
+  initialViewDate?: string;
 };
 
 function getFinalResult(t: TradeForHeatmap): number {
@@ -52,8 +54,11 @@ export function CalendarHeatmap({
   onDayClick,
   onWeekClick,
   onMonthClick,
+  initialViewDate,
 }: CalendarHeatmapProps) {
-  const [viewDate, setViewDate] = useState(new Date());
+  const [viewDate, setViewDate] = useState(() =>
+    initialViewDate ? new Date(initialViewDate + "T12:00:00") : new Date()
+  );
   const [showWeekly, setShowWeekly] = useState(true);
 
   useEffect(() => {

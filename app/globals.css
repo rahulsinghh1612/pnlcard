@@ -57,7 +57,7 @@
 
     --chart-5: 27 87% 67%;
 
-    --radius: 0.625rem
+    --radius: 0.625rem;
   }
   .dark {
 
@@ -107,7 +107,7 @@
 
     --chart-4: 280 65% 60%;
 
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -118,7 +118,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen;
+  }
+  a {
+    @apply text-inherit no-underline;
   }
 }
 
@@ -272,4 +275,21 @@
 .btn-gradient-flow > * {
   position: relative;
   z-index: 1;
+}
+.btn-gradient-flow-active::before {
+  opacity: 1 !important;
+  animation: gradient-flow 4s ease infinite !important;
+}
+.btn-gradient-flow-active {
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.12),
+    0 4px 20px rgba(248, 113, 113, 0.12);
+}
+
+@keyframes candlestick-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-candlestick-scroll {
+  animation: candlestick-scroll 20s linear infinite;
 }

@@ -1,0 +1,582 @@
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { DEMO_TRADES } from "@/lib/demo-trades";
+
+/* ─── Helpers ────────────────────────────────────────────── */
+
+function getFinalResult(t: { net_pnl: number; charges: number | null }): number {
+  return t.charges != null ? t.net_pnl - t.charges : t.net_pnl;
+}
+
+function formatINR(value: number): string {
+  return Math.abs(value).toLocaleString("en-IN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+}
+
+function formatCompact(value: number): string {
+  return `${value >= 0 ? "+" : "-"}₹${formatINR(value)}`;
+}
+
+/* ─── Pre-computed January 2026 data (from real trades) ──── */
+
+const TRADE_MAP = new Map<string, (typeof DEMO_TRADES)[number]>(
+  DEMO_TRADES.map((t) => [t.trade_date, t]),
+);
+
+const MONTH_PNL = DEMO_TRADES.reduce((s, t) => s + getFinalResult(t), 0);
+
+// Trade highlighted in the Log Trade modal: Jan 14, 2026
+const HIGHLIGHT = DEMO_TRADES.find((t) => t.trade_date === "2026-01-14")!;
+const H_FINAL = getFinalResult(HIGHLIGHT);
+const H_ROI =
+  HIGHLIGHT.capital_deployed != null
+    ? ((H_FINAL / HIGHLIGHT.capital_deployed) * 100).toFixed(2)
+    : null;
+
+// Build a Mon-first grid for January 2026
+function buildGrid(): (number | null)[][] {
+  const dow = new Date(2026, 0, 1).getDay(); // 4 = Thursday
+  const pad = (dow + 6) % 7; // 3 empty cells (Mon, Tue, Wed)
+  const flat: (number | null)[] = [
+    ...Array<null>(pad).fill(null),
+    ...Array.from({ length: 31 }, (_, i) => i + 1),
+  ];
+  while (flat.length % 7 !== 0) flat.push(null);
+  const weeks: (number | null)[][] = [];
+  for (let i = 0; i < flat.length; i += 7) weeks.push(flat.slice(i, i + 7));
+  return weeks;
+}
+
+const JAN_GRID = buildGrid();
+
+type WeekSummary = { pnl: number; trades: number; label: string };
+
+function buildWeekSummaries(): WeekSummary[] {
+  return JAN_GRID.map((week) => {
+    const nums = week.filter((d): d is number => d !== null);
+    let pnl = 0;
+    let trades = 0;
+    for (const day of nums) {
+      const t = TRADE_MAP.get(`2026-01-${String(day).padStart(2, "0")}`);
+      if (t) {
+        pnl += getFinalResult(t);
+        trades += t.num_trades;
+      }
+    }
+    const first = nums[0];
+    const last = nums[nums.length - 1];
+    return {
+      pnl,
+      trades,
+      label: first === last ? `${first}` : `${first}–${last}`,
+    };
+  });
+}
+
+const WEEK_SUMMARIES = buildWeekSummaries();
+
+// Unified intensity scale (daily + weekly, matching real calendar)
+const dailyFinals = DEMO_TRADES.map(getFinalResult);
+const weeklyPnls = WEEK_SUMMARIES.filter((w) => w.trades > 0).map((w) => w.pnl);
+const allValues = [...dailyFinals, ...weeklyPnls];
+const maxProfit = Math.max(...allValues.filter((v) => v > 0), 1);
+const maxLoss = Math.max(...allValues.filter((v) => v < 0).map(Math.abs), 1);
+
+function profitBg(v: number): string {
+  const r = v / maxProfit;
+  if (r >= 0.66) return "bg-emerald-200";
+  if (r >= 0.33) return "bg-emerald-100";
+  return "bg-emerald-50";
+}
+
+function lossBg(v: number): string {
+  const r = Math.abs(v) / maxLoss;
+  if (r >= 0.66) return "bg-red-200";
+  if (r >= 0.33) return "bg-red-100";
+  return "bg-red-50";
+}
+
+/* ─── DemoLogTrade ───────────────────────────────────────── */
+
+type Field = {
+  label: string;
+  value: string;
+  id: string;
+  subLabel?: string;
+  subValue?: string;
+  subPositive?: boolean;
+};
+
+const FORM_FIELDS: Field[] = [
+  { label: "Date *", value: "14/01/2026", id: "date" },
+  { label: "Number of trades *", value: "1", id: "num" },
+  { label: "P&L (₹) *", value: "3,100", id: "pnl" },
+  {
+    label: "Charges & taxes (₹)",
+    value: "90",
+    id: "charges",
+    subLabel: "Net P&L",
+    subValue: formatCompact(H_FINAL),
+    subPositive: H_FINAL >= 0,
+  },
+  {
+    label: "Capital (₹) deployed for ROI",
+    value: "10,00,000",
+    id: "capital",
+    subLabel: "ROI",
+    subValue: `+${H_ROI}%`,
+    subPositive: true,
+  },
+];
+
+function DemoLogTrade({ active }: { active: boolean }) {
+  const [revealed, setRevealed] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      setRevealed(0);
+      return;
+    }
+    let count = 0;
+    const id = setInterval(() => {
+      count++;
+      setRevealed(count);
+      if (count >= FORM_FIELDS.length + 1) clearInterval(id);
+    }, 550);
+    return () => clearInterval(id);
+  }, [active]);
+
+  return (
+    <div className="w-full max-w-sm mx-auto">
+      <div className="rounded-xl border border-border bg-background p-6 shadow-xl">
+        <h3 className="text-base font-semibold text-foreground text-center mb-6">
+          Log a trade
+        </h3>
+
+        <div className="space-y-6">
+          {FORM_FIELDS.map((f, i) => (
+            <div
+              key={f.id}
+              className="space-y-2 transition-all duration-500 ease-out"
+              style={{
+                opacity: revealed > i ? 1 : 0,
+                transform: `translateY(${revealed > i ? 0 : 16}px)`,
+              }}
+            >
+              <label className="block text-sm font-medium text-foreground">
+                {f.label}
+              </label>
+              <div className="flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-sm">
+                {f.value}
+              </div>
+              {f.subLabel && (
+                <p
+                  className="text-sm transition-opacity duration-300 delay-200"
+                  style={{ opacity: revealed > i ? 1 : 0 }}
+                >
+                  {f.subLabel}:{" "}
+                  <span
+                    className={`font-medium ${
+                      f.subPositive ? "text-emerald-600" : "text-red-600"
+                    }`}
+                  >
+                    {f.subValue}
+                  </span>
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="mt-8 transition-all duration-500 ease-out"
+          style={{
+            opacity: revealed > FORM_FIELDS.length ? 1 : 0,
+            transform: `translateY(${revealed > FORM_FIELDS.length ? 0 : 16}px)`,
+          }}
+        >
+          <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
+            <span className="relative z-[1]">Save</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── DemoCalendar ───────────────────────────────────────── */
+
+function DemoCalendar({ active }: { active: boolean }) {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setShow(false);
+      return;
+    }
+    const id = setTimeout(() => setShow(true), 200);
+    return () => clearTimeout(id);
+  }, [active]);
+
+  return (
+    <div className="w-full max-w-lg mx-auto">
+      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
+        {/* Month navigation bar */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <svg
+                width="14"
+                height="14"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </span>
+            <span className="min-w-[120px] text-center text-sm font-semibold text-foreground">
+              January 2026
+            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <svg
+                width="14"
+                height="14"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </span>
+          </div>
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold transition-all duration-700 ${
+              show ? "opacity-100 scale-100" : "opacity-0 scale-75"
+            } ${
+              MONTH_PNL >= 0
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {formatCompact(MONTH_PNL)}
+          </span>
+        </div>
+
+        {/* Day-of-week headers + Wk column */}
+        <div className="mb-1.5 grid grid-cols-[repeat(7,1fr)_8px_minmax(48px,1fr)] gap-1 text-center">
+          {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+            <span
+              key={`h-${i}`}
+              className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
+            >
+              {d}
+            </span>
+          ))}
+          <span />
+          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Wk
+          </span>
+        </div>
+
+        {/* Week rows */}
+        <div className="flex flex-col gap-1">
+          {JAN_GRID.map((week, ri) => {
+            const summary = WEEK_SUMMARIES[ri];
+
+            return (
+              <div
+                key={ri}
+                className="grid grid-cols-[repeat(7,1fr)_8px_minmax(48px,1fr)] gap-1"
+              >
+                {/* Day cells */}
+                {week.map((day, ci) => {
+                  const cellIdx = ri * 7 + ci;
+
+                  if (day === null)
+                    return (
+                      <div
+                        key={`e-${ri}-${ci}`}
+                        className="aspect-square rounded-lg"
+                      />
+                    );
+
+                  const ds = `2026-01-${String(day).padStart(2, "0")}`;
+                  const trade = TRADE_MAP.get(ds);
+                  const result = trade ? getFinalResult(trade) : 0;
+                  const isProfit = trade ? result >= 0 : false;
+
+                  let bg = "bg-muted/40";
+                  let text = "text-muted-foreground";
+                  if (trade) {
+                    bg = isProfit ? profitBg(result) : lossBg(result);
+                    text = isProfit ? "text-emerald-700" : "text-red-700";
+                  }
+
+                  return (
+                    <div
+                      key={ds}
+                      className={`relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all duration-500 ${bg} ${text}`}
+                      style={{
+                        opacity: show ? 1 : 0,
+                        transform: show ? "scale(1)" : "scale(0.6)",
+                        transitionDelay: show ? `${cellIdx * 25}ms` : "0ms",
+                      }}
+                    >
+                      {trade ? (
+                        <>
+                          <span className="absolute top-0.5 left-1 text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
+                            {day}
+                          </span>
+                          <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
+                            {formatCompact(result)}
+                          </span>
+                          <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-75 mt-0.5">
+                            {trade.num_trades === 1
+                              ? "1 Trade"
+                              : `${trade.num_trades} Trades`}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[10px] sm:text-xs font-medium">
+                          {day}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Dashed separator */}
+                <div className="flex items-center justify-center">
+                  <div className="h-3/4 border-l border-dashed border-border" />
+                </div>
+
+                {/* Weekly summary */}
+                <div
+                  className={`aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all duration-500 ${
+                    summary.trades === 0
+                      ? "bg-muted/30 text-muted-foreground"
+                      : summary.pnl >= 0
+                        ? `${profitBg(summary.pnl)} text-emerald-700 border border-emerald-200/50`
+                        : `${lossBg(summary.pnl)} text-red-700 border border-red-200/50`
+                  }`}
+                  style={{
+                    opacity: show ? 1 : 0,
+                    transform: show ? "scale(1)" : "scale(0.6)",
+                    transitionDelay: show ? `${(ri + 1) * 150}ms` : "0ms",
+                  }}
+                >
+                  <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
+                    {summary.label}
+                  </span>
+                  {summary.trades > 0 ? (
+                    <>
+                      <span className="text-[8px] sm:text-[10px] font-bold leading-tight truncate max-w-full">
+                        {formatCompact(summary.pnl)}
+                      </span>
+                      <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-70">
+                        {summary.trades} trades
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[7px] sm:text-[8px] leading-none opacity-50">
+                      —
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="flex gap-0.5">
+              <span className="h-3 w-3 rounded bg-emerald-50 border border-emerald-200/60" />
+              <span className="h-3 w-3 rounded bg-emerald-100 border border-emerald-200/60" />
+              <span className="h-3 w-3 rounded bg-emerald-200 border border-emerald-300/60" />
+            </span>
+            Profit
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="flex gap-0.5">
+              <span className="h-3 w-3 rounded bg-red-50 border border-red-200/60" />
+              <span className="h-3 w-3 rounded bg-red-100 border border-red-200/60" />
+              <span className="h-3 w-3 rounded bg-red-200 border border-red-300/60" />
+            </span>
+            Loss
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
+            No trade
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main: DemoSection ─────────────────────────────────── */
+
+const STEPS = [
+  { id: 0 as const, label: "Log a Trade" },
+  { id: 1 as const, label: "Your Calendar" },
+];
+
+const AUTO_MS = 7000;
+
+export function DemoSection() {
+  const [step, setStep] = useState<0 | 1>(0);
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setInterval>>();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) setVisible(true);
+      },
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const startTimer = useCallback(() => {
+    clearInterval(timer.current);
+    timer.current = setInterval(
+      () => setStep((p) => (p === 0 ? 1 : 0)),
+      AUTO_MS,
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    startTimer();
+    return () => clearInterval(timer.current);
+  }, [visible, startTimer]);
+
+  function pickStep(s: 0 | 1) {
+    setStep(s);
+    startTimer();
+  }
+
+  return (
+    <section ref={ref} className="py-16 sm:py-24">
+      <div className="mx-auto max-w-5xl px-6">
+        {/* Section heading */}
+        <div
+          className={`text-center mb-12 transition-all duration-700 ${
+            visible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            See it in{" "}
+            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+              action
+            </span>
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Real data from January 2026 — this is exactly what your dashboard
+            looks like.
+          </p>
+        </div>
+
+        {/* Step switcher pills */}
+        <div
+          className={`flex justify-center mb-8 transition-all duration-700 delay-150 ${
+            visible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          <div className="inline-flex items-center rounded-full border border-border bg-muted/50 p-1">
+            {STEPS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => pickStep(s.id)}
+                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
+                  step === s.id
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-300 ${
+                    step === s.id
+                      ? "bg-foreground text-background"
+                      : "bg-muted-foreground/20 text-muted-foreground"
+                  }`}
+                >
+                  {s.id + 1}
+                </span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Demo content area */}
+        <div
+          className={`relative transition-all duration-700 delay-300 ${
+            visible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8"
+          }`}
+        >
+          {/* Soft background glow */}
+          <div className="absolute -inset-20 rounded-3xl bg-emerald-200/15 blur-3xl pointer-events-none" />
+
+          <div className="relative min-h-[420px]">
+            {/* Step 1 — Log Trade */}
+            <div
+              className="transition-all duration-500 ease-out"
+              style={{
+                opacity: step === 0 ? 1 : 0,
+                transform: `translateX(${step === 0 ? 0 : -30}px)`,
+                position: step === 0 ? "relative" : "absolute",
+                inset: step === 0 ? undefined : 0,
+                pointerEvents: step === 0 ? "auto" : "none",
+              }}
+            >
+              <DemoLogTrade active={step === 0 && visible} />
+            </div>
+
+            {/* Step 2 — Calendar */}
+            <div
+              className="transition-all duration-500 ease-out"
+              style={{
+                opacity: step === 1 ? 1 : 0,
+                transform: `translateX(${step === 1 ? 0 : 30}px)`,
+                position: step === 1 ? "relative" : "absolute",
+                inset: step === 1 ? undefined : 0,
+                pointerEvents: step === 1 ? "auto" : "none",
+              }}
+            >
+              <DemoCalendar active={step === 1 && visible} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
