@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Pencil, Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   buildDailyCardParams,
@@ -123,6 +123,16 @@ export function CardPreviewModal({
 }: CardPreviewModalProps) {
   const [theme, setTheme] = useState(profile.card_theme);
   const [showRoi, setShowRoi] = useState(profile.trading_capital != null);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // Reset loading state when modal opens or card params change
+  useEffect(() => {
+    if (open && imgSrc) {
+      setImgLoaded(false);
+      setImgError(false);
+    }
+  }, [open, imgSrc]);
 
   const tradesForCard: TradeForCard[] = useMemo(
     () =>
@@ -324,15 +334,48 @@ export function CardPreviewModal({
 
         {/* Card image */}
         <div className="px-5 pb-4">
-          <div className="rounded-xl overflow-hidden border border-border shadow-sm bg-muted/30">
-            {imgSrc && (
+          <div className="relative rounded-xl overflow-hidden border border-border shadow-sm bg-muted/30 min-h-[200px]">
+            {/* Loading state: shimmer + sparkle */}
+            {imgSrc && !imgLoaded && !imgError && (
+              <div
+                className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 via-white to-emerald-50/30"
+                aria-hidden="true"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 animate-ping rounded-full bg-emerald-200/40" />
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 shadow-inner">
+                    <Sparkles className="h-7 w-7 text-emerald-600 animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-2 text-center">
+                  <p className="text-sm font-medium text-foreground">
+                    Generating your card
+                  </p>
+                  <div className="mx-auto h-1 w-24 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full w-8 animate-shimmer rounded-full bg-emerald-400/70" />
+                  </div>
+                </div>
+              </div>
+            )}
+            {imgError && (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Couldn&apos;t load preview. Try again.
+                </p>
+              </div>
+            )}
+            {imgSrc && !imgError && (
               <img
                 src={imgSrc}
                 alt={`${title} preview`}
-                className="w-full h-auto"
-                onError={() =>
-                  toast.error("Failed to load preview. Try refreshing.")
-                }
+                className={`w-full h-auto transition-opacity duration-500 ${
+                  imgLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                onLoad={() => setImgLoaded(true)}
+                onError={() => {
+                  setImgError(true);
+                  toast.error("Failed to load preview. Try refreshing.");
+                }}
               />
             )}
           </div>

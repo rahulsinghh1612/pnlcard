@@ -212,10 +212,9 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
     <div ref={ref} className="w-full max-w-md mx-auto">
       <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
         {/* Month navigation bar */}
-        <div className="mb-4 flex items-center justify-between">
-          <div className="w-16 sm:w-20" />
-          <div className="flex items-center gap-1">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-center gap-1 sm:flex-1">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
@@ -223,14 +222,14 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
             <span className="min-w-[120px] text-center text-sm font-semibold text-foreground">
               January 2026
             </span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </span>
           </div>
           <span
-            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold transition-all duration-700 ${
+            className={`inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-700 sm:px-2.5 sm:py-1 ${
               show ? "opacity-100 scale-100" : "opacity-0 scale-75"
             } ${
               MONTH_PNL >= 0

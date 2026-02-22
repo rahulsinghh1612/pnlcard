@@ -355,14 +355,6 @@ export default function LandingPage() {
                 Log your daily P&amp;L in 60 seconds. Generate stunning,
                 shareable recap cards for X and Instagram.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link
-                  href="/signup"
-                  className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
-                >
-                  <span className="relative z-[1]">Start for Free</span>
-                </Link>
-              </div>
             </div>
 
             {/* Hero card carousel — Earth-style revolving (cards around a column) */}
