@@ -123,6 +123,15 @@
   a {
     @apply text-inherit no-underline;
   }
+  /* Override browser autofill blue background — keep inputs looking normal */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px hsl(var(--card)) inset !important;
+    box-shadow: 0 0 0 30px hsl(var(--card)) inset !important;
+    -webkit-text-fill-color: inherit !important;
+  }
 }
 
 @layer utilities {
