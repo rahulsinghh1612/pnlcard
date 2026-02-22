@@ -559,7 +559,7 @@ export default function LandingPage() {
       <DemoSection />
 
       {/* ── Scrolling Feature Strip ──────────────────────────── */}
-      <section className="relative mt-16 py-5 overflow-hidden border-y border-border/40" aria-hidden="true">
+      <section className="relative mt-6 py-5 overflow-hidden border-y border-border/40" aria-hidden="true">
         <div
           className="absolute inset-y-0 left-0 w-20 sm:w-28 z-10 pointer-events-none"
           style={{
@@ -598,9 +598,9 @@ export default function LandingPage() {
             }`}
           >
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Your P&amp;L,{" "}
+              Your PnL,{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-                one glance.
+                One Glance.
               </span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">

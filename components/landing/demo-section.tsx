@@ -213,6 +213,7 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
       <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
         {/* Month navigation bar */}
         <div className="mb-4 flex items-center justify-between">
+          <div className="w-16 sm:w-20" />
           <div className="flex items-center gap-1">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -466,7 +467,7 @@ export function DemoSection() {
   }
 
   return (
-    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-56 scroll-mt-24">
+    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-32 scroll-mt-24">
       <div className="mx-auto max-w-5xl px-6">
         {/* Step switcher pills */}
         <div
