@@ -305,7 +305,7 @@ export function DashboardContent({
           <h2 className="text-sm font-medium text-foreground mb-3">
             Generate cards
           </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {/* Daily card */}
                 {(() => {
                   const current = dailyChips[dailyIdx];
@@ -313,7 +313,7 @@ export function DashboardContent({
                   const hasNext = dailyIdx > 0;
                   return (
                     <div
-                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-4 transition-all duration-200 ${
+                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
                         current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
                       }`}
                       onClick={() => {
@@ -326,8 +326,8 @@ export function DashboardContent({
                       }}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                          <CalendarDays className="h-4 w-4" />
+                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                          <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         {dailyChips.length > 1 && (
                           <div className="flex items-center gap-0.5">
@@ -350,16 +350,16 @@ export function DashboardContent({
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Daily
                       </p>
                       {current ? (
                         <>
-                          <p className={`mt-1 text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          <p className={`mt-1 text-sm sm:text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                             {formatPnl(current.pnl, currency)}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
-                            {format(parseISO(current.trade.trade_date), "EEE, MMM d")}
+                          <p className="mt-0.5 text-[9px] sm:text-[11px] text-muted-foreground">
+                            {format(parseISO(current.trade.trade_date), "d MMM yyyy")}
                           </p>
                         </>
                       ) : (
@@ -376,7 +376,7 @@ export function DashboardContent({
                   const hasNext = weeklyIdx > 0;
                   return (
                     <div
-                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-4 transition-all duration-200 ${
+                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
                         current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
                       }`}
                       onClick={() => {
@@ -389,8 +389,8 @@ export function DashboardContent({
                       }}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400">
-                          <CalendarRange className="h-4 w-4" />
+                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400">
+                          <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         {weeklyChips.length > 1 && (
                           <div className="flex items-center gap-0.5">
@@ -413,15 +413,15 @@ export function DashboardContent({
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Weekly
                       </p>
                       {current ? (
                         <>
-                          <p className={`mt-1 text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          <p className={`mt-1 text-sm sm:text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                             {formatPnl(current.pnl, currency)}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          <p className="mt-0.5 text-[9px] sm:text-[11px] text-muted-foreground truncate">
                             {current.label}
                           </p>
                         </>
@@ -439,7 +439,7 @@ export function DashboardContent({
                   const hasNext = monthlyIdx > 0;
                   return (
                     <div
-                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-4 transition-all duration-200 ${
+                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
                         current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
                       }`}
                       onClick={() => {
@@ -452,8 +452,8 @@ export function DashboardContent({
                       }}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                          <CalendarCheck className="h-4 w-4" />
+                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                          <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         {monthlyChips.length > 1 && (
                           <div className="flex items-center gap-0.5">
@@ -476,15 +476,15 @@ export function DashboardContent({
                           </div>
                         )}
                       </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                         Monthly
                       </p>
                       {current ? (
                         <>
-                          <p className={`mt-1 text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          <p className={`mt-1 text-sm sm:text-lg font-bold tracking-tight ${current.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                             {formatPnl(current.pnl, currency)}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          <p className="mt-0.5 text-[9px] sm:text-[11px] text-muted-foreground">
                             {current.label}
                           </p>
                         </>

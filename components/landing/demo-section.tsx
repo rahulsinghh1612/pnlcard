@@ -572,14 +572,14 @@ export function DemoSection() {
                 key={s.id}
                 type="button"
                 onClick={() => pickStep(s.id)}
-                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-5 py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
                   step === s.id
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-300 ${
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-300 shrink-0 ${
                     step === s.id
                       ? "bg-foreground text-background"
                       : "bg-muted-foreground/20 text-muted-foreground"
@@ -587,7 +587,7 @@ export function DemoSection() {
                 >
                   {s.id + 1}
                 </span>
-                {s.label}
+                <span className="whitespace-nowrap">{s.label}</span>
               </button>
             ))}
           </div>

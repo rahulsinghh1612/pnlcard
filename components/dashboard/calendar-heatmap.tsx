@@ -228,7 +228,7 @@ export function CalendarHeatmap({
       <div className={cn(
         "mb-1.5 grid gap-1 text-center",
         showWeekly
-          ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+          ? "grid-cols-[repeat(7,1fr)_6px_minmax(50px,1.2fr)] sm:grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
           : "grid-cols-[repeat(7,1fr)]"
       )}>
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
@@ -266,7 +266,7 @@ export function CalendarHeatmap({
               className={cn(
                 "grid gap-1 rounded-lg px-0.5 -mx-0.5 transition-colors duration-150 hover:bg-muted/20",
                 showWeekly
-                  ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+                  ? "grid-cols-[repeat(7,1fr)_6px_minmax(50px,1.2fr)] sm:grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
                   : "grid-cols-[repeat(7,1fr)]"
               )}
             >

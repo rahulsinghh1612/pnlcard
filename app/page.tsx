@@ -10,7 +10,11 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { DemoSection } from "@/components/landing/demo-section";
+import dynamic from "next/dynamic";
+const DemoSection = dynamic(() => import("@/components/landing/demo-section").then((m) => m.DemoSection), {
+  ssr: false,
+  loading: () => <div className="h-[520px]" />,
+});
 // ─── Sample ticker data ──────────────────────────────────────────
 
 const TICKER_1 = [
@@ -193,17 +197,25 @@ export default function LandingPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Preload all 12 promo card images so toggling theme/variant is instant
+  // Preload current theme/variant images immediately, defer the rest
   useEffect(() => {
-    for (const v of ["profit", "loss"] as const) {
-      for (const t of ["light", "dark"] as const) {
-        for (const { url } of getPromoCardUrls(t, v)) {
-          const img = new Image();
-          img.src = url;
+    for (const { url } of displayCards) {
+      const img = new Image();
+      img.src = url;
+    }
+    const timer = setTimeout(() => {
+      for (const v of ["profit", "loss"] as const) {
+        for (const t of ["light", "dark"] as const) {
+          if (v === cardVariant && t === cardTheme) continue;
+          for (const { url } of getPromoCardUrls(t, v)) {
+            const img = new Image();
+            img.src = url;
+          }
         }
       }
-    }
-  }, []);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleHeroClick = (index: number) => {
     heroPositionRef.current = index;
@@ -680,9 +692,9 @@ export default function LandingPage() {
                 : "opacity-0 translate-y-8"
             }`}
           >
-            <div className="relative flex items-center gap-4">
+            <div className="relative flex flex-col sm:flex-row items-center gap-4">
               {/* Large featured card */}
-              <div className="relative z-10 w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] md:w-[360px] md:h-[360px] shrink-0">
+              <div className="relative z-10 w-[260px] h-[260px] sm:w-[320px] sm:h-[320px] md:w-[360px] md:h-[360px] shrink-0">
                 {!galleryImgLoaded && !galleryImgError && (
                   <div className="absolute inset-0 rounded-2xl bg-muted/50 animate-pulse flex items-center justify-center">
                     <Sparkles className="h-8 w-8 text-muted-foreground/30" />
@@ -719,7 +731,7 @@ export default function LandingPage() {
                 )}
               </div>
               {/* Small cards column — swapped-out card goes to clicked card's position */}
-              <div className="relative z-10 flex flex-col gap-3 shrink-0">
+              <div className="relative z-10 flex flex-row sm:flex-col gap-3 shrink-0">
                 {(() => {
                   const defaultOrder = ([0, 1, 2] as const).filter(
                     (x) => x !== galleryFeaturedIndex
@@ -749,7 +761,7 @@ export default function LandingPage() {
                           setGalleryImgError(false);
                           setGallerySmallCardOrder(newOrder);
                         }}
-                        className="w-[120px] h-[120px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px] rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.10)] ring-1 ring-black/10 transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-black/20 focus:outline-none focus:ring-2 focus:ring-black/20 cursor-pointer"
+                        className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px] rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.10)] ring-1 ring-black/10 transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-black/20 focus:outline-none focus:ring-2 focus:ring-black/20 cursor-pointer"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
