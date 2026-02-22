@@ -111,22 +111,28 @@ export default function TermsPage() {
             </h2>
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>
-                You can cancel your Premium subscription at any time. Your
-                premium features remain active until the end of your current
-                billing period.
+                You can cancel your Premium subscription at any time from the
+                Settings page. Your premium features remain active until the end
+                of your current billing period.
               </li>
               <li>
-                No refunds are issued for partial billing periods.
+                No refunds are issued for partial billing periods or unused time.
               </li>
               <li>
-                If you experience a billing error, contact us within 7 days at{" "}
+                We consider refund requests on a case-by-case basis for
+                exceptional circumstances (e.g. duplicate charges, technical
+                issues preventing use of the Service).
+              </li>
+              <li>
+                For billing errors or refund requests, contact us within 7 days
+                at{" "}
                 <a
                   href="mailto:rahulsin1612@gmail.com"
                   className="text-emerald-600 hover:underline"
                 >
                   rahulsin1612@gmail.com
-                </a>{" "}
-                for a review.
+                </a>
+                . We will respond within 5 business days.
               </li>
             </ul>
           </div>
