@@ -133,19 +133,19 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
 
           <div className="space-y-2">
             <Label>Currency</Label>
-            <div className="flex gap-3">
+            <div className="flex rounded-xl border border-border bg-muted/50 p-1">
               {(["INR", "USD"] as const).map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setCurrency(c)}
-                  className={`flex flex-1 items-center justify-center rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all ${
+                  className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
                     currency === c
-                      ? "border-slate-300 bg-slate-100 text-slate-900 shadow-sm"
-                      : "btn-gradient-flow border-border bg-transparent text-muted-foreground hover:border-slate-300 hover:text-foreground"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <span className="relative z-[1]">{c === "INR" ? "₹ INR" : "$ USD"}</span>
+                  {c === "INR" ? "₹ INR" : "$ USD"}
                 </button>
               ))}
             </div>
