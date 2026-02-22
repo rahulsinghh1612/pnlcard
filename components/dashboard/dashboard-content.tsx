@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card } from "@/components/ui/card";
 import { LogTradeButton } from "@/components/dashboard/log-trade-button";
 import { RecentEntries } from "@/components/dashboard/recent-entries";
 import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
-import { BarChart3, Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
   format,
@@ -259,75 +258,53 @@ export function DashboardContent({
           />
         </div>
 
-        {!hasTrades ? (
-          <Card className="overflow-hidden border-dashed border-2 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/50 p-12 text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-slate-200/80 to-slate-300/60">
-              <BarChart3 className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-medium text-foreground">
-              No trades yet
-            </h2>
-            <p className="mt-2 max-w-sm mx-auto text-sm text-muted-foreground">
-              Log your first trade to generate your first recap card and start
-              sharing your progress.
-            </p>
-            <LogTradeButton
-              userId={userId}
-              currency={currency}
-              tradingCapital={tradingCapital}
-              className="mt-6"
-              onOpenCreate={openCreateModal}
-            />
-          </Card>
-        ) : (
-          <>
-            <CalendarHeatmap
-              trades={effectiveTrades.map((t) => ({
-                id: t.id,
-                trade_date: t.trade_date,
-                net_pnl: t.net_pnl,
-                charges: t.charges,
-                num_trades: t.num_trades,
-                capital_deployed: t.capital_deployed,
-                note: t.note,
-              }))}
-              currency={currency}
-              onDayClick={(date, existingTrade) => {
-                if (existingTrade) {
-                  const fullTrade = effectiveTrades.find((t) => t.id === existingTrade.id);
-                  if (fullTrade) {
-                    setCardPreviewType("daily");
-                    setCardPreviewTrade(fullTrade);
-                    setCardPreviewWeekMonday(null);
-                    setCardPreviewMonthDate(null);
-                    setCardPreviewOpen(true);
-                    return;
-                  }
-                }
-                openEditModal(date, null);
-              }}
-              onWeekClick={(mondayStr) => {
-                setCardPreviewType("weekly");
-                setCardPreviewTrade(null);
-                setCardPreviewWeekMonday(mondayStr);
+        <CalendarHeatmap
+          trades={effectiveTrades.map((t) => ({
+            id: t.id,
+            trade_date: t.trade_date,
+            net_pnl: t.net_pnl,
+            charges: t.charges,
+            num_trades: t.num_trades,
+            capital_deployed: t.capital_deployed,
+            note: t.note,
+          }))}
+          currency={currency}
+          onDayClick={(date, existingTrade) => {
+            if (existingTrade) {
+              const fullTrade = effectiveTrades.find((t) => t.id === existingTrade.id);
+              if (fullTrade) {
+                setCardPreviewType("daily");
+                setCardPreviewTrade(fullTrade);
+                setCardPreviewWeekMonday(null);
                 setCardPreviewMonthDate(null);
                 setCardPreviewOpen(true);
-              }}
-              onMonthClick={(monthDateStr) => {
-                setCardPreviewType("monthly");
-                setCardPreviewTrade(null);
-                setCardPreviewWeekMonday(null);
-                setCardPreviewMonthDate(monthDateStr);
-                setCardPreviewOpen(true);
-              }}
-              initialViewDate={demoViewDate}
-            />
+                return;
+              }
+            }
+            openEditModal(date, null);
+          }}
+          onWeekClick={(mondayStr) => {
+            setCardPreviewType("weekly");
+            setCardPreviewTrade(null);
+            setCardPreviewWeekMonday(mondayStr);
+            setCardPreviewMonthDate(null);
+            setCardPreviewOpen(true);
+          }}
+          onMonthClick={(monthDateStr) => {
+            setCardPreviewType("monthly");
+            setCardPreviewTrade(null);
+            setCardPreviewWeekMonday(null);
+            setCardPreviewMonthDate(monthDateStr);
+            setCardPreviewOpen(true);
+          }}
+          initialViewDate={demoViewDate}
+        />
 
-            {/* Generate Cards section */}
-            <div>
-              <h2 className="text-sm font-medium text-foreground mb-3">
-                Generate cards
-              </h2>
+        {/* Generate Cards section */}
+        <div>
+          <h2 className="text-sm font-medium text-foreground mb-3">
+            Generate cards
+          </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Daily card */}
                 {(() => {
@@ -531,27 +508,25 @@ export function DashboardContent({
               currency={currency}
             />
 
-            <RecentEntries
-              trades={effectiveTrades.map((t) => ({
-                id: t.id,
-                trade_date: t.trade_date,
-                net_pnl: t.net_pnl,
-                charges: t.charges,
-                num_trades: t.num_trades,
-              }))}
-              currency={currency}
-              onGenerateCard={(tradeId) => {
-                const trade = effectiveTrades.find((t) => t.id === tradeId);
-                if (!trade) return;
-                setCardPreviewType("daily");
-                setCardPreviewTrade(trade);
-                setCardPreviewWeekMonday(null);
-                setCardPreviewMonthDate(null);
-                setCardPreviewOpen(true);
-              }}
-            />
-          </>
-        )}
+        <RecentEntries
+          trades={effectiveTrades.map((t) => ({
+            id: t.id,
+            trade_date: t.trade_date,
+            net_pnl: t.net_pnl,
+            charges: t.charges,
+            num_trades: t.num_trades,
+          }))}
+          currency={currency}
+          onGenerateCard={(tradeId) => {
+            const trade = effectiveTrades.find((t) => t.id === tradeId);
+            if (!trade) return;
+            setCardPreviewType("daily");
+            setCardPreviewTrade(trade);
+            setCardPreviewWeekMonday(null);
+            setCardPreviewMonthDate(null);
+            setCardPreviewOpen(true);
+          }}
+        />
       </div>
 
       <TradeEntryModal
