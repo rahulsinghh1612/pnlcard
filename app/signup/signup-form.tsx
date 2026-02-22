@@ -7,18 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function LoginForm() {
+export function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
-  const errorParam = searchParams.get("error");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(errorParam === "auth_failed" ? "Authentication failed. Please try again." : null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignUp = async () => {
     setIsLoading(true);
     setError(null);
 
@@ -42,19 +42,28 @@ export function LoginForm() {
     }
   };
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError("Please enter your email and password.");
+      setError("Please enter your email and a password.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
 
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirect}` },
+      });
 
       if (error) {
         setError(error.message);
@@ -62,8 +71,15 @@ export function LoginForm() {
         return;
       }
 
-      router.push(redirect);
-      router.refresh();
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        router.push(redirect);
+        router.refresh();
+      } else {
+        setSuccess("Check your email to confirm your account, then sign in.");
+        setPassword("");
+      }
+      setIsLoading(false);
     } catch {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);
@@ -81,11 +97,20 @@ export function LoginForm() {
         </div>
       )}
 
+      {success && (
+        <div
+          className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          role="status"
+        >
+          {success}
+        </div>
+      )}
+
       <Button
         type="button"
         variant="outline"
         className="w-full"
-        onClick={handleGoogleSignIn}
+        onClick={handleGoogleSignUp}
         disabled={isLoading}
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -118,13 +143,13 @@ export function LoginForm() {
         </div>
       </div>
 
-      <form onSubmit={handleEmailSignIn} className="space-y-4">
+      <form onSubmit={handleEmailSignUp} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="sr-only">
+          <Label htmlFor="signup-email" className="sr-only">
             Email
           </Label>
           <Input
-            id="email"
+            id="signup-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -133,16 +158,16 @@ export function LoginForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password" className="sr-only">
+          <Label htmlFor="signup-password" className="sr-only">
             Password
           </Label>
           <Input
-            id="password"
+            id="signup-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            autoComplete="current-password"
+            placeholder="Password (min 6 characters)"
+            autoComplete="new-password"
           />
         </div>
         <Button
@@ -150,7 +175,7 @@ export function LoginForm() {
           disabled={isLoading}
           className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
         >
-          Sign in
+          Create account
         </Button>
       </form>
     </div>

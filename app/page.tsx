@@ -313,7 +313,7 @@ export default function LandingPage() {
               Pricing
             </a>
             <Link
-              href="/login"
+              href="/signup"
               className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
             >
               <span className="relative z-[1]">Start for Free</span>
@@ -340,7 +340,7 @@ export default function LandingPage() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/login"
+                  href="/signup"
                   className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
                 >
                   <span className="relative z-[1]">Start for Free</span>
@@ -858,7 +858,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/login"
+                href="/signup"
                 className="btn-gradient-flow group relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
               >
                 <span className="relative z-[1]">Get Started</span>
@@ -953,7 +953,7 @@ export default function LandingPage() {
           </h2>
           <div className="mt-8 flex justify-center">
             <Link
-              href="/login"
+              href="/signup"
               className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
             >
               <span className="relative z-[1]">Start for Free</span>
