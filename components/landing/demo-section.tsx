@@ -29,7 +29,6 @@ const TRADE_MAP = new Map<string, (typeof DEMO_TRADES)[number]>(
 
 const MONTH_PNL = DEMO_TRADES.reduce((s, t) => s + getFinalResult(t), 0);
 
-// Trade highlighted in the Log Trade modal: Jan 14, 2026
 const HIGHLIGHT = DEMO_TRADES.find((t) => t.trade_date === "2026-01-14")!;
 const H_FINAL = getFinalResult(HIGHLIGHT);
 const H_ROI =
@@ -37,10 +36,9 @@ const H_ROI =
     ? ((H_FINAL / HIGHLIGHT.capital_deployed) * 100).toFixed(2)
     : null;
 
-// Build a Mon-first grid for January 2026
 function buildGrid(): (number | null)[][] {
-  const dow = new Date(2026, 0, 1).getDay(); // 4 = Thursday
-  const pad = (dow + 6) % 7; // 3 empty cells (Mon, Tue, Wed)
+  const dow = new Date(2026, 0, 1).getDay();
+  const pad = (dow + 6) % 7;
   const flat: (number | null)[] = [
     ...Array<null>(pad).fill(null),
     ...Array.from({ length: 31 }, (_, i) => i + 1),
@@ -53,38 +51,9 @@ function buildGrid(): (number | null)[][] {
 
 const JAN_GRID = buildGrid();
 
-type WeekSummary = { pnl: number; trades: number; label: string };
-
-function buildWeekSummaries(): WeekSummary[] {
-  return JAN_GRID.map((week) => {
-    const nums = week.filter((d): d is number => d !== null);
-    let pnl = 0;
-    let trades = 0;
-    for (const day of nums) {
-      const t = TRADE_MAP.get(`2026-01-${String(day).padStart(2, "0")}`);
-      if (t) {
-        pnl += getFinalResult(t);
-        trades += t.num_trades;
-      }
-    }
-    const first = nums[0];
-    const last = nums[nums.length - 1];
-    return {
-      pnl,
-      trades,
-      label: first === last ? `${first}` : `${first}–${last}`,
-    };
-  });
-}
-
-const WEEK_SUMMARIES = buildWeekSummaries();
-
-// Unified intensity scale (daily + weekly, matching real calendar)
 const dailyFinals = DEMO_TRADES.map(getFinalResult);
-const weeklyPnls = WEEK_SUMMARIES.filter((w) => w.trades > 0).map((w) => w.pnl);
-const allValues = [...dailyFinals, ...weeklyPnls];
-const maxProfit = Math.max(...allValues.filter((v) => v > 0), 1);
-const maxLoss = Math.max(...allValues.filter((v) => v < 0).map(Math.abs), 1);
+const maxProfit = Math.max(...dailyFinals.filter((v) => v > 0), 1);
+const maxLoss = Math.max(...dailyFinals.filter((v) => v < 0).map(Math.abs), 1);
 
 function profitBg(v: number): string {
   const r = v / maxProfit;
@@ -208,60 +177,54 @@ function DemoLogTrade({ active }: { active: boolean }) {
   );
 }
 
-/* ─── DemoCalendar ───────────────────────────────────────── */
+/* ─── DemoCalendar (standalone, no weekly column) ────────── */
 
-function DemoCalendar({ active }: { active: boolean }) {
+export function DemoCalendar({ active = true }: { active?: boolean }) {
   const [show, setShow] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!active) {
       setShow(false);
       return;
     }
-    const id = setTimeout(() => setShow(true), 200);
-    return () => clearTimeout(id);
+
+    const el = ref.current;
+    if (!el) {
+      const id = setTimeout(() => setShow(true), 200);
+      return () => clearTimeout(id);
+    }
+
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setShow(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
   }, [active]);
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl scrollbar-none">
-        <div className="min-w-[440px]">
+    <div ref={ref} className="w-full max-w-md mx-auto">
+      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
         {/* Month navigation bar */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-1">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
-              <svg
-                width="14"
-                height="14"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </span>
             <span className="min-w-[120px] text-center text-sm font-semibold text-foreground">
               January 2026
             </span>
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-muted-foreground">
-              <svg
-                width="14"
-                height="14"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </span>
           </div>
@@ -278,8 +241,8 @@ function DemoCalendar({ active }: { active: boolean }) {
           </span>
         </div>
 
-        {/* Day-of-week headers + Wk column */}
-        <div className="mb-1.5 grid grid-cols-[repeat(7,1fr)_8px_minmax(48px,1fr)] gap-1 text-center">
+        {/* Day-of-week headers */}
+        <div className="mb-1.5 grid grid-cols-7 gap-1 text-center">
           {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
             <span
               key={`h-${i}`}
@@ -288,123 +251,68 @@ function DemoCalendar({ active }: { active: boolean }) {
               {d}
             </span>
           ))}
-          <span />
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Wk
-          </span>
         </div>
 
         {/* Week rows */}
         <div className="flex flex-col gap-1">
-          {JAN_GRID.map((week, ri) => {
-            const summary = WEEK_SUMMARIES[ri];
+          {JAN_GRID.map((week, ri) => (
+            <div key={ri} className="grid grid-cols-7 gap-1">
+              {week.map((day, ci) => {
+                const cellIdx = ri * 7 + ci;
 
-            return (
-              <div
-                key={ri}
-                className="grid grid-cols-[repeat(7,1fr)_8px_minmax(48px,1fr)] gap-1"
-              >
-                {/* Day cells */}
-                {week.map((day, ci) => {
-                  const cellIdx = ri * 7 + ci;
-
-                  if (day === null)
-                    return (
-                      <div
-                        key={`e-${ri}-${ci}`}
-                        className="aspect-square rounded-lg"
-                      />
-                    );
-
-                  const ds = `2026-01-${String(day).padStart(2, "0")}`;
-                  const trade = TRADE_MAP.get(ds);
-                  const result = trade ? getFinalResult(trade) : 0;
-                  const isProfit = trade ? result >= 0 : false;
-
-                  let bg = "bg-muted/40";
-                  let text = "text-muted-foreground";
-                  if (trade) {
-                    bg = isProfit ? profitBg(result) : lossBg(result);
-                    text = isProfit ? "text-emerald-700" : "text-red-700";
-                  }
-
+                if (day === null)
                   return (
-                    <div
-                      key={ds}
-                      className={`relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all duration-500 ${bg} ${text}`}
-                      style={{
-                        opacity: show ? 1 : 0,
-                        transform: show ? "scale(1)" : "scale(0.6)",
-                        transitionDelay: show ? `${cellIdx * 25}ms` : "0ms",
-                      }}
-                    >
-                      {trade ? (
-                        <>
-                          <span className="absolute top-0.5 left-1 text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
-                            {day}
-                          </span>
-                          <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
-                            {formatCompact(result)}
-                          </span>
-                          <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-75 mt-0.5">
-                            {trade.num_trades === 1
-                              ? "1 Trade"
-                              : `${trade.num_trades} Trades`}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-[10px] sm:text-xs font-medium">
+                    <div key={`e-${ri}-${ci}`} className="aspect-square rounded-lg" />
+                  );
+
+                const ds = `2026-01-${String(day).padStart(2, "0")}`;
+                const trade = TRADE_MAP.get(ds);
+                const result = trade ? getFinalResult(trade) : 0;
+                const isProfit = trade ? result >= 0 : false;
+
+                let bg = "bg-muted/40";
+                let text = "text-muted-foreground";
+                if (trade) {
+                  bg = isProfit ? profitBg(result) : lossBg(result);
+                  text = isProfit ? "text-emerald-700" : "text-red-700";
+                }
+
+                return (
+                  <div
+                    key={ds}
+                    className={`relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all duration-500 ${bg} ${text}`}
+                    style={{
+                      opacity: show ? 1 : 0,
+                      transform: show ? "scale(1)" : "scale(0.6)",
+                      transitionDelay: show ? `${cellIdx * 25}ms` : "0ms",
+                    }}
+                  >
+                    {trade ? (
+                      <>
+                        <span className="absolute top-0.5 left-1 text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
                           {day}
                         </span>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {/* Dashed separator */}
-                <div className="flex items-center justify-center">
-                  <div className="h-3/4 border-l border-dashed border-border" />
-                </div>
-
-                {/* Weekly summary */}
-                <div
-                  className={`aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all duration-500 ${
-                    summary.trades === 0
-                      ? "bg-muted/30 text-muted-foreground"
-                      : summary.pnl >= 0
-                        ? `${profitBg(summary.pnl)} text-emerald-700 border border-emerald-200/50`
-                        : `${lossBg(summary.pnl)} text-red-700 border border-red-200/50`
-                  }`}
-                  style={{
-                    opacity: show ? 1 : 0,
-                    transform: show ? "scale(1)" : "scale(0.6)",
-                    transitionDelay: show ? `${(ri + 1) * 150}ms` : "0ms",
-                  }}
-                >
-                  <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70">
-                    {summary.label}
-                  </span>
-                  {summary.trades > 0 ? (
-                    <>
-                      <span className="text-[8px] sm:text-[10px] font-bold leading-tight truncate max-w-full">
-                        {formatCompact(summary.pnl)}
+                        <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
+                          {formatCompact(result)}
+                        </span>
+                        <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-75 mt-0.5">
+                          {trade.num_trades === 1
+                            ? "1 Trade"
+                            : `${trade.num_trades} Trades`}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[10px] sm:text-xs font-medium">
+                        {day}
                       </span>
-                      <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-70">
-                        {summary.trades} trades
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-[7px] sm:text-[8px] leading-none opacity-50">
-                      —
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
-        </div>
         {/* Legend */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
@@ -496,18 +404,17 @@ function DemoCreateCards({ active }: { active: boolean }) {
   );
 }
 
-/* ─── Main: DemoSection ─────────────────────────────────── */
+/* ─── Main: DemoSection (2 steps: Log Trade + Create Cards) */
 
 const STEPS = [
   { id: 0 as const, label: "Log a Trade" },
-  { id: 1 as const, label: "Calendar" },
-  { id: 2 as const, label: "Create Cards" },
+  { id: 1 as const, label: "Create Cards" },
 ];
 
 const AUTO_MS = 6000;
 
 export function DemoSection() {
-  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [step, setStep] = useState<0 | 1>(0);
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setInterval>>();
@@ -528,7 +435,7 @@ export function DemoSection() {
   const startTimer = useCallback(() => {
     clearInterval(timer.current);
     timer.current = setInterval(
-      () => setStep((p) => (p >= 2 ? 0 : (p + 1) as 0 | 1 | 2)),
+      () => setStep((p) => (p === 0 ? 1 : 0)),
       AUTO_MS,
     );
   }, []);
@@ -539,7 +446,6 @@ export function DemoSection() {
     return () => clearInterval(timer.current);
   }, [visible, startTimer]);
 
-  // When user clicks "See how it works" and scrolls to #demo, reset to step 0 (Log a Trade)
   useEffect(() => {
     const handleHashChange = () => {
       if (typeof window !== "undefined" && window.location.hash === "#demo") {
@@ -554,7 +460,7 @@ export function DemoSection() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, [startTimer]);
 
-  function pickStep(s: 0 | 1 | 2) {
+  function pickStep(s: 0 | 1) {
     setStep(s);
     startTimer();
   }
@@ -605,10 +511,7 @@ export function DemoSection() {
               : "opacity-0 translate-y-8"
           }`}
         >
-          {/* Removed background glow — clean floating card style */}
-
           <div className="relative h-[520px]">
-            {/* Both views use absolute positioning so container height stays fixed — prevents layout shift */}
             <div
               className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
               style={{
@@ -628,18 +531,7 @@ export function DemoSection() {
                 pointerEvents: step === 1 ? "auto" : "none",
               }}
             >
-              <DemoCalendar active={step === 1 && visible} />
-            </div>
-
-            <div
-              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
-              style={{
-                opacity: step === 2 ? 1 : 0,
-                transform: `translateX(${step === 2 ? 0 : 30}px)`,
-                pointerEvents: step === 2 ? "auto" : "none",
-              }}
-            >
-              <DemoCreateCards active={step === 2 && visible} />
+              <DemoCreateCards active={step === 1 && visible} />
             </div>
           </div>
         </div>

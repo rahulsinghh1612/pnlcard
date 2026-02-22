@@ -15,6 +15,10 @@ const DemoSection = dynamic(() => import("@/components/landing/demo-section").th
   ssr: false,
   loading: () => <div className="h-[520px]" />,
 });
+const DemoCalendar = dynamic(() => import("@/components/landing/demo-section").then((m) => m.DemoCalendar), {
+  ssr: false,
+  loading: () => <div className="h-[320px]" />,
+});
 // ─── Sample ticker data ──────────────────────────────────────────
 
 const TICKER_1 = [
@@ -189,6 +193,7 @@ export default function LandingPage() {
   const rafRef = useRef<number>();
 
   const howItWorks = useInView();
+  const calendarFeature = useInView();
   const gallery = useInView();
   const pricing = useInView();
 
@@ -538,7 +543,7 @@ export default function LandingPage() {
             }`}
           >
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Three steps.{" "}
+              Two steps.{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 Sixty seconds.
               </span>
@@ -575,6 +580,42 @@ export default function LandingPage() {
                 <span className="text-emerald-400 select-none">&#x2022;</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Calendar Feature ──────────────────────────────── */}
+      <section
+        ref={calendarFeature.ref}
+        className="scroll-mt-24 py-24 sm:py-32 bg-white"
+      >
+        <div className="mx-auto max-w-4xl px-6">
+          <div
+            className={`text-center mb-12 transition-all duration-700 ${
+              calendarFeature.visible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              Your P&amp;L,{" "}
+              <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+                one glance.
+              </span>
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              See your entire month&apos;s performance in a single calendar view.
+            </p>
+          </div>
+
+          <div
+            className={`transition-all duration-700 delay-200 ${
+              calendarFeature.visible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            <DemoCalendar />
           </div>
         </div>
       </section>
