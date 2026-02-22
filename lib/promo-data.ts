@@ -144,11 +144,15 @@ export type PromoCardMeta = {
  * Static promo card images — pre-generated PNGs in public/promo/.
  * To regenerate: node scripts/save-promo-images.mjs (dev server must be running)
  */
-export function getPromoCardUrls(theme: "light" | "dark" = "light"): PromoCardMeta[] {
-  const suffix = theme === "dark" ? "-dark" : "";
+export function getPromoCardUrls(
+  theme: "light" | "dark" = "light",
+  variant: "profit" | "loss" = "profit"
+): PromoCardMeta[] {
+  const variantSuffix = variant === "loss" ? "-loss" : "";
+  const themeSuffix = theme === "dark" ? "-dark" : "";
   return [
-    { label: "Daily Recap", url: `/promo/daily${suffix}.png` },
-    { label: "Weekly Recap", url: `/promo/weekly${suffix}.png` },
-    { label: "Monthly Recap", url: `/promo/monthly${suffix}.png` },
+    { label: "Daily Recap", url: `/promo/daily${variantSuffix}${themeSuffix}.png` },
+    { label: "Weekly Recap", url: `/promo/weekly${variantSuffix}${themeSuffix}.png` },
+    { label: "Monthly Recap", url: `/promo/monthly${variantSuffix}${themeSuffix}.png` },
   ];
 }

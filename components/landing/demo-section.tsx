@@ -541,7 +541,7 @@ export function DemoSection() {
   }
 
   return (
-    <section ref={ref} className="py-16 sm:py-24 pb-20">
+    <section ref={ref} className="py-16 sm:py-24 pb-56">
       <div className="mx-auto max-w-5xl px-6">
         {/* Section heading */}
         <div
@@ -553,7 +553,7 @@ export function DemoSection() {
         >
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             See it in{" "}
-            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+            <span className="animate-gradient-shift bg-gradient-to-r from-emerald-500 via-red-500 to-emerald-500 bg-clip-text text-transparent">
               action
             </span>
           </h2>
@@ -606,8 +606,7 @@ export function DemoSection() {
               : "opacity-0 translate-y-8"
           }`}
         >
-          {/* Soft background glow */}
-          <div className="absolute -inset-20 rounded-3xl bg-emerald-200/15 blur-3xl pointer-events-none" />
+          {/* Removed background glow — clean floating card style */}
 
           <div className="relative h-[520px]">
             {/* Both views use absolute positioning so container height stays fixed — prevents layout shift */}

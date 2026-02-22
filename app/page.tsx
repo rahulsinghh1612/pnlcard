@@ -134,106 +134,21 @@ function TickerChip({ date, pnl }: { date: string; pnl: number }) {
   );
 }
 
-// ─── Candlestick data for animated chart ─────────────────────────
-// Realistic price action with trends, dojis, big moves, and varying wicks.
-// Values on a shared 0-100 price scale so candles move up and down together.
-const CANDLES = [
-  // Rally phase
-  { o: 30, c: 38, h: 40, l: 28 },
-  { o: 38, c: 36, h: 41, l: 35 },
-  { o: 37, c: 48, h: 50, l: 36 },
-  { o: 48, c: 46, h: 52, l: 44 },
-  { o: 46, c: 55, h: 58, l: 45 },
-  { o: 55, c: 62, h: 65, l: 53 },
-  { o: 62, c: 60, h: 66, l: 58 },
-  { o: 60, c: 70, h: 74, l: 58 },
-  { o: 70, c: 68, h: 76, l: 65 },
-  { o: 69, c: 78, h: 82, l: 67 },
-  // Top / reversal
-  { o: 78, c: 80, h: 88, l: 76 },
-  { o: 80, c: 79, h: 85, l: 77 },
-  { o: 79, c: 72, h: 82, l: 70 },
-  // Sell-off
-  { o: 72, c: 60, h: 74, l: 58 },
-  { o: 60, c: 55, h: 63, l: 52 },
-  { o: 55, c: 50, h: 58, l: 48 },
-  { o: 50, c: 52, h: 55, l: 46 },
-  { o: 52, c: 42, h: 54, l: 40 },
-  { o: 42, c: 38, h: 45, l: 35 },
-  // Bottom / bounce
-  { o: 38, c: 35, h: 40, l: 30 },
-  { o: 35, c: 36, h: 38, l: 28 },
-  { o: 36, c: 44, h: 46, l: 34 },
-  { o: 44, c: 42, h: 48, l: 40 },
-  { o: 42, c: 50, h: 52, l: 40 },
-  // Second rally
-  { o: 50, c: 58, h: 60, l: 48 },
-  { o: 58, c: 56, h: 62, l: 54 },
-  { o: 56, c: 65, h: 68, l: 54 },
-  { o: 65, c: 63, h: 70, l: 60 },
-  { o: 63, c: 72, h: 76, l: 62 },
-  { o: 72, c: 70, h: 78, l: 68 },
-  // Consolidation
-  { o: 70, c: 68, h: 73, l: 66 },
-  { o: 68, c: 70, h: 72, l: 66 },
-  { o: 70, c: 66, h: 72, l: 64 },
-  { o: 66, c: 62, h: 68, l: 60 },
-  { o: 62, c: 58, h: 64, l: 56 },
-  { o: 58, c: 52, h: 60, l: 50 },
-  { o: 52, c: 48, h: 54, l: 45 },
-  { o: 48, c: 44, h: 50, l: 42 },
-  { o: 44, c: 40, h: 46, l: 38 },
-  { o: 40, c: 35, h: 42, l: 32 },
+// ─── Feature highlights for scrolling strip ─────────────────────
+const FEATURE_HIGHLIGHTS = [
+  "Track Daily P&L",
+  "60-Second Trade Logging",
+  "Beautiful Recap Cards",
+  "Share On X & Instagram",
+  "Dark Mode Cards",
+  "Weekly & Monthly Recaps",
+  "Auto-Calculated ROI",
+  "Win Rate Tracking",
+  "Calendar Heatmap View",
+  "Multi-Currency Support",
+  "Export & Share Anywhere",
+  "Built For Traders",
 ];
-
-// Global scale: all candles share the same Y-axis
-const CHART_H = 120;
-const GLOBAL_MIN = Math.min(...CANDLES.map((c) => c.l));
-const GLOBAL_MAX = Math.max(...CANDLES.map((c) => c.h));
-const GLOBAL_RANGE = GLOBAL_MAX - GLOBAL_MIN || 1;
-
-function priceToY(price: number): number {
-  return ((GLOBAL_MAX - price) / GLOBAL_RANGE) * CHART_H;
-}
-
-function Candlestick({ candle }: { candle: typeof CANDLES[0] }) {
-  const bullish = candle.c >= candle.o;
-  const color = bullish ? "#10b981" : "#ef4444";
-
-  const highY = priceToY(candle.h);
-  const lowY = priceToY(candle.l);
-  const bodyTopY = priceToY(Math.max(candle.o, candle.c));
-  const bodyBotY = priceToY(Math.min(candle.o, candle.c));
-  const bodyH = Math.max(bodyBotY - bodyTopY, 2);
-
-  return (
-    <div className="relative shrink-0" style={{ width: 14, height: CHART_H }}>
-      {/* Wick: thin line from high to low */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2"
-        style={{
-          top: highY,
-          height: lowY - highY,
-          width: 1.5,
-          backgroundColor: color,
-          borderRadius: 1,
-        }}
-      />
-      {/* Body: rectangle from open to close */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2"
-        style={{
-          top: bodyTopY,
-          height: bodyH,
-          width: 8,
-          backgroundColor: bullish ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)",
-          border: `1.5px solid ${color}`,
-          borderRadius: 2,
-        }}
-      />
-    </div>
-  );
-}
 
 // ─── Main page ───────────────────────────────────────────────────
 
@@ -248,21 +163,23 @@ export default function LandingPage() {
   const [galleryImgLoaded, setGalleryImgLoaded] = useState(false);
   const [galleryImgError, setGalleryImgError] = useState(false);
   const galleryImgRef = useRef<HTMLImageElement>(null);
-  const [heroPosition, setHeroPosition] = useState(0);
+  const [heroActiveIndex, setHeroActiveIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
+  const heroRotorRef = useRef<HTMLDivElement>(null);
   const [galleryFeaturedIndex, setGalleryFeaturedIndex] = useState(0);
   /** Order of small cards [top, bottom]. When null, use default sorted order. */
   const [gallerySmallCardOrder, setGallerySmallCardOrder] = useState<[number, number] | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [cardVariant, setCardVariant] = useState<"profit" | "loss">("profit");
   const heroCards = useMemo(
-    () => getPromoCardUrls(cardTheme),
-    [cardTheme]
+    () => getPromoCardUrls(cardTheme, cardVariant),
+    [cardTheme, cardVariant]
   );
   /** Safe cards for hero/gallery — fallback when promo data is empty (e.g. missing public/promo/) */
   const FALLBACK_CARDS: PromoCardMeta[] = [
-    { label: "Daily Recap", url: "/promo/daily.png" },
-    { label: "Weekly Recap", url: "/promo/weekly.png" },
-    { label: "Monthly Recap", url: "/promo/monthly.png" },
+    { label: "Daily Recap", url: `/promo/daily${cardVariant === "loss" ? "-loss" : ""}.png` },
+    { label: "Weekly Recap", url: `/promo/weekly${cardVariant === "loss" ? "-loss" : ""}.png` },
+    { label: "Monthly Recap", url: `/promo/monthly${cardVariant === "loss" ? "-loss" : ""}.png` },
   ];
   const displayCards = heroCards.length > 0 ? heroCards : FALLBACK_CARDS;
   const heroPositionRef = useRef(0);
@@ -278,18 +195,35 @@ export default function LandingPage() {
     window.scrollTo(0, 0);
   }, []);
 
+  // Preload all 12 promo card images so toggling theme/variant is instant
+  useEffect(() => {
+    for (const v of ["profit", "loss"] as const) {
+      for (const t of ["light", "dark"] as const) {
+        for (const { url } of getPromoCardUrls(t, v)) {
+          const img = new Image();
+          img.src = url;
+        }
+      }
+    }
+  }, []);
+
   const handleHeroClick = (index: number) => {
     heroPositionRef.current = index;
-    setHeroPosition(index);
+    setHeroActiveIndex(index);
+    if (heroRotorRef.current && displayCards.length > 0) {
+      heroRotorRef.current.style.transform = `rotateY(${-index * (360 / displayCards.length)}deg)`;
+    }
   };
 
   const handleHeroPointerEnter = () => setHeroPaused(true);
   const handleHeroPointerLeave = () => setHeroPaused(false);
 
-  // Hero: continuous revolving — smooth decel on hover, smooth accel on leave
+  // Hero: continuous revolving — writes directly to DOM for 60fps, only triggers React re-render when active dot changes
   useEffect(() => {
-    if (displayCards.length === 0) return;
+    const count = displayCards.length;
+    if (count === 0) return;
     let lastTime = performance.now();
+    let prevIndex = Math.round(heroPositionRef.current) % count;
     const LERP = 0.12;
     const tick = (now: number) => {
       const deltaSec = (now - lastTime) / 1000;
@@ -297,9 +231,19 @@ export default function LandingPage() {
       const targetSpeed = heroPaused ? 0 : 1;
       heroSpeedRef.current += (targetSpeed - heroSpeedRef.current) * LERP;
       heroPositionRef.current += HERO_CARDS_PER_SEC * deltaSec * heroSpeedRef.current;
-      if (heroPositionRef.current >= displayCards.length) heroPositionRef.current -= displayCards.length;
-      if (heroPositionRef.current < 0) heroPositionRef.current += displayCards.length;
-      setHeroPosition(heroPositionRef.current);
+      if (heroPositionRef.current >= count) heroPositionRef.current -= count;
+      if (heroPositionRef.current < 0) heroPositionRef.current += count;
+
+      if (heroRotorRef.current) {
+        heroRotorRef.current.style.transform = `rotateY(${-heroPositionRef.current * (360 / count)}deg)`;
+      }
+
+      const newIndex = ((Math.round(heroPositionRef.current) % count) + count) % count;
+      if (newIndex !== prevIndex) {
+        prevIndex = newIndex;
+        setHeroActiveIndex(newIndex);
+      }
+
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -318,7 +262,7 @@ export default function LandingPage() {
     check();
     const t = setTimeout(check, 50);
     return () => clearTimeout(t);
-  }, [cardType, cardTheme, galleryFeaturedIndex]);
+  }, [cardType, cardTheme, cardVariant, galleryFeaturedIndex]);
 
   const handleCardChange = (type: "daily" | "weekly" | "monthly") => {
     if (type === cardType) return;
@@ -330,7 +274,7 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-page overflow-x-hidden">
+    <main id="top" className="min-h-screen bg-page overflow-x-hidden">
       {/* ── Navbar ─────────────────────────────────────────── */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -404,19 +348,20 @@ export default function LandingPage() {
             {/* Hero card carousel — Earth-style revolving (cards around a column) */}
             <div className="animate-fade-in-up-delay-2 relative flex flex-col items-center lg:items-end gap-16">
               <div
-                className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[380px] md:h-[380px]"
+                className="relative w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] md:w-[380px] md:h-[380px] flex-shrink-0"
                 style={{ perspective: "1400px", perspectiveOrigin: "50% 50%" }}
                 onMouseEnter={handleHeroPointerEnter}
                 onMouseLeave={handleHeroPointerLeave}
                 onTouchStart={handleHeroPointerEnter}
                 onTouchEnd={handleHeroPointerLeave}
               >
-                <div className="absolute -inset-20 rounded-3xl bg-emerald-200/20 blur-3xl pointer-events-none" />
                 <div
+                  ref={heroRotorRef}
                   className="absolute inset-0"
                   style={{
                     transformStyle: "preserve-3d",
-                    transform: `rotateY(${-heroPosition * (360 / displayCards.length)}deg)`,
+                    transform: `rotateY(0deg)`,
+                    willChange: "transform",
                   }}
                 >
                   {displayCards.map((card, i) => {
@@ -440,7 +385,7 @@ export default function LandingPage() {
                           alt={card.label}
                           width={360}
                           height={360}
-                          className="w-full h-full rounded-2xl shadow-xl ring-1 ring-black/[0.06] object-cover select-none"
+                          className="w-full h-full rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06] object-cover select-none"
                           draggable={false}
                         />
                       </div>
@@ -449,52 +394,83 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Dot indicators + Light/Dark toggle */}
-              <div className="flex flex-wrap items-center justify-center gap-8">
+              {/* Dot indicators + toggles — stacked in two fixed rows to prevent layout shift */}
+              <div className="flex flex-col items-center gap-4">
+                {/* Row 1: Dot indicators + card label */}
                 <div className="flex items-center gap-1.5">
-                {displayCards.map((card, i) => (
-                  <button
-                    key={`dot-${i}`}
-                    type="button"
-                    onClick={() => handleHeroClick(i)}
-                    className={`rounded-full transition-all duration-300 ${
-                      ((Math.round(heroPosition) % displayCards.length) + displayCards.length) % displayCards.length === i
-                          ? "w-5 h-2 bg-foreground"
-                          : "w-1.5 h-1.5 bg-muted-foreground/40 hover:bg-muted-foreground/60"
-                    }`}
-                    aria-label={`Show ${card.label} card`}
-                  />
-                ))}
+                  {displayCards.map((card, i) => (
+                    <button
+                      key={`dot-${i}`}
+                      type="button"
+                      onClick={() => handleHeroClick(i)}
+                      className={`rounded-full transition-all duration-300 ${
+                        heroActiveIndex === i
+                            ? "w-5 h-2 bg-foreground"
+                            : "w-1.5 h-1.5 bg-muted-foreground/40 hover:bg-muted-foreground/60"
+                      }`}
+                      aria-label={`Show ${card.label} card`}
+                    />
+                  ))}
                   <span className="ml-2 text-xs text-muted-foreground">
-                    {displayCards[((Math.round(heroPosition) % displayCards.length) + displayCards.length) % displayCards.length]?.label ?? "Daily Recap"}
+                    {displayCards[heroActiveIndex]?.label ?? "Daily Recap"}
                   </span>
                 </div>
-                {/* Light / Dark toggle */}
-                <div className="flex items-center rounded-full border border-border bg-muted/50 p-1">
-                  {(["light", "dark"] as const).map((theme) => (
-                    <button
-                      key={theme}
-                      type="button"
-                      onClick={() => {
-                        if (cardTheme === theme) return;
-                        setGalleryImgLoaded(false);
-                        setGalleryImgError(false);
-                        setCardTheme(theme);
-                      }}
-                      className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
-                        cardTheme === theme
-                          ? "bg-white text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {theme === "light" ? (
-                        <Sun className="h-3.5 w-3.5" />
-                      ) : (
-                        <Moon className="h-3.5 w-3.5" />
-                      )}
-                      {theme === "light" ? "Light" : "Dark"}
-                    </button>
-                  ))}
+                {/* Row 2: Light/Dark + Profit/Loss toggles */}
+                <div className="flex items-center gap-3">
+                  {/* Light / Dark toggle */}
+                  <div className="flex items-center rounded-full border border-border bg-muted/50 p-1">
+                    {(["light", "dark"] as const).map((theme) => (
+                      <button
+                        key={theme}
+                        type="button"
+                        onClick={() => {
+                          if (cardTheme === theme) return;
+                          setGalleryImgLoaded(false);
+                          setGalleryImgError(false);
+                          setCardTheme(theme);
+                        }}
+                        className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                          cardTheme === theme
+                            ? "bg-white text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {theme === "light" ? (
+                          <Sun className="h-3.5 w-3.5" />
+                        ) : (
+                          <Moon className="h-3.5 w-3.5" />
+                        )}
+                        {theme === "light" ? "Light" : "Dark"}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Profit / Loss toggle */}
+                  <div className="flex items-center rounded-full border border-border bg-muted/50 p-1">
+                    {(["profit", "loss"] as const).map((variant) => (
+                      <button
+                        key={variant}
+                        type="button"
+                        onClick={() => {
+                          if (cardVariant === variant) return;
+                          setGalleryImgLoaded(false);
+                          setGalleryImgError(false);
+                          setCardVariant(variant);
+                        }}
+                        className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                          cardVariant === variant
+                            ? "bg-white text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {variant === "profit" ? (
+                          <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                        ) : (
+                          <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                        )}
+                        {variant === "profit" ? "Profit" : "Loss"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -636,15 +612,27 @@ export default function LandingPage() {
       {/* ── Interactive Demo ──────────────────────────────── */}
       <DemoSection />
 
-      {/* ── Animated Candlestick Chart ─────────────────────── */}
-      <section className="pt-12 pb-8 overflow-hidden" aria-hidden="true">
+      {/* ── Scrolling Feature Strip ──────────────────────────── */}
+      <section className="relative mt-16 py-5 overflow-hidden border-y border-border/40" aria-hidden="true">
+        <div
+          className="absolute inset-y-0 left-0 w-20 sm:w-28 z-10 pointer-events-none"
+          style={{
+            background: "linear-gradient(to right, hsl(var(--page-bg)) 0%, transparent 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 w-20 sm:w-28 z-10 pointer-events-none"
+          style={{
+            background: "linear-gradient(to left, hsl(var(--page-bg)) 0%, transparent 100%)",
+          }}
+        />
         <div className="overflow-hidden w-full">
-          <div
-            className="animate-candlestick-scroll flex items-end gap-px flex-nowrap"
-            style={{ width: "400%", minWidth: "max-content" }}
-          >
-            {[...CANDLES, ...CANDLES, ...CANDLES, ...CANDLES].map((c, i) => (
-              <Candlestick key={`candle-${i}`} candle={c} />
+          <div className="animate-stock-ticker flex items-center flex-nowrap w-max">
+            {[...FEATURE_HIGHLIGHTS, ...FEATURE_HIGHLIGHTS].map((text, i) => (
+              <div key={`feat-${i}`} className="flex shrink-0 items-center gap-4 px-6">
+                <span className="text-sm font-medium text-foreground/70">{text}</span>
+                <span className="text-emerald-400 select-none">&#x2022;</span>
+              </div>
             ))}
           </div>
         </div>
@@ -723,6 +711,32 @@ export default function LandingPage() {
                 </button>
               ))}
             </div>
+            {/* Profit / Loss toggle */}
+            <div className="flex items-center rounded-full border border-border bg-muted/50 p-1">
+              {(["profit", "loss"] as const).map((variant) => (
+                <button
+                  key={variant}
+                  onClick={() => {
+                    if (cardVariant === variant) return;
+                    setGalleryImgLoaded(false);
+                    setGalleryImgError(false);
+                    setCardVariant(variant);
+                  }}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                    cardVariant === variant
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {variant === "profit" ? (
+                    <TrendingUp className="h-4 w-4 text-emerald-600" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-600" />
+                  )}
+                  {variant === "profit" ? "Profit" : "Loss"}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Gallery bento — one large featured card + two small cards */}
@@ -734,13 +748,6 @@ export default function LandingPage() {
             }`}
           >
             <div className="relative flex items-center gap-4">
-              <div
-                className={`absolute -inset-8 rounded-3xl blur-3xl transition-colors duration-500 pointer-events-none ${
-                  cardTheme === "dark"
-                    ? "bg-zinc-400/20"
-                    : "bg-emerald-200/30"
-                }`}
-              />
               {/* Large featured card */}
               <div className="relative z-10 w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] md:w-[360px] md:h-[360px] shrink-0">
                 {!galleryImgLoaded && !galleryImgError && (
@@ -749,10 +756,14 @@ export default function LandingPage() {
                   </div>
                 )}
                 {galleryImgError ? (
-                  <div className={`w-full h-full rounded-2xl flex items-center justify-center border shadow-2xl ring-1 ring-black/5 ${
-                    cardTheme === "dark"
-                      ? "bg-zinc-900 border-zinc-700"
-                      : "bg-gradient-to-br from-emerald-50 to-emerald-100/80 border-emerald-200/60"
+                  <div className={`w-full h-full rounded-2xl flex items-center justify-center border shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black/5 ${
+                    cardVariant === "loss"
+                      ? cardTheme === "dark"
+                        ? "bg-zinc-900 border-red-700/50"
+                        : "bg-gradient-to-br from-red-50 to-red-100/80 border-red-200/60"
+                      : cardTheme === "dark"
+                        ? "bg-zinc-900 border-zinc-700"
+                        : "bg-gradient-to-br from-emerald-50 to-emerald-100/80 border-emerald-200/60"
                   }`}>
                     <p className="text-sm text-muted-foreground">Card preview</p>
                   </div>
@@ -760,14 +771,14 @@ export default function LandingPage() {
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     ref={galleryImgRef}
-                    key={`gallery-${galleryFeaturedIndex}-${cardTheme}`}
-                    src={displayCards[galleryFeaturedIndex]?.url ?? "/promo/daily.png"}
+                    key={`gallery-${galleryFeaturedIndex}-${cardTheme}-${cardVariant}`}
+                    src={displayCards[galleryFeaturedIndex]?.url ?? `/promo/daily${cardVariant === "loss" ? "-loss" : ""}.png`}
                     alt={displayCards[galleryFeaturedIndex]?.label ?? "Daily Recap"}
                     onLoad={() => setGalleryImgLoaded(true)}
                     onError={() => setGalleryImgError(true)}
                     width={360}
                     height={360}
-                    className={`w-full h-full rounded-2xl shadow-2xl ring-1 ring-black/5 object-cover transition-all duration-500 ${
+                    className={`w-full h-full rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] ring-1 ring-black/5 object-cover transition-all duration-500 ${
                       galleryImgLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
                     }`}
                     draggable={false}
@@ -805,7 +816,7 @@ export default function LandingPage() {
                           setGalleryImgError(false);
                           setGallerySmallCardOrder(newOrder);
                         }}
-                        className="w-[120px] h-[120px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px] rounded-xl overflow-hidden shadow-lg ring-1 ring-black/[0.06] transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+                        className="w-[120px] h-[120px] sm:w-[130px] sm:h-[130px] md:w-[140px] md:h-[140px] rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.10)] ring-1 ring-black/10 transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-black/20 focus:outline-none focus:ring-2 focus:ring-black/20 cursor-pointer"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -1045,9 +1056,12 @@ export default function LandingPage() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="logo-capsule px-3.5 py-1 text-xs">
+              <a
+                href="#top"
+                className="logo-capsule px-3.5 py-1 text-xs hover:opacity-90 transition-opacity cursor-pointer"
+              >
                 Pnl Card
-              </div>
+              </a>
               <span className="text-sm text-muted-foreground">
                 &mdash; Log. Share. Grow.
               </span>
