@@ -582,7 +582,11 @@ export default function LandingPage() {
             }`}
           >
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Cards that make your followers stop scrolling
+              Cards that make your{" "}
+              <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+                followers
+              </span>{" "}
+              stop scrolling
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
               Beautiful, data-rich recap cards &mdash; generated in seconds.
@@ -781,7 +785,10 @@ export default function LandingPage() {
             }`}
           >
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Simple pricing. No surprises.
+              Simple pricing.{" "}
+              <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+                No surprises.
+              </span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
               Start free. Upgrade when you&apos;re ready to level up.
