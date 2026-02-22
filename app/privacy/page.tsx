@@ -172,10 +172,10 @@ export default function PrivacyPage() {
             <p>
               For privacy-related questions, contact us at{" "}
               <a
-                href="mailto:support@pnlcard.com"
+                href="mailto:rahulsin1612@gmail.com"
                 className="text-emerald-600 hover:underline"
               >
-                support@pnlcard.com
+                rahulsin1612@gmail.com
               </a>
               .
             </p>

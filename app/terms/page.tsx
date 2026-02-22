@@ -121,10 +121,10 @@ export default function TermsPage() {
               <li>
                 If you experience a billing error, contact us within 7 days at{" "}
                 <a
-                  href="mailto:support@pnlcard.com"
+                  href="mailto:rahulsin1612@gmail.com"
                   className="text-emerald-600 hover:underline"
                 >
-                  support@pnlcard.com
+                  rahulsin1612@gmail.com
                 </a>{" "}
                 for a review.
               </li>
@@ -218,10 +218,10 @@ export default function TermsPage() {
             <p>
               For questions about these terms, contact us at{" "}
               <a
-                href="mailto:support@pnlcard.com"
+                href="mailto:rahulsin1612@gmail.com"
                 className="text-emerald-600 hover:underline"
               >
-                support@pnlcard.com
+                rahulsin1612@gmail.com
               </a>
               .
             </p>
