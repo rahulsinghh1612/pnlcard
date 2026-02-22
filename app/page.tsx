@@ -5,9 +5,7 @@ import Link from "next/link";
 import {
   TrendingUp,
   TrendingDown,
-  PenLine,
   Sparkles,
-  Share2,
   Check,
   Sun,
   Moon,
@@ -284,15 +282,20 @@ export default function LandingPage() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/">
-            <div className="logo-capsule px-4 py-1.5 text-sm">
-              Pnl Card
-            </div>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/">
+              <div className="logo-capsule px-4 py-1.5 text-sm">
+                Pnl Card
+              </div>
+            </Link>
+            <span className="hidden sm:inline text-sm text-muted-foreground">
+              Log. Share. Grow.
+            </span>
+          </div>
 
           <div className="flex items-center gap-6">
             <a
-              href="#how-it-works"
+              href="#demo"
               className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               See how it works
@@ -512,11 +515,11 @@ export default function LandingPage() {
       <section
         id="how-it-works"
         ref={howItWorks.ref}
-        className="scroll-mt-24 py-24 sm:py-32"
+        className="scroll-mt-24 pt-20 sm:pt-24 pb-6"
       >
         <div className="mx-auto max-w-5xl px-6">
           <div
-            className={`text-center mb-16 transition-all duration-700 ${
+            className={`text-center mb-0 transition-all duration-700 ${
               howItWorks.visible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
@@ -531,80 +534,6 @@ export default function LandingPage() {
             <p className="mt-4 text-lg text-muted-foreground">
               From trade to shareable card in under a minute.
             </p>
-          </div>
-
-          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-0">
-            {/* Connecting lines between cards (desktop only) */}
-            <div className="hidden sm:block absolute top-16 left-[calc(33.33%+0.5rem)] right-[calc(33.33%+0.5rem)] h-px bg-gradient-to-r from-emerald-300 via-purple-300 to-amber-300 opacity-40 z-0" />
-
-            {[
-              {
-                icon: PenLine,
-                step: "01",
-                title: "Log your trade",
-                desc: "Enter your daily P&L, charges, and capital deployed. One entry per day \u2014 that\u2019s it.",
-                iconBg: "bg-gradient-to-br from-blue-50 to-blue-100",
-                iconColor: "text-blue-600",
-                accentBorder: "group-hover:border-blue-200",
-                bigNumColor: "text-blue-500/[0.07]",
-              },
-              {
-                icon: Sparkles,
-                step: "02",
-                title: "Pick your card",
-                desc: "Choose daily, weekly, or monthly. Toggle between light and dark themes.",
-                iconBg: "bg-gradient-to-br from-purple-50 to-purple-100",
-                iconColor: "text-purple-600",
-                accentBorder: "group-hover:border-purple-200",
-                bigNumColor: "text-purple-500/[0.07]",
-              },
-              {
-                icon: Share2,
-                step: "03",
-                title: "Share everywhere",
-                desc: "Download a 1080\u00D71080 PNG or copy a shareable link for X and Instagram.",
-                iconBg: "bg-gradient-to-br from-amber-50 to-amber-100",
-                iconColor: "text-amber-600",
-                accentBorder: "group-hover:border-amber-200",
-                bigNumColor: "text-amber-500/[0.07]",
-              },
-            ].map((s, i) => (
-              <div
-                key={s.step}
-                className={`group relative z-10 rounded-2xl border border-border bg-white p-10 transition-all duration-500 hover:shadow-xl hover:-translate-y-1.5 ${s.accentBorder} ${
-                  i > 0 ? "sm:ml-4" : ""
-                } ${
-                  howItWorks.visible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-8"
-                }`}
-                style={{
-                  transitionDelay: howItWorks.visible
-                    ? `${150 * (i + 1)}ms`
-                    : "0ms",
-                }}
-              >
-                {/* Large background step number */}
-                <span className={`absolute top-4 right-6 text-7xl font-black select-none pointer-events-none ${s.bigNumColor}`}>
-                  {s.step}
-                </span>
-
-                <div
-                  className={`relative mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ${s.iconBg} shadow-sm`}
-                >
-                  <s.icon className={`h-6 w-6 ${s.iconColor}`} />
-                </div>
-                <div className="text-[11px] font-bold tracking-widest text-muted-foreground/50 uppercase mb-2">
-                  {`Step ${s.step}`}
-                </div>
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  {s.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {s.desc}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -1063,7 +992,7 @@ export default function LandingPage() {
                 Pnl Card
               </a>
               <span className="text-sm text-muted-foreground">
-                &mdash; Log. Share. Grow.
+                Log. Share. Grow.
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">

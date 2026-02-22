@@ -31,11 +31,16 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-page">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <Link href="/dashboard">
-            <div className="logo-capsule px-4 py-1.5 text-sm">
-              Pnl Card
-            </div>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard">
+              <div className="logo-capsule px-4 py-1.5 text-sm">
+                Pnl Card
+              </div>
+            </Link>
+            <span className="hidden sm:inline text-sm text-muted-foreground">
+              Log. Share. Grow.
+            </span>
+          </div>
 
           <DashboardNav displayName={profile?.display_name ?? "User"} plan={(profile?.plan as "free" | "premium") ?? "free"} />
         </div>

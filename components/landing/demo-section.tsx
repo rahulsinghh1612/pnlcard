@@ -535,37 +535,32 @@ export function DemoSection() {
     return () => clearInterval(timer.current);
   }, [visible, startTimer]);
 
+  // When user clicks "See how it works" and scrolls to #demo, reset to step 0 (Log a Trade)
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (typeof window !== "undefined" && window.location.hash === "#demo") {
+        setStep(0);
+        startTimer();
+      }
+    };
+    if (typeof window !== "undefined" && window.location.hash === "#demo") {
+      setStep(0);
+    }
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [startTimer]);
+
   function pickStep(s: 0 | 1 | 2) {
     setStep(s);
     startTimer();
   }
 
   return (
-    <section ref={ref} className="py-16 sm:py-24 pb-56">
+    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-56 scroll-mt-24">
       <div className="mx-auto max-w-5xl px-6">
-        {/* Section heading */}
-        <div
-          className={`text-center mb-12 transition-all duration-700 ${
-            visible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-8"
-          }`}
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            See it in{" "}
-            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-              action
-            </span>
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Real data from January 2026 — this is exactly what your dashboard
-            looks like.
-          </p>
-        </div>
-
         {/* Step switcher pills */}
         <div
-          className={`flex justify-center mb-8 transition-all duration-700 delay-150 ${
+          className={`flex justify-center mb-6 transition-all duration-700 delay-150 ${
             visible
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-8"

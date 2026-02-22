@@ -12,11 +12,16 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-sm">
-        <Link href="/" className="flex justify-center mb-10">
-          <div className="logo-capsule px-5 py-2 text-base font-semibold">
-            Pnl Card
-          </div>
-        </Link>
+        <div className="flex flex-col items-center mb-8">
+          <Link href="/" className="mb-2">
+            <div className="logo-capsule px-5 py-2 text-base font-semibold">
+              Pnl Card
+            </div>
+          </Link>
+          <span className="text-sm font-medium text-foreground/80">
+            Log. Share. Grow.
+          </span>
+        </div>
 
         <Card className="p-8">
           <CardHeader className="p-0">

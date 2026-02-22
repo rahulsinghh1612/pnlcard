@@ -33,9 +33,10 @@ export default async function OnboardingPage() {
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="logo-capsule px-5 py-2 text-lg mb-4">
+          <div className="logo-capsule px-5 py-2 text-lg mb-2">
             Pnl Card
           </div>
+          <p className="text-sm text-muted-foreground mb-4">Log. Share. Grow.</p>
           <h1 className="text-2xl font-semibold text-foreground">
             Set up your profile
           </h1>
