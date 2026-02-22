@@ -25,9 +25,9 @@ export default function LoginPage() {
 
         <Card className="p-8">
           <CardHeader className="p-0">
-            <h1 className="text-xl font-semibold text-foreground">Welcome back</h1>
+            <h1 className="text-xl font-semibold text-foreground">Welcome</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in to log your trades and generate cards
+              Sign in with Google, or use email below. New here? Click &quot;Create account&quot; to get started.
             </p>
           </CardHeader>
           <CardContent className="p-0 pt-6">
@@ -38,7 +38,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account? Sign up with Google or email above.
+          <strong>Sign in</strong> = you already have an account. <strong>Create account</strong> = first time here.
         </p>
       </div>
     </main>

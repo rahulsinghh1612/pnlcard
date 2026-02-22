@@ -46,7 +46,7 @@ export function LoginForm() {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError("Please enter email and password.");
+      setError("Enter your email and password to sign in. New here? Use \"Create account\" instead.");
       return;
     }
 
@@ -74,7 +74,7 @@ export function LoginForm() {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError("Please enter email and password.");
+      setError("Enter your email and a password (min 6 characters) to create your account.");
       return;
     }
     if (password.length < 6) {
@@ -207,7 +207,7 @@ export function LoginForm() {
             className="btn-gradient-flow flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
             onClick={handleEmailSignUp}
           >
-            Sign up
+            Create account
           </Button>
         </div>
       </form>
