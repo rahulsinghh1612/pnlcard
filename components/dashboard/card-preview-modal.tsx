@@ -126,14 +126,6 @@ export function CardPreviewModal({
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  // Reset loading state when modal opens or card params change
-  useEffect(() => {
-    if (open && imgSrc) {
-      setImgLoaded(false);
-      setImgError(false);
-    }
-  }, [open, imgSrc]);
-
   const tradesForCard: TradeForCard[] = useMemo(
     () =>
       allTrades.map((t) => ({
@@ -195,6 +187,12 @@ export function CardPreviewModal({
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}${ogUrl}`;
   }, [ogUrl]);
+
+  // Reset loading state when modal opens or card params change
+  useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [imgSrc]);
 
   const downloadFilename = useMemo(() => {
     if (cardType === "daily" && dailyParams) {
