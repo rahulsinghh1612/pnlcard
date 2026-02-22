@@ -192,14 +192,19 @@ export function LoginForm() {
           />
         </div>
         <div className="flex gap-3">
-          <Button type="submit" disabled={isLoading} className="flex-1">
+          <Button
+            type="submit"
+            variant="outline"
+            disabled={isLoading}
+            className="btn-gradient-flow flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
+          >
             Sign in
           </Button>
           <Button
             type="button"
             variant="outline"
             disabled={isLoading}
-            className="flex-1"
+            className="btn-gradient-flow flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
             onClick={handleEmailSignUp}
           >
             Sign up
