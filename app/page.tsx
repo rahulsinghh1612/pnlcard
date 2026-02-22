@@ -997,13 +997,13 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <a
-                href="#"
+                href="/privacy"
                 className="hover:text-foreground transition-colors"
               >
                 Privacy
               </a>
               <a
-                href="#"
+                href="/terms"
                 className="hover:text-foreground transition-colors"
               >
                 Terms

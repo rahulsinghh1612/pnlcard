@@ -120,8 +120,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
     profileForCard
   );
 
-  // TODO: revert to `profile.plan === "premium"` once Razorpay is integrated (Task 6)
-  const isPremium = true;
+  const isPremium = profile.plan === "premium";
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -141,6 +140,8 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
         isPremium={isPremium}
         baseUrl={baseUrl}
         defaultCardType={cardTypeParam}
+        userEmail={user.email ?? ""}
+        userName={profile.display_name}
       />
     </div>
   );

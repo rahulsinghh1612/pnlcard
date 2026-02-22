@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import type { DailyCardParams } from "@/lib/card-data";
 import type { WeeklyCardParams } from "@/lib/card-data";
 import type { MonthlyCardParams } from "@/lib/card-data";
+import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 
 type CardGeneratorProps = {
   dailyParams: DailyCardParams;
@@ -22,6 +23,8 @@ type CardGeneratorProps = {
   isPremium: boolean;
   baseUrl: string;
   defaultCardType?: "daily" | "weekly" | "monthly";
+  userEmail?: string;
+  userName?: string;
 };
 
 /** Use absolute URL for img src so it loads reliably across environments */
@@ -89,6 +92,8 @@ export function CardGenerator({
   isPremium,
   baseUrl,
   defaultCardType,
+  userEmail,
+  userName,
 }: CardGeneratorProps) {
   const [theme, setTheme] = useState(dailyParams.theme);
   const [cardType, setCardType] = useState<"daily" | "weekly" | "monthly">(
@@ -183,6 +188,22 @@ export function CardGenerator({
           ))}
         </div>
       </div>
+
+      {!isPremium && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <Lock className="h-4 w-4 text-amber-600 shrink-0" />
+          <p className="text-sm text-amber-800 flex-1">
+            Weekly &amp; monthly cards are a Premium feature.
+          </p>
+          <UpgradeButton
+            userEmail={userEmail ?? ""}
+            userName={userName ?? ""}
+            className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors"
+          >
+            Upgrade
+          </UpgradeButton>
+        </div>
+      )}
 
       {cardType === "weekly" && !weeklyParams && (
         <p className="text-sm text-muted-foreground">

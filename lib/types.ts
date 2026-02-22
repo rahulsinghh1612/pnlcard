@@ -12,3 +12,17 @@ export interface Profile {
   created_at: string;
   updated_at: string;
 }
+
+/** Subscription row from Supabase subscriptions table */
+export interface Subscription {
+  id: string;
+  user_id: string;
+  provider: string;
+  provider_subscription_id: string | null;
+  plan_type: "monthly" | "yearly";
+  status: "active" | "cancelled" | "expired";
+  current_period_start: string | null;
+  current_period_end: string | null;
+  created_at: string;
+  updated_at: string;
+}

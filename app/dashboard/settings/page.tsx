@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
+import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 
 export const metadata = {
   title: "Settings — PNLCard",
@@ -18,7 +19,7 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("plan, plan_expires_at")
+    .select("display_name, plan, plan_expires_at")
     .eq("id", user.id)
     .single();
 
@@ -80,12 +81,10 @@ export default async function SettingsPage() {
           )}
 
           {plan === "free" && (
-            <button
-              type="button"
-              className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
-            >
-              <span className="relative z-[1]">Upgrade to Premium</span>
-            </button>
+            <UpgradeButton
+              userEmail={user.email ?? ""}
+              userName={profile?.display_name ?? ""}
+            />
           )}
         </CardContent>
       </Card>
