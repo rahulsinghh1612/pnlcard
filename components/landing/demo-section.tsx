@@ -455,7 +455,8 @@ function DemoCreateCards({ active }: { active: boolean }) {
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 shadow-xl">
+      <div className="overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 shadow-xl scrollbar-none">
+        <div className="min-w-[400px]">
         <h3 className="text-base font-semibold text-foreground text-center mb-6">
           Generate your card
         </h3>
@@ -488,6 +489,7 @@ function DemoCreateCards({ active }: { active: boolean }) {
           <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
             <span className="relative z-[1]">Generate Daily Card</span>
           </div>
+        </div>
         </div>
       </div>
     </div>
