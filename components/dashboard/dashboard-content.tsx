@@ -325,7 +325,7 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                           <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
@@ -335,17 +335,17 @@ export function DashboardContent({
                               type="button"
                               disabled={!hasPrev}
                               onClick={(e) => { e.stopPropagation(); setDailyIdx((i) => i + 1); }}
-                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                              <ChevronLeft className="h-3.5 w-3.5" />
+                              <ChevronLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </button>
                             <button
                               type="button"
                               disabled={!hasNext}
                               onClick={(e) => { e.stopPropagation(); setDailyIdx((i) => i - 1); }}
-                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                              <ChevronRight className="h-3.5 w-3.5" />
+                              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </button>
                           </div>
                         )}
@@ -388,7 +388,7 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400">
                           <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
@@ -398,17 +398,17 @@ export function DashboardContent({
                               type="button"
                               disabled={!hasPrev}
                               onClick={(e) => { e.stopPropagation(); setWeeklyIdx((i) => i + 1); }}
-                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                              <ChevronLeft className="h-3.5 w-3.5" />
+                              <ChevronLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </button>
                             <button
                               type="button"
                               disabled={!hasNext}
                               onClick={(e) => { e.stopPropagation(); setWeeklyIdx((i) => i - 1); }}
-                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                              <ChevronRight className="h-3.5 w-3.5" />
+                              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </button>
                           </div>
                         )}
@@ -451,7 +451,7 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                           <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
@@ -461,17 +461,17 @@ export function DashboardContent({
                               type="button"
                               disabled={!hasPrev}
                               onClick={(e) => { e.stopPropagation(); setMonthlyIdx((i) => i + 1); }}
-                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                              <ChevronLeft className="h-3.5 w-3.5" />
+                              <ChevronLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </button>
                             <button
                               type="button"
                               disabled={!hasNext}
                               onClick={(e) => { e.stopPropagation(); setMonthlyIdx((i) => i - 1); }}
-                              className="h-6 w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                              <ChevronRight className="h-3.5 w-3.5" />
+                              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                             </button>
                           </div>
                         )}

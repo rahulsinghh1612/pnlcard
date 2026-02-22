@@ -184,7 +184,8 @@ export function CalendarHeatmap({
   };
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm">
+    <div className="w-full overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm scrollbar-none">
+      <div className={showWeekly ? "min-w-[480px]" : "min-w-[380px]"}>
       {/* Month navigation */}
       <div className="mb-4 flex items-center justify-center gap-1">
         <Button
@@ -228,7 +229,7 @@ export function CalendarHeatmap({
       <div className={cn(
         "mb-1.5 grid gap-1 text-center",
         showWeekly
-          ? "grid-cols-[repeat(7,1fr)_6px_minmax(50px,1.2fr)] sm:grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+          ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
           : "grid-cols-[repeat(7,1fr)]"
       )}>
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
@@ -266,7 +267,7 @@ export function CalendarHeatmap({
               className={cn(
                 "grid gap-1 rounded-lg px-0.5 -mx-0.5 transition-colors duration-150 hover:bg-muted/20",
                 showWeekly
-                  ? "grid-cols-[repeat(7,1fr)_6px_minmax(50px,1.2fr)] sm:grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+                  ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
                   : "grid-cols-[repeat(7,1fr)]"
               )}
             >
@@ -407,6 +408,7 @@ export function CalendarHeatmap({
         })}
       </div>
 
+      </div>
       {/* Legend */}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">

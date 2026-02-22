@@ -224,7 +224,8 @@ function DemoCalendar({ active }: { active: boolean }) {
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
+      <div className="overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl scrollbar-none">
+        <div className="min-w-[440px]">
         {/* Month navigation bar */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-1">
@@ -403,6 +404,7 @@ function DemoCalendar({ active }: { active: boolean }) {
           })}
         </div>
 
+        </div>
         {/* Legend */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
