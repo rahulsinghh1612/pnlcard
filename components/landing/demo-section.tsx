@@ -553,7 +553,7 @@ export function DemoSection() {
         >
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
             See it in{" "}
-            <span className="animate-gradient-shift bg-gradient-to-r from-emerald-500 via-red-500 to-emerald-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               action
             </span>
           </h2>
