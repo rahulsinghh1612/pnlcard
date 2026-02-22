@@ -1019,7 +1019,14 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-8 text-center text-xs text-muted-foreground/60">
-            A Next Alphabet Product
+            <a
+              href="https://www.nextalphabet.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground/70 transition-colors"
+            >
+              A Next Alphabet Product
+            </a>
           </div>
         </div>
       </footer>
