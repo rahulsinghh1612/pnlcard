@@ -290,7 +290,7 @@ export function TradeEntryModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="sm:max-w-md max-h-[90vh] flex flex-col overflow-hidden"
+          className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden"
           onOpenAutoFocus={(e) => e.preventDefault()}
           hideCloseButton={isEdit}
         >
@@ -328,9 +328,10 @@ export function TradeEntryModal({
 
           <form
             onSubmit={handleSubmit}
-            className="space-y-7 overflow-y-auto overflow-x-hidden min-h-0 flex-1 pr-1 -mr-1"
+            className="flex flex-col min-h-0 flex-1 overflow-hidden"
           >
-            <div className="space-y-3">
+            <div className="space-y-5 overflow-y-auto min-h-0 flex-1">
+            <div className="space-y-2">
               <Label htmlFor="trade_date">Date *</Label>
               <DatePicker
                 id="trade_date"
@@ -362,7 +363,7 @@ export function TradeEntryModal({
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label htmlFor="num_trades">Number of trades *</Label>
               <Input
                 id="num_trades"
@@ -383,7 +384,7 @@ export function TradeEntryModal({
               />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label htmlFor="net_pnl">P&L ({symbol}) *</Label>
               <div className="flex gap-2">
                 <button
@@ -436,7 +437,7 @@ export function TradeEntryModal({
               </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label htmlFor="charges">Charges & taxes ({symbol})</Label>
               <Input
                 id="charges"
@@ -468,7 +469,7 @@ export function TradeEntryModal({
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="capital_deployed" className="mb-0">
                   Capital ({symbol}) deployed for ROI
@@ -521,8 +522,9 @@ export function TradeEntryModal({
                 </p>
               )}
             </div>
+            </div>
 
-            <DialogFooter className="mt-10">
+            <DialogFooter className="shrink-0 pt-4 border-t border-border/30 mt-2">
               <button
                 type="submit"
                 disabled={isLoading || isFutureDate || isDuplicateDate}
