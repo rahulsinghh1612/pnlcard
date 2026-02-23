@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { CalendarDays, CalendarRange, CalendarCheck } from "lucide-react";
-import { DEMO_TRADES } from "@/lib/demo-trades";
+import {
+  DEMO_TRADES,
+  DEMO_MONTHS,
+  DEMO_MONTH_KEYS,
+  DEMO_MONTH_LABELS,
+  type DemoMonthKey,
+  type DemoTradeType,
+} from "@/lib/demo-trades";
 
 /* ─── Helpers ────────────────────────────────────────────── */
 
@@ -21,27 +28,24 @@ function formatCompact(value: number): string {
   return `${value >= 0 ? "+" : "-"}₹${formatINR(value)}`;
 }
 
-/* ─── Pre-computed January 2026 data (from real trades) ──── */
+/* ─── Pre-computed January 2026 data (for DemoLogTrade form) ── */
 
-const TRADE_MAP = new Map<string, (typeof DEMO_TRADES)[number]>(
-  DEMO_TRADES.map((t) => [t.trade_date, t]),
-);
-
-const MONTH_PNL = DEMO_TRADES.reduce((s, t) => s + getFinalResult(t), 0);
-
-const HIGHLIGHT = DEMO_TRADES.find((t) => t.trade_date === "2026-01-14")!;
+const HIGHLIGHT = DEMO_TRADES.find((t) => t.trade_date === "2026-01-15")!;
 const H_FINAL = getFinalResult(HIGHLIGHT);
 const H_ROI =
   HIGHLIGHT.capital_deployed != null
     ? ((H_FINAL / HIGHLIGHT.capital_deployed) * 100).toFixed(2)
     : null;
 
-function buildGrid(): (number | null)[][] {
-  const dow = new Date(2026, 0, 1).getDay();
+/* ─── Month grid builder ──────────────────────────────────── */
+
+function buildGridForMonth(year: number, month: number): (number | null)[][] {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const dow = new Date(year, month, 1).getDay();
   const pad = (dow + 6) % 7;
   const flat: (number | null)[] = [
     ...Array<null>(pad).fill(null),
-    ...Array.from({ length: 31 }, (_, i) => i + 1),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (flat.length % 7 !== 0) flat.push(null);
   const weeks: (number | null)[][] = [];
@@ -49,21 +53,26 @@ function buildGrid(): (number | null)[][] {
   return weeks;
 }
 
-const JAN_GRID = buildGrid();
+function computeMonthData(trades: DemoTradeType[]) {
+  const tradeMap = new Map<string, DemoTradeType>(
+    trades.map((t) => [t.trade_date, t]),
+  );
+  const monthPnl = trades.reduce((s, t) => s + getFinalResult(t), 0);
+  const finals = trades.map(getFinalResult);
+  const mxProfit = Math.max(...finals.filter((v) => v > 0), 1);
+  const mxLoss = Math.max(...finals.filter((v) => v < 0).map(Math.abs), 1);
+  return { tradeMap, monthPnl, maxProfit: mxProfit, maxLoss: mxLoss };
+}
 
-const dailyFinals = DEMO_TRADES.map(getFinalResult);
-const maxProfit = Math.max(...dailyFinals.filter((v) => v > 0), 1);
-const maxLoss = Math.max(...dailyFinals.filter((v) => v < 0).map(Math.abs), 1);
-
-function profitBg(v: number): string {
-  const r = v / maxProfit;
+function profitBg(v: number, max: number): string {
+  const r = v / max;
   if (r >= 0.66) return "bg-emerald-200";
   if (r >= 0.33) return "bg-emerald-100";
   return "bg-emerald-50";
 }
 
-function lossBg(v: number): string {
-  const r = Math.abs(v) / maxLoss;
+function lossBg(v: number, max: number): string {
+  const r = Math.abs(v) / max;
   if (r >= 0.66) return "bg-red-200";
   if (r >= 0.33) return "bg-red-100";
   return "bg-red-50";
@@ -81,12 +90,12 @@ type Field = {
 };
 
 const FORM_FIELDS: Field[] = [
-  { label: "Date *", value: "14/01/2026", id: "date" },
-  { label: "Number of trades *", value: "1", id: "num" },
-  { label: "P&L (₹) *", value: "3,100", id: "pnl" },
+  { label: "Date *", value: "15/01/2026", id: "date" },
+  { label: "Number of trades *", value: "2", id: "num" },
+  { label: "P&L (₹) *", value: "3,500", id: "pnl" },
   {
     label: "Charges & taxes (₹)",
-    value: "90",
+    value: "250",
     id: "charges",
     subLabel: "Net P&L",
     subValue: formatCompact(H_FINAL),
@@ -177,11 +186,24 @@ function DemoLogTrade({ active }: { active: boolean }) {
   );
 }
 
-/* ─── DemoCalendar (standalone, no weekly column) ────────── */
+/* ─── DemoCalendar (with multi-month navigation) ─────────── */
 
 export function DemoCalendar({ active = true }: { active?: boolean }) {
   const [show, setShow] = useState(false);
+  const [monthIdx, setMonthIdx] = useState(1);
   const ref = useRef<HTMLDivElement>(null);
+
+  const monthKey = DEMO_MONTH_KEYS[monthIdx];
+  const trades = DEMO_MONTHS[monthKey];
+  const label = DEMO_MONTH_LABELS[monthKey];
+  const { tradeMap, monthPnl, maxProfit: mxP, maxLoss: mxL } = computeMonthData(trades);
+
+  const [year, mon] = monthKey.split("-").map(Number);
+  const grid = buildGridForMonth(year, mon - 1);
+  const datePrefix = monthKey;
+
+  const canPrev = monthIdx > 0;
+  const canNext = monthIdx < DEMO_MONTH_KEYS.length - 1;
 
   useEffect(() => {
     if (!active) {
@@ -211,34 +233,46 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
   return (
     <div ref={ref} className="w-full max-w-md mx-auto">
       <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
-        {/* Month navigation bar */}
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center justify-center gap-1 sm:flex-1">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
+        {/* Month navigation bar — month name + PNL inline */}
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => canPrev && setMonthIdx((i) => i - 1)}
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted transition-opacity ${
+              canPrev ? "text-muted-foreground hover:bg-muted/80 cursor-pointer" : "opacity-30 cursor-default"
+            }`}
+            disabled={!canPrev}
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-sm font-semibold text-foreground">
+              {label}
             </span>
-            <span className="min-w-[120px] text-center text-sm font-semibold text-foreground">
-              January 2026
-            </span>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+            <span
+              className={`text-xs font-bold transition-all duration-500 ${
+                show ? "opacity-100" : "opacity-0"
+              } ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}
+            >
+              {formatCompact(monthPnl)}
             </span>
           </div>
-          <span
-            className={`inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-bold transition-all duration-700 sm:px-2.5 sm:py-1 ${
-              show ? "opacity-100 scale-100" : "opacity-0 scale-75"
-            } ${
-              MONTH_PNL >= 0
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-red-100 text-red-700"
+
+          <button
+            type="button"
+            onClick={() => canNext && setMonthIdx((i) => i + 1)}
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted transition-opacity ${
+              canNext ? "text-muted-foreground hover:bg-muted/80 cursor-pointer" : "opacity-30 cursor-default"
             }`}
+            disabled={!canNext}
           >
-            {formatCompact(MONTH_PNL)}
-          </span>
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         {/* Day-of-week headers */}
@@ -255,8 +289,8 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
 
         {/* Week rows */}
         <div className="flex flex-col gap-1">
-          {JAN_GRID.map((week, ri) => (
-            <div key={ri} className="grid grid-cols-7 gap-1">
+          {grid.map((week, ri) => (
+            <div key={`${monthKey}-${ri}`} className="grid grid-cols-7 gap-1">
               {week.map((day, ci) => {
                 const cellIdx = ri * 7 + ci;
 
@@ -265,15 +299,15 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
                     <div key={`e-${ri}-${ci}`} className="aspect-square rounded-lg" />
                   );
 
-                const ds = `2026-01-${String(day).padStart(2, "0")}`;
-                const trade = TRADE_MAP.get(ds);
+                const ds = `${datePrefix}-${String(day).padStart(2, "0")}`;
+                const trade = tradeMap.get(ds);
                 const result = trade ? getFinalResult(trade) : 0;
                 const isProfit = trade ? result >= 0 : false;
 
                 let bg = "bg-muted/40";
                 let text = "text-muted-foreground";
                 if (trade) {
-                  bg = isProfit ? profitBg(result) : lossBg(result);
+                  bg = isProfit ? profitBg(result, mxP) : lossBg(result, mxL);
                   text = isProfit ? "text-emerald-700" : "text-red-700";
                 }
 
@@ -343,10 +377,12 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
 
 /* ─── DemoCreateCards ───────────────────────────────────── */
 
+const JAN_PNL = DEMO_TRADES.reduce((s, t) => s + getFinalResult(t), 0);
+
 const CARD_OPTIONS = [
   { type: "Daily", pnl: formatCompact(getFinalResult(DEMO_TRADES[DEMO_TRADES.length - 1])), date: "31 Jan 2026", Icon: CalendarDays, iconBg: "bg-blue-50 text-blue-600" },
   { type: "Weekly", pnl: formatCompact(4360), date: "27 Jan – 2 Feb", Icon: CalendarRange, iconBg: "bg-purple-50 text-purple-600" },
-  { type: "Monthly", pnl: formatCompact(MONTH_PNL), date: "Jan 2026", Icon: CalendarCheck, iconBg: "bg-amber-50 text-amber-600" },
+  { type: "Monthly", pnl: formatCompact(JAN_PNL), date: "Jan 2026", Icon: CalendarCheck, iconBg: "bg-amber-50 text-amber-600" },
 ];
 
 function DemoCreateCards({ active }: { active: boolean }) {
@@ -363,30 +399,31 @@ function DemoCreateCards({ active }: { active: boolean }) {
 
   return (
     <div className="w-full max-w-lg mx-auto">
-      <div className="overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 shadow-xl scrollbar-none">
-        <div className="min-w-[400px]">
+      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 shadow-xl">
         <h3 className="text-base font-semibold text-foreground text-center mb-6">
           Generate your card
         </h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {CARD_OPTIONS.map((opt, i) => (
             <div
               key={opt.type}
-              className={`rounded-xl border border-border bg-white p-4 transition-all duration-500 ${
+              className={`rounded-xl border border-border bg-white p-4 transition-all duration-500 flex items-center gap-3 sm:block ${
                 show ? "opacity-100 scale-100" : "opacity-0 scale-95"
               }`}
               style={{
                 transitionDelay: show ? `${i * 120}ms` : "0ms",
               }}
             >
-              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${opt.iconBg} mb-2`}>
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${opt.iconBg} sm:mb-2`}>
                 <opt.Icon className="h-4 w-4" />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                {opt.type}
-              </p>
-              <p className="mt-0.5 text-sm font-bold text-emerald-600">{opt.pnl}</p>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">{opt.date}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {opt.type}
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-emerald-600">{opt.pnl}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{opt.date}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -397,7 +434,6 @@ function DemoCreateCards({ active }: { active: boolean }) {
           <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
             <span className="relative z-[1]">Generate Daily Card</span>
           </div>
-        </div>
         </div>
       </div>
     </div>
@@ -511,7 +547,7 @@ export function DemoSection() {
               : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="relative h-[520px]">
+          <div className="relative h-[560px] sm:h-[520px]">
             <div
               className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
               style={{

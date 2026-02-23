@@ -24,6 +24,10 @@ const interRegular = fetch(
   new URL("./fonts/Inter-Regular.woff", import.meta.url)
 ).then((res) => res.arrayBuffer());
 
+const spaceGroteskBold = fetch(
+  new URL("./fonts/SpaceGrotesk-Bold.ttf", import.meta.url)
+).then((res) => res.arrayBuffer());
+
 /**
  * Returns the fonts config array to pass to ImageResponse options.
  *
@@ -32,9 +36,10 @@ const interRegular = fetch(
  *   return new ImageResponse(jsx, { width: 1080, height: 1080, fonts: await getOgFonts() });
  */
 export async function getOgFonts() {
-  const [extraBoldData, regularData] = await Promise.all([
+  const [extraBoldData, regularData, spaceGroteskData] = await Promise.all([
     interExtraBold,
     interRegular,
+    spaceGroteskBold,
   ]);
   return [
     {
@@ -47,6 +52,12 @@ export async function getOgFonts() {
       name: "Inter",
       data: extraBoldData,
       weight: 900 as const,
+      style: "normal" as const,
+    },
+    {
+      name: "SpaceGrotesk",
+      data: spaceGroteskData,
+      weight: 700 as const,
       style: "normal" as const,
     },
   ];

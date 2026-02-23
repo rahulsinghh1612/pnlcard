@@ -44,8 +44,8 @@ export async function GET(request: Request) {
     const hasCharges = charges != null && charges !== "";
     const hasRoi = netRoi != null && netRoi !== "";
 
-    const pnlLabel = hasCharges ? "NET P/L" : "P/L";
-    const roiLabel = hasCharges ? "NET ROI" : "ROI";
+    const pnlLabel = hasCharges ? "Net P/L" : "P/L";
+    const roiLabel = hasCharges ? "Net ROI" : "ROI";
     const tradeCount = trades.trim();
     const tradesText = tradeCount === "1" ? "1 Trade" : `${trades} Trades`;
     const streakText = streak >= 5 ? `${streak}d streak` : "";
@@ -62,13 +62,12 @@ export async function GET(request: Request) {
             display: "flex",
             fontSize: Math.round(10 * S),
             color: s.labelColor,
-            textTransform: "uppercase",
             letterSpacing: "0.1em",
             fontWeight: 500,
             marginBottom: Math.round(4 * S),
           }}
         >
-          {"TRADES"}
+          {"Trades"}
         </div>
         <div
           style={{
@@ -92,7 +91,6 @@ export async function GET(request: Request) {
           display: "flex",
           fontSize: Math.round(10 * S),
           color: s.labelColor,
-          textTransform: "uppercase",
           letterSpacing: "0.1em",
           fontWeight: 500,
           marginBottom: labelToValueGap,
@@ -121,20 +119,19 @@ export async function GET(request: Request) {
 
     if (hasRoi) {
       pnlChildren.push(
-        <div
-          key="roi-label"
-          style={{
-            display: "flex",
-            fontSize: Math.round(10 * S),
-            color: s.labelColor,
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            fontWeight: 500,
-            marginBottom: labelToValueGap,
-          }}
-        >
-          {roiLabel}
-        </div>
+      <div
+        key="roi-label"
+        style={{
+          display: "flex",
+          fontSize: Math.round(10 * S),
+          color: s.labelColor,
+          letterSpacing: "0.1em",
+          fontWeight: 500,
+          marginBottom: labelToValueGap,
+        }}
+      >
+        {roiLabel}
+      </div>
       );
       pnlChildren.push(
         <div
@@ -229,7 +226,7 @@ export async function GET(request: Request) {
               marginBottom: headerToContentGap,
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 600 }}>
+            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
               {date}
             </div>
           </div>

@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     const isProfit = pnlNum >= 0;
     const s = getOgStyles(isDark, isProfit);
     const hasRoi = roi != null && roi !== "";
-    const pnlLabel = symbol ? `NET P/L (${symbol})` : "NET P/L";
+    const pnlLabel = symbol ? `Net P/L (${symbol})` : "Net P/L";
 
     // --- Build main children ---
     const mainChildren: React.ReactNode[] = [];
@@ -72,7 +72,6 @@ export async function GET(request: Request) {
           display: "flex",
           fontSize: Math.round(10 * S),
           color: s.text3,
-          textTransform: "uppercase",
           letterSpacing: "0.1em",
           fontWeight: 500,
           marginBottom: Math.round(4 * S),
@@ -114,7 +113,6 @@ export async function GET(request: Request) {
               display: "flex",
               fontSize: Math.round(10 * S),
               color: s.text3,
-              textTransform: "uppercase",
               letterSpacing: "0.1em",
               fontWeight: 500,
               marginBottom: Math.round(2 * S),
@@ -298,7 +296,7 @@ export async function GET(request: Request) {
               marginBottom: Math.round(10 * S),
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(15 * S), color: s.accent, fontWeight: 600 }}>
+            <div style={{ display: "flex", fontSize: Math.round(15 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
               {range}
             </div>
           </div>

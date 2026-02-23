@@ -82,7 +82,7 @@ export async function GET(request: Request) {
     const isProfit = pnlNum >= 0;
     const s = getOgStyles(isDark, isProfit);
     const hasRoi = roi != null && roi !== "";
-    const pnlLabel = symbol ? `NET P/L (${symbol})` : "NET P/L";
+    const pnlLabel = symbol ? `Net P/L (${symbol})` : "Net P/L";
 
     const getCellColor = (day: number): string => {
       const pnlVal = tradeData[day];
@@ -186,7 +186,6 @@ export async function GET(request: Request) {
           display: "flex",
           fontSize: Math.round(10 * S),
           color: s.labelColor,
-          textTransform: "uppercase",
           letterSpacing: "0.1em",
           fontWeight: 500,
           marginBottom: Math.round(4 * S),
@@ -229,7 +228,6 @@ export async function GET(request: Request) {
                 display: "flex",
                 fontSize: Math.round(10 * S),
                 color: s.labelColor,
-                textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 fontWeight: 500,
                 marginBottom: Math.round(3 * S),
@@ -257,7 +255,6 @@ export async function GET(request: Request) {
               display: "flex",
               fontSize: Math.round(10 * S),
               color: s.labelColor,
-              textTransform: "uppercase",
               letterSpacing: "0.1em",
               fontWeight: 500,
               marginBottom: Math.round(3 * S),
@@ -331,7 +328,7 @@ export async function GET(request: Request) {
               marginBottom: Math.round(14 * S),
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 600 }}>
+            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
               {month}
             </div>
           </div>
