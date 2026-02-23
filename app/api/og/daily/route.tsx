@@ -178,22 +178,8 @@ export async function GET(request: Request) {
 
     // --- Watermark left side ---
     const watermarkLeft = !handle ? (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: Math.round(14 * S),
-          paddingRight: Math.round(14 * S),
-          paddingTop: Math.round(6 * S),
-          paddingBottom: Math.round(6 * S),
-          borderRadius: 9999,
-          background: s.logoBg,
-          border: `${Math.round(1 * S)}px solid ${s.logoBorder}`,
-        }}
-      >
-        <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
-          {"Pnl Card"}
-        </div>
+      <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
+        {"Pnl Card"}
       </div>
     ) : (
       <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.footerText, fontWeight: 500 }}>

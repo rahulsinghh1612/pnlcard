@@ -382,6 +382,38 @@ export function TradeEntryModal({
 
             <div className="space-y-3">
               <Label htmlFor="net_pnl">P&L ({symbol}) *</Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const raw = form.net_pnl.replace(/-/g, "").replace(/,/g, "");
+                    const abs = raw === "" || raw === "." ? "" : raw;
+                    setForm((f) => ({ ...f, net_pnl: abs }));
+                  }}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    !form.net_pnl.startsWith("-") && form.net_pnl !== ""
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                      : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Profit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const raw = form.net_pnl.replace(/-/g, "").replace(/,/g, "");
+                    const abs = raw === "" || raw === "." ? "" : raw;
+                    setForm((f) => ({ ...f, net_pnl: abs ? `-${abs}` : "-" }));
+                  }}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    form.net_pnl.startsWith("-")
+                      ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                      : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  Loss
+                </button>
+              </div>
               <Input
                 id="net_pnl"
                 type="text"
@@ -394,8 +426,11 @@ export function TradeEntryModal({
                     net_pnl: stripToNumberString(e.target.value, true),
                   }))
                 }
-                placeholder="e.g. 1,500.50 or -500"
+                placeholder="e.g. 1,500.50"
               />
+              <p className="text-xs text-muted-foreground">
+                Tap Profit or Loss, then enter the amount (no minus key needed on mobile).
+              </p>
             </div>
 
             <div className="space-y-3">

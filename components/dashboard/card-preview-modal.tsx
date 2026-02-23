@@ -264,6 +264,18 @@ export function CardPreviewModal({
     (cardType === "weekly" && weeklyParams != null) ||
     (cardType === "monthly" && monthlyParams != null);
 
+  const isProfit = useMemo(() => {
+    const pnlStr =
+      cardType === "daily"
+        ? dailyParams?.netPnl
+        : cardType === "weekly"
+          ? weeklyParams?.pnl
+          : monthlyParams?.pnl;
+    if (!pnlStr) return true;
+    const num = parseFloat(pnlStr.replace(/[^0-9.\-]/g, "")) || 0;
+    return num >= 0;
+  }, [cardType, dailyParams?.netPnl, weeklyParams?.pnl, monthlyParams?.pnl]);
+
   if (!isReady) return null;
 
   const title =
@@ -333,16 +345,34 @@ export function CardPreviewModal({
         {/* Card image */}
         <div className="px-5 pb-4">
           <div className="relative rounded-xl overflow-hidden border border-border shadow-sm bg-muted/30 min-h-[200px]">
-            {/* Loading state: shimmer + sparkle */}
+            {/* Loading state: green for profit, neutral for loss */}
             {imgSrc && !imgLoaded && !imgError && (
               <div
-                className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 via-white to-emerald-50/30"
+                className={`absolute inset-0 flex flex-col items-center justify-center gap-4 ${
+                  isProfit
+                    ? "bg-gradient-to-br from-slate-50 via-white to-emerald-50/30"
+                    : "bg-gradient-to-br from-slate-50 via-white to-slate-100/50"
+                }`}
                 aria-hidden="true"
               >
                 <div className="relative">
-                  <div className="absolute inset-0 animate-ping rounded-full bg-emerald-200/40" />
-                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 shadow-inner">
-                    <Sparkles className="h-7 w-7 text-emerald-600 animate-pulse" />
+                  <div
+                    className={`absolute inset-0 animate-ping rounded-full ${
+                      isProfit ? "bg-emerald-200/40" : "bg-slate-200/40"
+                    }`}
+                  />
+                  <div
+                    className={`relative flex h-14 w-14 items-center justify-center rounded-full shadow-inner ${
+                      isProfit
+                        ? "bg-gradient-to-br from-emerald-100 to-emerald-50"
+                        : "bg-gradient-to-br from-slate-100 to-slate-50"
+                    }`}
+                  >
+                    <Sparkles
+                      className={`h-7 w-7 animate-pulse ${
+                        isProfit ? "text-emerald-600" : "text-slate-500"
+                      }`}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2 text-center">
@@ -350,7 +380,11 @@ export function CardPreviewModal({
                     Generating your card
                   </p>
                   <div className="mx-auto h-1 w-24 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full w-8 animate-shimmer rounded-full bg-emerald-400/70" />
+                    <div
+                      className={`h-full w-8 animate-shimmer rounded-full ${
+                        isProfit ? "bg-emerald-400/70" : "bg-slate-400/60"
+                      }`}
+                    />
                   </div>
                 </div>
               </div>
