@@ -290,11 +290,11 @@ export function TradeEntryModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="sm:max-w-md"
+          className="sm:max-w-md max-h-[90vh] flex flex-col overflow-hidden"
           onOpenAutoFocus={(e) => e.preventDefault()}
           hideCloseButton={isEdit}
         >
-          <DialogHeader className="text-center">
+          <DialogHeader className="text-center shrink-0">
             {isEdit ? (
               <div className="flex items-center justify-between">
                 <button
@@ -326,7 +326,10 @@ export function TradeEntryModal({
             )}
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-7">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-7 overflow-y-auto overflow-x-hidden min-h-0 flex-1 pr-1 -mr-1"
+          >
             <div className="space-y-3">
               <Label htmlFor="trade_date">Date *</Label>
               <DatePicker
