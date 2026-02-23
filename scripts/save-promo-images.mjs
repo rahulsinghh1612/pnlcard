@@ -9,7 +9,7 @@
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
 
-const BASE = "http://localhost:3000";
+const BASE = process.env.BASE_URL || "http://localhost:3000";
 
 const profitParams = {
   daily: {

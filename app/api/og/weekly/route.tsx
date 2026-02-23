@@ -263,12 +263,12 @@ export async function GET(request: Request) {
           border: `${Math.round(1 * S)}px solid ${s.logoBorder}`,
         }}
       >
-        <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.logoText, fontWeight: 700, letterSpacing: "-0.02em" }}>
+        <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
           {"Pnl Card"}
         </div>
       </div>
     ) : (
-      <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.text3, fontWeight: 500 }}>
+      <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.footerText, fontWeight: 500 }}>
         {handle}
       </div>
     );
@@ -289,30 +289,17 @@ export async function GET(request: Request) {
             overflow: "hidden",
           }}
         >
-          {/* Header */}
+          {/* Header: centered, accent-colored, prominent */}
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "center",
               alignItems: "center",
               marginBottom: Math.round(10 * S),
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.text3 }}>
+            <div style={{ display: "flex", fontSize: Math.round(15 * S), color: s.accent, fontWeight: 600 }}>
               {range}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                background: s.pillBg,
-                border: `${Math.round(1 * S)}px solid ${s.pillBorder}`,
-                borderRadius: Math.round(8 * S),
-                padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
-              }}
-            >
-              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 500 }}>
-                {totalTrades === 1 ? "1 Trade" : `${totalTrades} Trades`}
-              </div>
             </div>
           </div>
 
@@ -338,7 +325,7 @@ export async function GET(request: Request) {
             }}
           >
             {watermarkLeft}
-            <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.text3 }}>
+            <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
               {"Weekly Recap"}
             </div>
           </div>

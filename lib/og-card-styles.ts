@@ -10,6 +10,7 @@
 export type OgStyles = {
   accent: string;
   accentDim: string;
+  footerText: string;
   subtleGlow: string;
   pillBg: string;
   pillBorder: string;
@@ -42,6 +43,13 @@ export function getOgStyles(isDark: boolean, isProfit: boolean): OgStyles {
     : isDark
       ? "rgba(239,68,68,0.55)"
       : "rgba(220,38,38,0.3)";
+  const footerText = isProfit
+    ? isDark
+      ? "rgba(34,197,94,0.80)"
+      : "rgba(22,163,74,0.80)"
+    : isDark
+      ? "rgba(239,68,68,0.80)"
+      : "rgba(220,38,38,0.80)";
   const subtleGlow = isProfit
     ? isDark
       ? "rgba(34,197,94,0.14)"
@@ -99,6 +107,7 @@ export function getOgStyles(isDark: boolean, isProfit: boolean): OgStyles {
   return {
     accent,
     accentDim,
+    footerText,
     subtleGlow,
     pillBg,
     pillBorder,

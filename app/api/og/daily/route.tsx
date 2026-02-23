@@ -50,47 +50,42 @@ export async function GET(request: Request) {
     const tradesText = tradeCount === "1" ? "1 Trade" : `${trades} Trades`;
     const streakText = streak >= 5 ? `${streak}d streak` : "";
 
-    // --- Build main section children (avoiding JSX conditionals) ---
-    const mainChildren: React.ReactNode[] = [];
-
+    // --- Build content groups (trades count + P&L section) ---
     const sectionGap = Math.round(14 * S);
     const labelToValueGap = Math.round(6 * S);
     const headerToContentGap = Math.round(8 * S);
 
-    if (hasCharges) {
-      mainChildren.push(
+    const tradesGroup = (
+      <div key="trades-group" style={{ display: "flex", flexDirection: "column" }}>
         <div
-          key="charges"
           style={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: Math.round(32 * S),
+            fontSize: Math.round(10 * S),
+            color: s.labelColor,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            fontWeight: 500,
+            marginBottom: Math.round(4 * S),
           }}
         >
-          <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.accent, fontWeight: 700 }}>
-            {pnl}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              background: s.pillBg,
-              border: `${Math.round(1 * S)}px solid ${s.pillBorder}`,
-              borderRadius: Math.round(8 * S),
-              padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
-            }}
-          >
-            <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 500 }}>
-              {`Charges & taxes: ${charges}`}
-            </div>
-          </div>
+          {"TRADES"}
         </div>
-      );
-    }
+        <div
+          style={{
+            display: "flex",
+            fontSize: Math.round(18 * S),
+            fontWeight: 700,
+            color: s.accent,
+          }}
+        >
+          {tradeCount}
+        </div>
+      </div>
+    );
 
-    mainChildren.push(
+    const pnlChildren: React.ReactNode[] = [];
+
+    pnlChildren.push(
       <div
         key="pnl-label"
         style={{
@@ -107,7 +102,7 @@ export async function GET(request: Request) {
       </div>
     );
 
-    mainChildren.push(
+    pnlChildren.push(
       <div
         key="pnl-value"
         style={{
@@ -117,7 +112,7 @@ export async function GET(request: Request) {
           color: s.accent,
           letterSpacing: "-0.04em",
           lineHeight: 1,
-          marginBottom: sectionGap,
+          marginBottom: hasRoi ? sectionGap : 0,
         }}
       >
         {netPnl}
@@ -125,7 +120,7 @@ export async function GET(request: Request) {
     );
 
     if (hasRoi) {
-      mainChildren.push(
+      pnlChildren.push(
         <div
           key="roi-label"
           style={{
@@ -141,7 +136,7 @@ export async function GET(request: Request) {
           {roiLabel}
         </div>
       );
-      mainChildren.push(
+      pnlChildren.push(
         <div
           key="roi-value"
           style={{
@@ -157,6 +152,12 @@ export async function GET(request: Request) {
         </div>
       );
     }
+
+    const pnlGroup = (
+      <div key="pnl-group" style={{ display: "flex", flexDirection: "column" }}>
+        {pnlChildren}
+      </div>
+    );
 
     // --- Streak dots (last dot solid, rest muted to match target) ---
     const streakDots: React.ReactNode[] = [];
@@ -193,12 +194,12 @@ export async function GET(request: Request) {
           border: `${Math.round(1 * S)}px solid ${s.logoBorder}`,
         }}
       >
-        <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.logoText, fontWeight: 700, letterSpacing: "-0.02em" }}>
+        <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
           {"Pnl Card"}
         </div>
       </div>
     ) : (
-      <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.text3, fontWeight: 500 }}>
+      <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.footerText, fontWeight: 500 }}>
         {handle}
       </div>
     );
@@ -219,45 +220,27 @@ export async function GET(request: Request) {
           overflow: "hidden",
         }}
       >
-          {/* Header: date + trades pill — tighter gap so P&L/charges line sits closer */}
+          {/* Header: centered, accent-colored, prominent */}
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "center",
               alignItems: "center",
               marginBottom: headerToContentGap,
             }}
           >
-            <div style={{ display: "flex", fontSize: Math.round(14 * S), color: s.dateColor, fontWeight: 500 }}>
+            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 600 }}>
               {date}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                background: s.pillBg,
-                border: `${Math.round(1 * S)}px solid ${s.pillBorder}`,
-                borderRadius: Math.round(8 * S),
-                padding: `${Math.round(3 * S)}px ${Math.round(10 * S)}px`,
-              }}
-            >
-              <div style={{ display: "flex", fontSize: Math.round(12 * S), color: s.pillText, fontWeight: 500 }}>
-                {tradesText}
-              </div>
             </div>
           </div>
 
-          {/* Main content — centered in remaining space so vertical gap is even top & bottom */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              minHeight: 0,
-            }}
-          >
-            {mainChildren}
+          {/* Main content — TRADES + P/L + ROI grouped tightly, centered vertically */}
+          <div style={{ flex: 1, display: "flex" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: Math.round(14 * S) }}>
+            {tradesGroup}
+            {pnlGroup}
           </div>
+          <div style={{ flex: 1, display: "flex" }} />
 
           {/* Footer */}
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -286,7 +269,7 @@ export async function GET(request: Request) {
               }}
             >
               {watermarkLeft}
-              <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.text3 }}>
+              <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
                 {"Daily Recap"}
               </div>
             </div>
