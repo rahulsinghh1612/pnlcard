@@ -290,11 +290,11 @@ export function TradeEntryModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden"
+          className="sm:max-w-md max-h-[90vh] rounded-2xl sm:rounded-lg flex flex-col overflow-hidden p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
           hideCloseButton={isEdit}
         >
-          <DialogHeader className="text-center shrink-0">
+          <DialogHeader className="text-center shrink-0 px-6 pt-6 pb-0">
             {isEdit ? (
               <div className="flex items-center justify-between">
                 <button
@@ -330,8 +330,8 @@ export function TradeEntryModal({
             onSubmit={handleSubmit}
             className="flex flex-col min-h-0 flex-1 overflow-hidden"
           >
-            <div className="space-y-5 overflow-y-auto min-h-0 flex-1">
-            <div className="space-y-2">
+            <div className="space-y-6 overflow-y-auto min-h-0 flex-1 px-6 py-4">
+            <div className="space-y-2.5">
               <Label htmlFor="trade_date">Date *</Label>
               <DatePicker
                 id="trade_date"
@@ -363,7 +363,7 @@ export function TradeEntryModal({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <Label htmlFor="num_trades">Number of trades *</Label>
               <Input
                 id="num_trades"
@@ -384,7 +384,7 @@ export function TradeEntryModal({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <Label htmlFor="net_pnl">P&L ({symbol}) *</Label>
               <div className="flex gap-2">
                 <button
@@ -437,7 +437,7 @@ export function TradeEntryModal({
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <Label htmlFor="charges">Charges & taxes ({symbol})</Label>
               <Input
                 id="charges"
@@ -469,7 +469,7 @@ export function TradeEntryModal({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="capital_deployed" className="mb-0">
                   Capital ({symbol}) deployed for ROI
@@ -524,7 +524,7 @@ export function TradeEntryModal({
             </div>
             </div>
 
-            <DialogFooter className="shrink-0 pt-4 border-t border-border/30 mt-2">
+            <div className="shrink-0 border-t border-border/30 px-6 py-4">
               <button
                 type="submit"
                 disabled={isLoading || isFutureDate || isDuplicateDate}
@@ -534,7 +534,7 @@ export function TradeEntryModal({
                   {isLoading ? "Saving…" : isEdit ? "Update" : "Save"}
                 </span>
               </button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
