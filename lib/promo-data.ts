@@ -1,31 +1,22 @@
 /**
  * Permanent promo data for the landing page hero carousel.
  *
- * Source: Real trades from @iamrahulx0's January 2026 account.
- * Fetched on 21 Feb 2026 from Supabase (scripts/jan-2026-trades.json).
+ * Capital basis: ₹10,00,000 (10 lakh) for all ROI calculations.
+ * Data matches lib/demo-trades.ts so the calendar heatmap and promo cards
+ * are consistent across the landing page.
  *
- * This file is the single source of truth for landing page card previews.
- * If the user updates their trades, re-run the debug-trades endpoint and
- * update the raw trades below, then the computed values will stay in sync.
+ * ── Weekly cards (Mon–Sun, 5 bars + 1 gap) ──────────────────────
+ * Profit week (5–11 Jan 2026):
+ *   Mon: +5,800 | Tue: -3,400 | Wed: +10,000 | Thu: — | Fri: -2,800
+ *   Sat: +1,800 | Sun: — | Total: +11,400 | 3W · 2L | ROI: +1.14%
  *
- * ── Raw trades used ──────────────────────────────────────────────
+ * Loss week (8–14 Dec 2025):
+ *   Mon: -3,200 | Tue: -6,400 | Wed: +4,800 | Thu: — | Fri: -4,400
+ *   Sat: +1,200 | Sun: — | Total: -8,000 | 2W · 3L | ROI: -0.80%
  *
- * Jan 2  (profit day):  net_pnl=+2,000  charges=200  trades=2  capital=10L
- * Jan 13 (loss day):    net_pnl=-1,200  charges=300  trades=1  capital=10L
- *
- * Jan 12-18 week:
- *   Mon 12: no trade
- *   Tue 13: net_pnl=-1,200  charges=300  → final=-1,500  (loss)
- *   Wed 14: net_pnl=+3,100  charges=90   → final=+3,010  (win)
- *   Thu 15: net_pnl=+2,500  charges=250  → final=+2,250  (win)
- *   Fri 16: net_pnl=+3,000  charges=300  → final=+2,700  (win)
- *   Sat 17: net_pnl=-1,000  charges=100  → final=-1,100  (loss)
- *   Sun 18: no trade
- *   Week total: +5,360  |  3W · 2L  |  9 trades  |  best: Wed +3,010
- *
- * January 2026 month (23 trading days, Jan 5 excluded):
- *   Jan 1 adjusted to +6,500 for promo display.
- *   Total: +16,726  |  14W · 9L  |  best: 1st +6,500  |  worst: 21st -3,200
+ * ── Monthly cards ────────────────────────────────────────────────
+ * Profit (Jan 2026): +65,000 | 15W · 6L | +6.50% ROI | 21 trades
+ * Loss (Dec 2025):   -35,000 | 8W · 11L | -3.50% ROI | 19 trades
  */
 
 export const PROMO_HANDLE = "@iamrahulx0";
@@ -40,84 +31,107 @@ export const PROMO_DAILY_PROFIT = {
   label: "Daily Profit",
   date: "2nd Jan, 2026",
   trades: "2",
-  pnl: "+2,000",
-  charges: "200",
-  netPnl: "+1,800",
-  netRoi: "+0.18%",
+  pnl: "+8,650",
+  charges: "250",
+  netPnl: "+8,400",
+  netRoi: "+0.84%",
 };
 
-// ─── Daily: Jan 13 (Loss) ───────────────────────────────────────
+// ─── Daily: Dec 30 (Loss) ───────────────────────────────────────
 
 export const PROMO_DAILY_LOSS = {
   type: "daily" as const,
   variant: "loss" as const,
   label: "Daily Loss",
-  date: "13th Jan, 2026",
-  trades: "1",
-  pnl: "-1,200",
-  charges: "300",
-  netPnl: "-1,500",
-  netRoi: "-0.15%",
+  date: "30th Dec, 2025",
+  trades: "3",
+  pnl: "-13,000",
+  charges: "200",
+  netPnl: "-13,200",
+  netRoi: "-1.32%",
 };
 
-// ─── Weekly: Jan 12–18 ──────────────────────────────────────────
+// ─── Weekly: Profit (5–11 Jan 2026, 5 bars + gap on Thu) ────────
 
 export const PROMO_WEEKLY = {
   type: "weekly" as const,
   variant: "profit" as const,
   label: "Weekly Recap",
-  range: "12 – 18 Jan, 2026",
-  totalTrades: "9",
-  netPnl: "+5,360",
-  roi: "+0.54%",
+  range: "5 Jan – 11 Jan, 2026",
+  totalTrades: "8",
+  netPnl: "+11,400",
+  roi: "+1.14%",
   winRate: "60%",
   wl: "3W · 2L",
   days: [
-    { day: "M", pnl: 0, win: false },
-    { day: "T", pnl: -1500, win: false },
-    { day: "W", pnl: 3010, win: true },
-    { day: "T", pnl: 2250, win: true },
-    { day: "F", pnl: 2700, win: true },
-    { day: "S", pnl: -1100, win: false },
+    { day: "M", pnl: 5800, win: true },
+    { day: "T", pnl: -3400, win: false },
+    { day: "W", pnl: 10000, win: true },
+    { day: "T", pnl: 0, win: false },
+    { day: "F", pnl: -2800, win: false },
+    { day: "S", pnl: 1800, win: true },
     { day: "S", pnl: 0, win: false },
   ],
 };
 
-// ─── Monthly: January 2026 ──────────────────────────────────────
+// ─── Weekly: Loss (8–14 Dec 2025, 5 bars + gap on Thu) ──────────
+
+export const PROMO_WEEKLY_LOSS = {
+  type: "weekly" as const,
+  variant: "loss" as const,
+  label: "Weekly Loss",
+  range: "8 Dec – 14 Dec, 2025",
+  totalTrades: "10",
+  netPnl: "-8,000",
+  roi: "-0.80%",
+  winRate: "40%",
+  wl: "2W · 3L",
+  days: [
+    { day: "M", pnl: -3200, win: false },
+    { day: "T", pnl: -6400, win: false },
+    { day: "W", pnl: 4800, win: true },
+    { day: "T", pnl: 0, win: false },
+    { day: "F", pnl: -4400, win: false },
+    { day: "S", pnl: 1200, win: true },
+    { day: "S", pnl: 0, win: false },
+  ],
+};
+
+// ─── Monthly: Profit (January 2026, 21 trades) ──────────────────
 
 export const PROMO_MONTHLY = {
   type: "monthly" as const,
   variant: "profit" as const,
   label: "Monthly Recap",
   month: "January 2026",
-  netPnl: "+16,726",
-  roi: "+1.67%",
-  winRate: "61%",
-  wl: "14W · 9L",
+  netPnl: "+65,000",
+  roi: "+6.50%",
+  winRate: "71%",
+  wl: "15W · 6L",
   calendarData: {
-    1: 6500,
-    2: 1800,
-    3: -1500,
-    6: 3627,
-    7: -550,
-    8: 1539,
-    9: 1120,
-    10: -1800,
-    13: -1500,
-    14: 3010,
-    15: 2250,
-    16: 2700,
-    17: -1100,
-    20: 1250,
-    21: -3200,
-    22: 900,
-    23: -1400,
-    24: 1850,
-    27: 1800,
-    28: -1430,
-    29: -2200,
-    30: 2160,
-    31: 900,
+    2: 8400, 3: 2200, 5: 5800, 6: -3400, 7: 10000,
+    9: -2800, 10: 1800, 12: 6400, 14: 5200, 15: 7200,
+    16: -3600, 19: 7600, 20: -2400, 21: 4800, 22: -3200,
+    23: 7600, 27: 6800, 28: -2600, 29: 3400, 30: 5600, 31: 1600,
+  } as Record<number, number>,
+};
+
+// ─── Monthly: Loss (December 2025, 19 trades) ───────────────────
+
+export const PROMO_MONTHLY_LOSS = {
+  type: "monthly" as const,
+  variant: "loss" as const,
+  label: "Monthly Loss",
+  month: "December 2025",
+  netPnl: "-35,000",
+  roi: "-3.50%",
+  winRate: "42%",
+  wl: "8W · 11L",
+  calendarData: {
+    1: -4200, 2: 3600, 3: -5800, 5: 2400, 6: -2600,
+    8: -3200, 9: -6400, 10: 4800, 12: -4400, 13: 1200,
+    15: 3200, 16: -5600, 17: 2800, 19: -3800, 22: -4600,
+    23: 3400, 24: -5200, 29: 2600, 30: -13200,
   } as Record<number, number>,
 };
 

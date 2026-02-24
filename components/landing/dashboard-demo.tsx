@@ -29,10 +29,8 @@ const getFinalResult = (t: { net_pnl: number; charges: number | null }) =>
 const DEMO_MONTH_PNL = DEMO_TRADES.reduce((sum, t) => sum + getFinalResult(t), 0);
 const DEMO_DAILY = DEMO_TRADES[DEMO_TRADES.length - 1]; // Jan 31
 const DEMO_WEEK_PNL = DEMO_TRADES.filter((t) => {
-  const d = new Date(t.trade_date);
-  const day = d.getDay();
-  const date = d.getDate();
-  return date >= 27 && date <= 31; // Last week of Jan
+  const d = t.trade_date;
+  return d >= "2026-01-26" && d <= "2026-02-01";
 }).reduce((sum, t) => sum + getFinalResult(t), 0);
 
 export function DashboardDemo({ step }: DashboardDemoProps) {
@@ -166,7 +164,7 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
                     </div>
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Weekly</p>
                     <p className="mt-0.5 text-sm font-bold text-emerald-600">{formatPnl(DEMO_WEEK_PNL)}</p>
-                    <p className="mt-0.5 text-[9px] text-muted-foreground">27 Jan – 2 Feb</p>
+                    <p className="mt-0.5 text-[9px] text-muted-foreground">26 Jan – 1 Feb</p>
                   </div>
                   <div className="rounded-lg border border-border bg-gradient-to-br from-white to-slate-50/40 p-3">
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 mb-2">

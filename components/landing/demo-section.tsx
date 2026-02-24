@@ -91,11 +91,11 @@ type Field = {
 
 const FORM_FIELDS: Field[] = [
   { label: "Date *", value: "15/01/2026", id: "date" },
-  { label: "Number of trades *", value: "2", id: "num" },
-  { label: "P&L (₹) *", value: "3,500", id: "pnl" },
+  { label: "Number of trades *", value: String(HIGHLIGHT.num_trades), id: "num" },
+  { label: "P&L (₹) *", value: formatINR(HIGHLIGHT.net_pnl), id: "pnl" },
   {
     label: "Charges & taxes (₹)",
-    value: "250",
+    value: formatINR(HIGHLIGHT.charges),
     id: "charges",
     subLabel: "Net P&L",
     subValue: formatCompact(H_FINAL),
@@ -375,13 +375,295 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
   );
 }
 
+/* ─── DemoWeeklyBreakdown ──────────────────────────────── */
+
+const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+type WeekRow = {
+  range: string;
+  pnl: number;
+  wins: number;
+  losses: number;
+  dailyPnls: { label: string; pnl: number; hasTrade: boolean }[];
+};
+
+function buildWeekRows(
+  grid: (number | null)[][],
+  tradeMap: Map<string, DemoTradeType>,
+  datePrefix: string,
+  monthShort: string,
+): WeekRow[] {
+  return grid
+    .map((week) => {
+      const dailyPnls: WeekRow["dailyPnls"] = [];
+      let total = 0;
+      let wins = 0;
+      let losses = 0;
+      let minDay: number | null = null;
+      let maxDay: number | null = null;
+
+      week.forEach((day, ci) => {
+        if (day === null) {
+          dailyPnls.push({ label: DAY_LABELS[ci], pnl: 0, hasTrade: false });
+          return;
+        }
+        if (minDay === null || day < minDay) minDay = day;
+        if (maxDay === null || day > maxDay) maxDay = day;
+
+        const ds = `${datePrefix}-${String(day).padStart(2, "0")}`;
+        const trade = tradeMap.get(ds);
+        if (trade) {
+          const r = getFinalResult(trade);
+          total += r;
+          if (r >= 0) wins++;
+          else losses++;
+          dailyPnls.push({ label: DAY_LABELS[ci], pnl: r, hasTrade: true });
+        } else {
+          dailyPnls.push({ label: DAY_LABELS[ci], pnl: 0, hasTrade: false });
+        }
+      });
+
+      return {
+        range:
+          minDay !== null && maxDay !== null
+            ? `${minDay} – ${maxDay} ${monthShort}`
+            : "",
+        pnl: total,
+        wins,
+        losses,
+        dailyPnls,
+      };
+    })
+    .filter((w) => w.wins + w.losses > 0);
+}
+
+export function DemoWeeklyBreakdown() {
+  const [show, setShow] = useState(false);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [showAvg, setShowAvg] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const { tradeMap } = computeMonthData(DEMO_TRADES);
+  const grid = buildGridForMonth(2026, 0);
+  const weeks = buildWeekRows(grid, tradeMap, "2026-01", "Jan");
+
+  const avgWeekly =
+    weeks.length > 0
+      ? Math.round(weeks.reduce((s, w) => s + w.pnl, 0) / weeks.length)
+      : 0;
+
+  const maxDayAbs = Math.max(
+    ...weeks.flatMap((w) =>
+      w.dailyPnls.filter((d) => d.hasTrade).map((d) => Math.abs(d.pnl)),
+    ),
+    1,
+  );
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setShow(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setRevealedCount(0);
+    setShowAvg(false);
+
+    if (!show) return;
+
+    for (let i = 0; i < weeks.length; i++) {
+      const t = setTimeout(() => setRevealedCount(i + 1), 200 + i * 600);
+      timersRef.current.push(t);
+    }
+
+    const avgT = setTimeout(
+      () => setShowAvg(true),
+      200 + weeks.length * 600 + 400,
+    );
+    timersRef.current.push(avgT);
+
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show]);
+
+  return (
+    <div ref={ref} className="w-full max-w-md mx-auto">
+      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5 shadow-xl">
+        {/* Header */}
+        <div className="mb-5 flex items-baseline justify-between">
+          <div>
+            <span className="text-sm font-semibold text-foreground">
+              January 2026
+            </span>
+            <span className="ml-1.5 text-[10px] sm:text-xs text-muted-foreground">
+              · Weekly Breakdown
+            </span>
+          </div>
+          <span className="text-[10px] sm:text-xs text-muted-foreground">
+            {weeks.length} weeks
+          </span>
+        </div>
+
+        {/* Week rows */}
+        <div className="flex flex-col gap-4">
+          {weeks.map((week, wi) => {
+            const revealed = wi < revealedCount;
+            const BAR_MAX_H = 28;
+
+            return (
+              <div
+                key={`wk-${wi}`}
+                className="transition-all duration-500"
+                style={{
+                  opacity: revealed ? 1 : 0,
+                  transform: revealed
+                    ? "translateY(0)"
+                    : "translateY(12px)",
+                }}
+              >
+                {/* Row header */}
+                <div className="flex items-baseline justify-between mb-2">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[11px] sm:text-xs font-semibold text-foreground">
+                      Week {wi + 1}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                      {week.range}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                      {week.wins}W · {week.losses}L
+                    </span>
+                    <span
+                      className={`text-[11px] sm:text-xs font-bold ${
+                        week.pnl >= 0
+                          ? "text-emerald-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {formatCompact(week.pnl)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mini day bars */}
+                <div className="grid grid-cols-7 gap-1.5">
+                  {week.dailyPnls.map((d, di) => {
+                    const barH = d.hasTrade
+                      ? Math.max(
+                          6,
+                          Math.round(
+                            (Math.abs(d.pnl) / maxDayAbs) * BAR_MAX_H,
+                          ),
+                        )
+                      : 0;
+
+                    return (
+                      <div
+                        key={`d-${wi}-${di}`}
+                        className="flex flex-col items-center"
+                      >
+                        {/* Bar container — fixed height for alignment */}
+                        <div
+                          className="w-full flex items-end justify-center"
+                          style={{ height: `${BAR_MAX_H + 2}px` }}
+                        >
+                          {d.hasTrade ? (
+                            <div
+                              className="w-full rounded-[4px] transition-all duration-700"
+                              style={{
+                                height: revealed ? `${barH}px` : "0px",
+                                transitionDelay: revealed
+                                  ? `${di * 50 + 100}ms`
+                                  : "0ms",
+                                backgroundColor:
+                                  d.pnl >= 0
+                                    ? "rgb(16 185 129 / 0.2)"
+                                    : "rgb(239 68 68 / 0.2)",
+                                borderWidth: "1px",
+                                borderColor:
+                                  d.pnl >= 0
+                                    ? "rgb(16 185 129 / 0.35)"
+                                    : "rgb(239 68 68 / 0.35)",
+                              }}
+                            />
+                          ) : (
+                            <div
+                              className="w-1.5 h-1.5 rounded-full bg-muted/60 transition-opacity duration-500"
+                              style={{
+                                opacity: revealed ? 1 : 0,
+                                transitionDelay: revealed
+                                  ? `${di * 50 + 100}ms`
+                                  : "0ms",
+                              }}
+                            />
+                          )}
+                        </div>
+                        {/* Day label */}
+                        <span className="mt-1 text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
+                          {d.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Avg Weekly */}
+        <div
+          className="mt-5 pt-3 border-t border-border/60 flex items-center justify-between transition-all duration-700"
+          style={{
+            opacity: showAvg ? 1 : 0,
+            transform: showAvg ? "translateY(0)" : "translateY(6px)",
+          }}
+        >
+          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Avg. Weekly P&L
+          </span>
+          <span
+            className={`text-sm sm:text-base font-bold ${
+              avgWeekly >= 0 ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {formatCompact(avgWeekly)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── DemoCreateCards ───────────────────────────────────── */
 
 const JAN_PNL = DEMO_TRADES.reduce((s, t) => s + getFinalResult(t), 0);
 
+const JAN_WEEK_PNL = DEMO_TRADES
+  .filter((t) => t.trade_date >= "2026-01-26" && t.trade_date <= "2026-02-01")
+  .reduce((s, t) => s + getFinalResult(t), 0);
+
 const CARD_OPTIONS = [
   { type: "Daily", pnl: formatCompact(getFinalResult(DEMO_TRADES[DEMO_TRADES.length - 1])), date: "31 Jan 2026", Icon: CalendarDays, iconBg: "bg-blue-50 text-blue-600" },
-  { type: "Weekly", pnl: formatCompact(4360), date: "27 Jan – 2 Feb", Icon: CalendarRange, iconBg: "bg-purple-50 text-purple-600" },
+  { type: "Weekly", pnl: formatCompact(JAN_WEEK_PNL), date: "26 Jan – 1 Feb", Icon: CalendarRange, iconBg: "bg-purple-50 text-purple-600" },
   { type: "Monthly", pnl: formatCompact(JAN_PNL), date: "Jan 2026", Icon: CalendarCheck, iconBg: "bg-amber-50 text-amber-600" },
 ];
 

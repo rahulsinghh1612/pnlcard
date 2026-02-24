@@ -19,6 +19,10 @@ const DemoCalendar = dynamic(() => import("@/components/landing/demo-section").t
   ssr: false,
   loading: () => <div className="h-[320px]" />,
 });
+const DemoWeeklyBreakdown = dynamic(() => import("@/components/landing/demo-section").then((m) => m.DemoWeeklyBreakdown), {
+  ssr: false,
+  loading: () => <div className="h-[320px]" />,
+});
 // ─── Sample ticker data ──────────────────────────────────────────
 
 const TICKER_1 = [
@@ -194,6 +198,7 @@ export default function LandingPage() {
 
   const howItWorks = useInView();
   const calendarFeature = useInView();
+  const weeklyFeature = useInView();
   const gallery = useInView();
   const pricing = useInView();
 
@@ -608,6 +613,42 @@ export default function LandingPage() {
             }`}
           >
             <DemoCalendar />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Weekly Feature ─────────────────────────────────── */}
+      <section
+        ref={weeklyFeature.ref}
+        className="scroll-mt-24 pb-24 sm:pb-32 bg-white"
+      >
+        <div className="mx-auto max-w-4xl px-6">
+          <div
+            className={`text-center mb-12 transition-all duration-700 ${
+              weeklyFeature.visible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              Zoom into your{" "}
+              <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+                Weeks.
+              </span>
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Break down your monthly performance week by week &mdash; spot patterns and stay consistent.
+            </p>
+          </div>
+
+          <div
+            className={`transition-all duration-700 delay-200 ${
+              weeklyFeature.visible
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8"
+            }`}
+          >
+            <DemoWeeklyBreakdown />
           </div>
         </div>
       </section>
