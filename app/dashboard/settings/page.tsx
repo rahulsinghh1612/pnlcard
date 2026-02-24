@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Settings — PNLCard",
   description: "Manage your account settings.",

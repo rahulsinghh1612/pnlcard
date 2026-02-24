@@ -6,6 +6,8 @@ import {
   getMonthPnl,
 } from "@/lib/stats";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Dashboard — PNLCard",
   description: "Your trading recap dashboard.",
