@@ -61,6 +61,9 @@ export default async function DashboardPage() {
     note: t.note ?? null,
   }));
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://pnlcard.com";
+
   return (
     <DashboardContent
       displayName={profile.display_name}
@@ -74,6 +77,7 @@ export default async function DashboardPage() {
       xHandle={profile.x_handle ?? null}
       cardTheme={profile.card_theme ?? "light"}
       trades={tradesForClient}
+      baseUrl={baseUrl}
     />
   );
 }

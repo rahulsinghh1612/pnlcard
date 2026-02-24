@@ -10,7 +10,7 @@ import {
   subMonths,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays, ChartNoAxesColumn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays, ChartNoAxesColumn, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -63,17 +63,12 @@ export function CalendarHeatmap({
   const [viewMode, setViewMode] = useState<"calendar" | "breakdown">("calendar");
 
   useEffect(() => {
-    const stored = localStorage.getItem("pnlcard-show-weekly");
-    if (stored !== null) setShowWeekly(stored === "true");
     const storedMode = localStorage.getItem("pnlcard-view-mode");
     if (storedMode === "calendar" || storedMode === "breakdown") setViewMode(storedMode);
   }, []);
 
   const toggleWeekly = () => {
-    setShowWeekly((prev) => {
-      localStorage.setItem("pnlcard-show-weekly", String(!prev));
-      return !prev;
-    });
+    setShowWeekly((prev) => !prev);
   };
 
   const changeViewMode = (mode: "calendar" | "breakdown") => {
@@ -557,16 +552,16 @@ export function CalendarHeatmap({
           <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
           No trade
         </span>
-        {!showWeekly && (
-          <button
-            type="button"
-            onClick={toggleWeekly}
-            className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
-          >
-            <BarChart3 className="h-3 w-3" />
-            Show weekly
-          </button>
-        )}
+          {!showWeekly && (
+            <button
+              type="button"
+              onClick={toggleWeekly}
+              className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
+            >
+            <PanelRightOpen className="h-3 w-3" />
+              Show weekly
+            </button>
+          )}
       </div>
 
       {/* ── Mobile divider between calendar and breakdown ── */}

@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles, Square, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import {
   buildDailyCardParams,
@@ -37,6 +37,7 @@ type CardPreviewModalProps = {
   weekMondayStr?: string | null;
   monthDateStr?: string | null;
   allTrades: Trade[];
+  baseUrl: string;
   profile: {
     x_handle: string | null;
     trading_capital: number | null;
@@ -118,11 +119,13 @@ export function CardPreviewModal({
   weekMondayStr,
   monthDateStr,
   allTrades,
+  baseUrl,
   profile,
   onEditTrade,
 }: CardPreviewModalProps) {
   const [theme, setTheme] = useState(profile.card_theme);
   const [showRoi, setShowRoi] = useState(profile.trading_capital != null);
+  const [downloadFormat, setDownloadFormat] = useState<"square" | "story">("square");
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -194,6 +197,37 @@ export function CardPreviewModal({
     setImgError(false);
   }, [imgSrc]);
 
+  const shareUrl = useMemo(() => {
+    if (cardType === "daily" && trade) {
+      return `${baseUrl}/card/${trade.id}`;
+    }
+    if (cardType === "weekly" && weekMondayStr) {
+      const monday = new Date(weekMondayStr + "T12:00:00");
+      const sunday = new Date(monday);
+      sunday.setDate(sunday.getDate() + 6);
+      const weekTrade = allTrades.find((t) => {
+        const d = new Date(t.trade_date + "T12:00:00");
+        return d >= monday && d <= sunday;
+      });
+      if (weekTrade) {
+        return `${baseUrl}/card/weekly/${weekMondayStr}?t=${weekTrade.id}`;
+      }
+    }
+    if (cardType === "monthly" && monthDateStr) {
+      const monthStr = monthDateStr.slice(0, 7);
+      const monthStart = new Date(monthDateStr + "T12:00:00");
+      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      const monthTrade = allTrades.find((t) => {
+        const d = new Date(t.trade_date + "T12:00:00");
+        return d >= monthStart && d <= monthEnd;
+      });
+      if (monthTrade) {
+        return `${baseUrl}/card/monthly/${monthStr}?t=${monthTrade.id}`;
+      }
+    }
+    return null;
+  }, [baseUrl, cardType, trade, weekMondayStr, monthDateStr, allTrades]);
+
   const downloadFilename = useMemo(() => {
     if (cardType === "daily" && dailyParams) {
       return `pnlcard-daily-${dailyParams.date.replace(/\s/g, "-")}.png`;
@@ -207,10 +241,11 @@ export function CardPreviewModal({
     return "pnlcard.png";
   }, [cardType, dailyParams, weeklyParams, monthlyParams]);
 
-  const fetchCardBlob = useCallback(async (): Promise<Blob | null> => {
+  const fetchCardBlob = useCallback(async (format: "square" | "story" = "square"): Promise<Blob | null> => {
     if (!ogUrl) return null;
+    const url = format === "story" ? `${ogUrl}${ogUrl.includes("?") ? "&" : "?"}format=story` : ogUrl;
     try {
-      const res = await fetch(ogUrl);
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to generate image");
       return await res.blob();
     } catch {
@@ -220,7 +255,7 @@ export function CardPreviewModal({
   }, [ogUrl]);
 
   const handleDownload = useCallback(async () => {
-    const blob = await fetchCardBlob();
+    const blob = await fetchCardBlob(downloadFormat);
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -229,18 +264,24 @@ export function CardPreviewModal({
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Card downloaded!");
-  }, [fetchCardBlob, downloadFilename]);
+  }, [fetchCardBlob, downloadFilename, downloadFormat]);
 
   const handleShareX = useCallback(async () => {
+    const shareText = shareUrl
+      ? `Check out my PnL Card! ${shareUrl} #PnLCard #Trading`
+      : "Check out my PnL Card! #PnLCard #Trading";
+
     const blob = await fetchCardBlob();
     if (!blob) return;
 
     const file = new File([blob], downloadFilename, { type: "image/png" });
-    const shareText = "Check out my PnL Card! #PnLCard #Trading";
 
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ text: shareText, files: [file] });
+        await navigator.share({
+          text: shareText,
+          files: [file],
+        });
         toast.success("Shared successfully!");
         return;
       } catch (err) {
@@ -250,8 +291,12 @@ export function CardPreviewModal({
 
     const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
     window.open(tweetUrl, "_blank", "noopener,noreferrer");
-    toast.success("Opening X — download the card first to attach it!");
-  }, [fetchCardBlob, downloadFilename]);
+    if (shareUrl) {
+      toast.success("Opening X — the link will show your card preview!");
+    } else {
+      toast.success("Opening X — paste the link after sharing to show your card!");
+    }
+  }, [fetchCardBlob, downloadFilename, shareUrl]);
 
   const handleEdit = useCallback(() => {
     if (!trade) return;
@@ -340,6 +385,34 @@ export function CardPreviewModal({
               ROI
             </button>
           )}
+
+          {/* Download format: Square (feed) vs Story */}
+          <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+            <button
+              onClick={() => setDownloadFormat("square")}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                downloadFormat === "square"
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Square (1080×1080) for feed"
+            >
+              <Square className="h-2.5 w-2.5" />
+              Square
+            </button>
+            <button
+              onClick={() => setDownloadFormat("story")}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                downloadFormat === "story"
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Story (1080×1920) for Instagram"
+            >
+              <LayoutGrid className="h-2.5 w-2.5" />
+              Story
+            </button>
+          </div>
         </div>
 
         {/* Card image */}

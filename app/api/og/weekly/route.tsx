@@ -30,6 +30,8 @@ export async function GET(request: Request) {
     const bestDay = searchParams.get("bestDay") ?? "Thu +21,294";
     const handle = searchParams.get("handle");
     const theme = searchParams.get("theme") ?? "light";
+    const format = searchParams.get("format") ?? "square";
+    const isStory = format === "story";
     const currency = searchParams.get("currency") ?? "INR";
     // INR: no symbol (redundant for Indian users). USD: show "$".
     const symbol = currency === "USD" ? "$" : "";
@@ -259,64 +261,77 @@ export async function GET(request: Request) {
 
     const fonts = await getOgFonts();
 
-    return new ImageResponse(
-      (
+    const cardContent = (
+      <div
+        style={{
+          width: 1080,
+          height: 1080,
+          fontFamily: "Inter",
+          background: s.bg,
+          padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         <div
           style={{
-            width: 1080,
-            height: 1080,
-            fontFamily: "Inter",
-            background: s.bg,
-            padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
             display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: Math.round(10 * S),
           }}
         >
-          {/* Header: centered, accent-colored, prominent */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: Math.round(10 * S),
-            }}
-          >
-            <div style={{ display: "flex", fontSize: Math.round(15 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
-              {range}
-            </div>
-          </div>
-
-          {/* Main content */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-            }}
-          >
-            {mainChildren}
-          </div>
-
-          {/* Footer */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "auto",
-            }}
-          >
-            {watermarkLeft}
-            <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
-              {"Weekly Recap"}
-            </div>
+          <div style={{ display: "flex", fontSize: Math.round(15 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
+            {range}
           </div>
         </div>
-      ),
-      { width: 1080, height: 1080, fonts }
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          {mainChildren}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "auto",
+          }}
+        >
+          {watermarkLeft}
+          <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
+            {"Weekly Recap"}
+          </div>
+        </div>
+      </div>
     );
+
+    const wrapper = isStory ? (
+      <div
+        style={{
+          width: 1080,
+          height: 1920,
+          background: s.bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {cardContent}
+      </div>
+    ) : cardContent;
+
+    return new ImageResponse(wrapper, {
+      width: 1080,
+      height: isStory ? 1920 : 1080,
+      fonts,
+    });
   } catch (e) {
     console.error("OG weekly card error:", e);
     return new Response(

@@ -9,7 +9,7 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Link2, Lock } from "lucide-react";
+import { Download, Link2, Lock, Square, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import type { DailyCardParams } from "@/lib/card-data";
 import type { WeeklyCardParams } from "@/lib/card-data";
@@ -96,6 +96,7 @@ export function CardGenerator({
   userName,
 }: CardGeneratorProps) {
   const [theme, setTheme] = useState(dailyParams.theme);
+  const [downloadFormat, setDownloadFormat] = useState<"square" | "story">("square");
   const [cardType, setCardType] = useState<"daily" | "weekly" | "monthly">(
     defaultCardType && ["daily", "weekly", "monthly"].includes(defaultCardType)
       ? defaultCardType
@@ -116,23 +117,33 @@ export function CardGenerator({
 
   const shareUrl = `${baseUrl}/card/${dailyParams.tradeId}`;
 
+  const downloadLabel =
+    cardType === "daily"
+      ? dailyParams.date.replace(/\s/g, "-")
+      : cardType === "weekly" && weeklyParams
+        ? weeklyParams.range.replace(/\s/g, "-")
+        : cardType === "monthly" && monthlyParams
+          ? monthlyParams.month.replace(/\s/g, "-")
+          : "card";
+
   const handleDownload = useCallback(async () => {
     if (!ogUrl) return;
+    const url = downloadFormat === "story" ? `${ogUrl}${ogUrl.includes("?") ? "&" : "?"}format=story` : ogUrl;
     try {
-      const res = await fetch(ogUrl);
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to generate image");
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = `pnlcard-${cardType}-${dailyParams.date.replace(/\s/g, "-")}.png`;
+      a.href = blobUrl;
+      a.download = `pnlcard-${cardType}-${downloadLabel}.png`;
       a.click();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(blobUrl);
       toast.success("Card downloaded!");
     } catch {
       toast.error("Failed to download card");
     }
-  }, [ogUrl, cardType, dailyParams.date]);
+  }, [ogUrl, cardType, downloadLabel, downloadFormat]);
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -230,10 +241,38 @@ export function CardGenerator({
             />
           </Card>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex rounded-lg border border-border p-0.5 bg-muted/40">
+              <button
+                type="button"
+                onClick={() => setDownloadFormat("square")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  downloadFormat === "square"
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Square (1080×1080) for feed"
+              >
+                <Square className="h-3 w-3" />
+                Square
+              </button>
+              <button
+                type="button"
+                onClick={() => setDownloadFormat("story")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  downloadFormat === "story"
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Story (1080×1920) for Instagram"
+              >
+                <LayoutGrid className="h-3 w-3" />
+                Story
+              </button>
+            </div>
             <Button onClick={handleDownload}>
               <Download className="mr-2 h-4 w-4" />
-              Download as Image
+              Download
             </Button>
             <Button variant="outline" onClick={handleCopyLink}>
               <Link2 className="mr-2 h-4 w-4" />

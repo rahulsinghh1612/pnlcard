@@ -37,6 +37,8 @@ export async function GET(request: Request) {
     const streak = parseInt(searchParams.get("streak") ?? "0", 10);
     const handle = searchParams.get("handle");
     const theme = searchParams.get("theme") ?? "light";
+    const format = searchParams.get("format") ?? "square";
+    const isStory = format === "story";
     const isDark = theme === "dark";
     const netPnlNum = parseFloat(netPnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = netPnlNum >= 0;
@@ -189,8 +191,7 @@ export async function GET(request: Request) {
 
     const fonts = await getOgFonts();
 
-    return new ImageResponse(
-      (
+    const cardContent = (
       <div
         style={{
           width: 1080,
@@ -258,13 +259,28 @@ export async function GET(request: Request) {
             </div>
           </div>
         </div>
-      ),
-      {
-        width: 1080,
-        height: 1080,
-        fonts,
-      }
     );
+
+    const wrapper = isStory ? (
+      <div
+        style={{
+          width: 1080,
+          height: 1920,
+          background: s.bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {cardContent}
+      </div>
+    ) : cardContent;
+
+    return new ImageResponse(wrapper, {
+      width: isStory ? 1080 : 1080,
+      height: isStory ? 1920 : 1080,
+      fonts,
+    });
   } catch (e) {
     console.error("OG daily card error:", e);
     return new Response(

@@ -42,6 +42,8 @@ export async function GET(request: Request) {
     const calendarGridJson = searchParams.get("calendarGrid");
     const handle = searchParams.get("handle");
     const theme = searchParams.get("theme") ?? "light";
+    const format = searchParams.get("format") ?? "square";
+    const isStory = format === "story";
     const currency = searchParams.get("currency") ?? "INR";
     // INR: no symbol (redundant for Indian users). USD: show "$".
     const symbol = currency === "USD" ? "$" : "";
@@ -291,89 +293,99 @@ export async function GET(request: Request) {
 
     const fonts = await getOgFonts();
 
-    return new ImageResponse(
-      (
+    const cardContent = (
+      <div
+        style={{
+          width: 1080,
+          height: 1080,
+          fontFamily: "Inter",
+          background: s.bg,
+          padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         <div
           style={{
-            width: 1080,
-            height: 1080,
-            fontFamily: "Inter",
-            background: s.bg,
-            padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
             display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: Math.round(14 * S),
           }}
         >
-          {/* Header: centered, accent-colored, prominent */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: Math.round(14 * S),
-            }}
-          >
-            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
-              {month}
-            </div>
-          </div>
-
-          {/* Main content — centered vertically like daily/weekly cards */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              minHeight: 0,
-            }}
-          >
-            {/* Calendar heatmap */}
-            <div style={{ display: "flex", flexDirection: "column", marginBottom: Math.round(10 * S) }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  marginBottom: Math.round(3 * S),
-                }}
-              >
-                {calHeaderCells}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: Math.round(3 * S),
-                }}
-              >
-                {calRows}
-              </div>
-            </div>
-
-            {/* Hero numbers */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {heroChildren}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            {watermarkLeft}
-            <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
-              {"Monthly Recap"}
-            </div>
+          <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
+            {month}
           </div>
         </div>
-      ),
-      { width: 1080, height: 1080, fonts }
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            minHeight: 0,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: Math.round(10 * S) }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                marginBottom: Math.round(3 * S),
+              }}
+            >
+              {calHeaderCells}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: Math.round(3 * S),
+              }}
+            >
+              {calRows}
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {heroChildren}
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {watermarkLeft}
+          <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
+            {"Monthly Recap"}
+          </div>
+        </div>
+      </div>
     );
+
+    const wrapper = isStory ? (
+      <div
+        style={{
+          width: 1080,
+          height: 1920,
+          background: s.bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {cardContent}
+      </div>
+    ) : cardContent;
+
+    return new ImageResponse(wrapper, {
+      width: 1080,
+      height: isStory ? 1920 : 1080,
+      fonts,
+    });
   } catch (e) {
     console.error("OG monthly card error:", e);
     return new Response(

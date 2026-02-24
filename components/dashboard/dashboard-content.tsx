@@ -39,6 +39,7 @@ type DashboardContentProps = {
   xHandle: string | null;
   cardTheme: string;
   trades: Trade[];
+  baseUrl?: string;
   /** For landing page demo: use these trades instead of props.trades */
   demoTrades?: Trade[];
   /** For landing page demo: force modal open (step 1) */
@@ -71,6 +72,7 @@ export function DashboardContent({
   xHandle,
   cardTheme,
   trades,
+  baseUrl = typeof window !== "undefined" ? window.location.origin : "https://pnlcard.com",
   demoTrades,
   forceModalOpen,
   demoMode = false,
@@ -565,6 +567,7 @@ export function DashboardContent({
         weekMondayStr={cardPreviewWeekMonday}
         monthDateStr={cardPreviewMonthDate}
         allTrades={effectiveTrades}
+        baseUrl={baseUrl}
         profile={{
           x_handle: xHandle,
           trading_capital: tradingCapital,
