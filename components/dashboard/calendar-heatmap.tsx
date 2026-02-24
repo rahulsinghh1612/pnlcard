@@ -254,20 +254,13 @@ export function CalendarHeatmap({
     };
   }).filter((w) => w.hasTrades);
 
-  const maxDayAbs = Math.max(
-    ...breakdownWeeks.flatMap((w) =>
-      w.dailyPnls.filter((d) => d.hasTrade).map((d) => Math.abs(d.pnl))
-    ),
-    1,
-  );
-
   const activeWeeks = breakdownWeeks.filter((w) => w.hasTrades);
   const avgWeekly =
     activeWeeks.length > 0
       ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length)
       : 0;
 
-  const BAR_MAX_H = 36;
+  const BAR_MAX_H = 46;
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm scrollbar-none">
@@ -545,7 +538,11 @@ export function CalendarHeatmap({
           ) : (
             <>
               {breakdownWeeks.map((week) => {
-                const barMaxPnl = maxDayAbs;
+                const weekMaxAbs = Math.max(
+                  ...week.dailyPnls.filter((d) => d.hasTrade).map((d) => Math.abs(d.pnl)),
+                  1
+                );
+                const weekMaxSqrt = Math.sqrt(weekMaxAbs);
 
                 return (
                   <button
@@ -583,11 +580,11 @@ export function CalendarHeatmap({
                       </div>
                     </div>
 
-                    {/* Mini day bars — vertical columns (up/down) */}
+                    {/* Mini day bars — sqrt scale, P&L above, vertical columns */}
                     <div className="grid grid-cols-7 gap-2">
                       {week.dailyPnls.map((d, di) => {
                         const barH = d.hasTrade
-                          ? Math.max(8, Math.round((Math.abs(d.pnl) / barMaxPnl) * BAR_MAX_H))
+                          ? Math.max(8, (Math.sqrt(Math.abs(d.pnl)) / weekMaxSqrt) * BAR_MAX_H)
                           : 0;
 
                         return (
@@ -596,27 +593,48 @@ export function CalendarHeatmap({
                             className="flex flex-col items-center"
                           >
                             <div
-                              className="w-3 flex items-end justify-center"
-                              style={{ height: `${BAR_MAX_H + 4}px` }}
+                              className="w-4 flex flex-col items-center justify-end"
+                              style={{ height: `${BAR_MAX_H + 20}px` }}
                             >
                               {d.hasTrade ? (
-                                <div
-                                  className="w-full min-w-[10px] rounded-t-[4px] transition-all duration-500"
-                                  style={{
-                                    height: `${barH}px`,
-                                    backgroundColor:
+                                <>
+                                  <span
+                                    className={cn(
+                                      "text-[8px] sm:text-[9px] font-semibold leading-none mb-0.5 truncate max-w-full",
                                       d.pnl >= 0
-                                        ? "rgb(16 185 129 / 0.35)"
-                                        : "rgb(239 68 68 / 0.35)",
-                                    borderWidth: "1px",
-                                    borderColor:
-                                      d.pnl >= 0
-                                        ? "rgb(16 185 129 / 0.5)"
-                                        : "rgb(239 68 68 / 0.5)",
-                                  }}
-                                />
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : "text-red-600 dark:text-red-400"
+                                    )}
+                                    title={formatCompact(d.pnl, currency)}
+                                  >
+                                    {formatCompact(d.pnl, currency)}
+                                  </span>
+                                  <div
+                                    className="w-full min-w-[12px] rounded-t-[4px] transition-all duration-500"
+                                    style={{
+                                      height: `${barH}px`,
+                                      backgroundColor:
+                                        d.pnl >= 0
+                                          ? "rgb(16 185 129 / 0.35)"
+                                          : "rgb(239 68 68 / 0.35)",
+                                      borderWidth: "1px",
+                                      borderColor:
+                                        d.pnl >= 0
+                                          ? "rgb(16 185 129 / 0.5)"
+                                          : "rgb(239 68 68 / 0.5)",
+                                    }}
+                                  />
+                                </>
                               ) : (
-                                <div className="w-1.5 h-1.5 rounded-full bg-muted/60" />
+                                <>
+                                  <span className="text-[8px] text-muted-foreground/50 mb-0.5">—</span>
+                                  <div
+                                    className="flex items-end justify-center"
+                                    style={{ height: `${BAR_MAX_H}px` }}
+                                  >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-muted/60" />
+                                  </div>
+                                </>
                               )}
                             </div>
                             <span className="mt-1.5 text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
