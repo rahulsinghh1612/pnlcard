@@ -307,7 +307,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Link href="/">
               <div className="logo-capsule px-4 py-1.5 text-sm">
-                Pnl Card
+                PnLCard
               </div>
             </Link>
             <span className="hidden sm:inline text-sm text-muted-foreground">
@@ -1082,7 +1082,7 @@ export default function LandingPage() {
                 href="#top"
                 className="logo-capsule px-3.5 py-1 text-xs hover:opacity-90 transition-opacity cursor-pointer"
               >
-                Pnl Card
+                PnLCard
               </a>
               <span className="text-sm text-muted-foreground">
                 Log. Share. Grow.

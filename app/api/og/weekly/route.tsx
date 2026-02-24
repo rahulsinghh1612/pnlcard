@@ -255,7 +255,7 @@ export async function GET(request: Request) {
     // --- Watermark ---
     const watermarkLeft = !handle ? (
       <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
-        {"Pnl Card"}
+        {"PnLCard"}
       </div>
     ) : (
       <div style={{ display: "flex", fontSize: Math.round(13 * S), color: s.footerText, fontWeight: 500 }}>

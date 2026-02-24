@@ -40,7 +40,7 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
         <header className="border-b border-border bg-background/95 px-4 py-2.5">
           <div className="flex items-center justify-between">
             <div className="logo-capsule px-3 py-1 text-xs">
-              Pnl Card
+              PnLCard
             </div>
             <div className="h-6 w-6 rounded-lg bg-muted" />
           </div>
