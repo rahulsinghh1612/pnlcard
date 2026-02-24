@@ -18,12 +18,7 @@ import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
-/**
- * Scale factor: The original PNLCard.jsx was designed at 370×370px.
- * Our OG image is 1080×1080px. So we multiply all sizes by ~2.92.
- * This keeps the proportions identical to the original mockup.
- */
-const S = 1080 / 370;
+/* S (scale factor) is computed inside the handler based on output format. */
 
 export async function GET(request: Request) {
   try {
@@ -39,6 +34,10 @@ export async function GET(request: Request) {
     const theme = searchParams.get("theme") ?? "light";
     const format = searchParams.get("format") ?? "square";
     const isStory = format === "story";
+    const isOg = format === "og";
+    const S = isOg ? 630 / 370 : 1080 / 370;
+    const imgW = isOg ? 1200 : 1080;
+    const imgH = isStory ? 1920 : isOg ? 630 : 1080;
     const isDark = theme === "dark";
     const netPnlNum = parseFloat(netPnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = netPnlNum >= 0;
@@ -194,8 +193,8 @@ export async function GET(request: Request) {
     const cardContent = (
       <div
         style={{
-          width: 1080,
-          height: 1080,
+          width: imgW,
+          height: imgH,
           fontFamily: "Inter",
           background: s.bg,
           padding: `${Math.round(24 * S)}px ${Math.round(36 * S)}px ${Math.round(24 * S)}px`,
@@ -261,24 +260,9 @@ export async function GET(request: Request) {
         </div>
     );
 
-    const wrapper = isStory ? (
-      <div
-        style={{
-          width: 1080,
-          height: 1920,
-          background: s.bg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {cardContent}
-      </div>
-    ) : cardContent;
-
-    return new ImageResponse(wrapper, {
-      width: isStory ? 1080 : 1080,
-      height: isStory ? 1920 : 1080,
+    return new ImageResponse(cardContent, {
+      width: imgW,
+      height: imgH,
       fonts,
     });
   } catch (e) {

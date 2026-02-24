@@ -104,14 +104,14 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
     openGraph: {
       title: `${monthlyParams.month} — Monthly Recap`,
       description: `Trading recap: ${monthlyParams.pnl}`,
-      images: [{ url: ogUrl, width: 1080, height: 1080 }],
+      images: [{ url: `${ogUrl}&format=og`, width: 1200, height: 630 }],
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title: `${monthlyParams.month} — Monthly Recap`,
       description: `Trading recap: ${monthlyParams.pnl}`,
-      images: [ogUrl],
+      images: [`${ogUrl}&format=og`],
     },
   };
 }

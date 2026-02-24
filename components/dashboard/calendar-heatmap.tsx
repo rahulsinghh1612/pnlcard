@@ -62,18 +62,12 @@ export function CalendarHeatmap({
   const [showWeekly, setShowWeekly] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "breakdown">("calendar");
 
-  useEffect(() => {
-    const storedMode = localStorage.getItem("pnlcard-view-mode");
-    if (storedMode === "calendar" || storedMode === "breakdown") setViewMode(storedMode);
-  }, []);
-
   const toggleWeekly = () => {
     setShowWeekly((prev) => !prev);
   };
 
   const changeViewMode = (mode: "calendar" | "breakdown") => {
     setViewMode(mode);
-    localStorage.setItem("pnlcard-view-mode", mode);
   };
 
   const tradesByDate = new Map<string, TradeForHeatmap>();

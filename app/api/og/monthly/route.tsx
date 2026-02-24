@@ -14,7 +14,7 @@ import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
-const S = 1080 / 370;
+/* S is computed inside the handler based on output format. */
 
 const CELL_HEIGHT = 18;
 
@@ -44,6 +44,10 @@ export async function GET(request: Request) {
     const theme = searchParams.get("theme") ?? "light";
     const format = searchParams.get("format") ?? "square";
     const isStory = format === "story";
+    const isOg = format === "og";
+    const S = isOg ? 630 / 370 : 1080 / 370;
+    const imgW = isOg ? 1200 : 1080;
+    const imgH = isStory ? 1920 : isOg ? 630 : 1080;
     const currency = searchParams.get("currency") ?? "INR";
     // INR: no symbol (redundant for Indian users). USD: show "$".
     const symbol = currency === "USD" ? "$" : "";
@@ -296,8 +300,8 @@ export async function GET(request: Request) {
     const cardContent = (
       <div
         style={{
-          width: 1080,
-          height: 1080,
+          width: imgW,
+          height: imgH,
           fontFamily: "Inter",
           background: s.bg,
           padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
@@ -366,24 +370,9 @@ export async function GET(request: Request) {
       </div>
     );
 
-    const wrapper = isStory ? (
-      <div
-        style={{
-          width: 1080,
-          height: 1920,
-          background: s.bg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {cardContent}
-      </div>
-    ) : cardContent;
-
-    return new ImageResponse(wrapper, {
-      width: 1080,
-      height: isStory ? 1920 : 1080,
+    return new ImageResponse(cardContent, {
+      width: imgW,
+      height: imgH,
       fonts,
     });
   } catch (e) {
