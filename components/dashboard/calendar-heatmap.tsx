@@ -260,7 +260,7 @@ export function CalendarHeatmap({
       ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length)
       : 0;
 
-  const BAR_MAX_H = 46;
+  const BAR_MAX_H = 32;
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm scrollbar-none">
@@ -580,64 +580,38 @@ export function CalendarHeatmap({
                       </div>
                     </div>
 
-                    {/* Mini day bars — sqrt scale, P&L above, vertical columns */}
-                    <div className="grid grid-cols-7 gap-2">
+                    {/* Mini day bars — sqrt scale, wide columns */}
+                    <div className="flex items-end gap-1.5 sm:gap-2">
                       {week.dailyPnls.map((d, di) => {
                         const barH = d.hasTrade
-                          ? Math.max(8, (Math.sqrt(Math.abs(d.pnl)) / weekMaxSqrt) * BAR_MAX_H)
+                          ? Math.max(6, Math.round((Math.sqrt(Math.abs(d.pnl)) / weekMaxSqrt) * BAR_MAX_H))
                           : 0;
 
                         return (
                           <div
                             key={`bd-${week.weekNum}-${di}`}
-                            className="flex flex-col items-center"
+                            className="flex-1 flex flex-col items-center gap-1"
                           >
                             <div
-                              className="w-4 flex flex-col items-center justify-end"
-                              style={{ height: `${BAR_MAX_H + 20}px` }}
+                              className="w-full flex items-end justify-center"
+                              style={{ height: `${BAR_MAX_H + 2}px` }}
                             >
                               {d.hasTrade ? (
-                                <>
-                                  <span
-                                    className={cn(
-                                      "text-[8px] sm:text-[9px] font-semibold leading-none mb-0.5 truncate max-w-full",
-                                      d.pnl >= 0
-                                        ? "text-emerald-600 dark:text-emerald-400"
-                                        : "text-red-600 dark:text-red-400"
-                                    )}
-                                    title={formatCompact(d.pnl, currency)}
-                                  >
-                                    {formatCompact(d.pnl, currency)}
-                                  </span>
-                                  <div
-                                    className="w-full min-w-[12px] rounded-t-[4px] transition-all duration-500"
-                                    style={{
-                                      height: `${barH}px`,
-                                      backgroundColor:
-                                        d.pnl >= 0
-                                          ? "rgb(16 185 129 / 0.35)"
-                                          : "rgb(239 68 68 / 0.35)",
-                                      borderWidth: "1px",
-                                      borderColor:
-                                        d.pnl >= 0
-                                          ? "rgb(16 185 129 / 0.5)"
-                                          : "rgb(239 68 68 / 0.5)",
-                                    }}
-                                  />
-                                </>
+                                <div
+                                  className={cn(
+                                    "w-full rounded-sm transition-all duration-300",
+                                    d.pnl >= 0
+                                      ? "bg-emerald-400/30 border border-emerald-400/40 dark:bg-emerald-500/25 dark:border-emerald-500/35"
+                                      : "bg-red-400/30 border border-red-400/40 dark:bg-red-500/25 dark:border-red-500/35"
+                                  )}
+                                  style={{ height: `${barH}px` }}
+                                  title={formatCompact(d.pnl, currency)}
+                                />
                               ) : (
-                                <>
-                                  <span className="text-[8px] text-muted-foreground/50 mb-0.5">—</span>
-                                  <div
-                                    className="flex items-end justify-center"
-                                    style={{ height: `${BAR_MAX_H}px` }}
-                                  >
-                                    <div className="w-1.5 h-1.5 rounded-full bg-muted/60" />
-                                  </div>
-                                </>
+                                <div className="w-1 h-1 rounded-full bg-muted-foreground/20" />
                               )}
                             </div>
-                            <span className="mt-1.5 text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
+                            <span className="text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
                               {d.label}
                             </span>
                           </div>
