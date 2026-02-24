@@ -46,7 +46,7 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
 
       const handle = xHandle.trim() || null;
       if (handle && !handle.startsWith("@")) {
-        setError("X handle should start with @ (e.g. @yourhandle).");
+        setError("Handle should start with @ (e.g. @yourhandle).");
         setIsLoading(false);
         return;
       }
@@ -151,7 +151,7 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
       {/* X handle */}
       <div className="space-y-2">
         <Label htmlFor="xHandle" className="text-sm font-medium text-foreground">
-          X handle{" "}
+          Social handle{" "}
           <span className="font-normal text-muted-foreground">(optional)</span>
         </Label>
         <Input
@@ -159,11 +159,11 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
           type="text"
           value={xHandle}
           onChange={(e) => setXHandle(e.target.value)}
-          placeholder="@yourhandle"
+          placeholder="@yourhandle (X / Instagram)"
           className="rounded-xl border-border bg-white px-4 py-2.5 text-sm transition-colors focus-visible:ring-emerald-300"
         />
         <p className="text-xs text-muted-foreground">
-          Displayed on your premium recap cards.
+          Displayed on your recap cards (X, Instagram, etc.).
         </p>
       </div>
 

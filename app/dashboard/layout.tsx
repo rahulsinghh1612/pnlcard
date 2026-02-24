@@ -34,7 +34,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-3">
             <Link href="/dashboard">
               <div className="logo-capsule px-4 py-1.5 text-sm">
-                Pnl Card
+                PnLCard
               </div>
             </Link>
             <span className="hidden sm:inline text-sm text-muted-foreground">

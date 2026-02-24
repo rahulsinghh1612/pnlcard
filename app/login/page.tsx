@@ -15,7 +15,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="mb-2">
             <div className="logo-capsule px-5 py-2 text-base font-semibold">
-              Pnl Card
+              PnLCard
             </div>
           </Link>
           <span className="text-sm font-medium text-foreground/80">
