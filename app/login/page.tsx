@@ -44,6 +44,12 @@ export default function LoginPage() {
             Create an account
           </Link>
         </p>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Waiting for confirmation?{" "}
+          <Link href="/signup/confirm" className="font-medium text-foreground hover:underline">
+            Resend email
+          </Link>
+        </p>
       </div>
     </main>
   );

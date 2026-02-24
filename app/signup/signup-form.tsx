@@ -14,7 +14,6 @@ export function SignupForm() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -55,7 +54,6 @@ export function SignupForm() {
 
     setIsLoading(true);
     setError(null);
-    setSuccess(null);
 
     try {
       const supabase = createClient();
@@ -76,8 +74,7 @@ export function SignupForm() {
         router.push(redirect);
         router.refresh();
       } else {
-        setSuccess("Check your email to confirm your account, then sign in.");
-        setPassword("");
+        router.push(`/signup/confirm?email=${encodeURIComponent(email)}`);
       }
       setIsLoading(false);
     } catch {
@@ -94,15 +91,6 @@ export function SignupForm() {
           role="alert"
         >
           {error}
-        </div>
-      )}
-
-      {success && (
-        <div
-          className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-          role="status"
-        >
-          {success}
         </div>
       )}
 
