@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { SignupForm } from "./signup-form";
+import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata = {
   title: "Create account — PNLCard",
@@ -14,8 +15,8 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="mb-2">
-            <div className="logo-capsule px-5 py-2 text-base font-semibold">
-              PnLCard
+            <div className="logo-capsule px-4 py-2 text-base font-semibold">
+              <PnLCardLogo size={22} />
             </div>
           </Link>
           <span className="text-sm font-medium text-foreground/80">

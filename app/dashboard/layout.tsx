@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { DashboardNav } from "./dashboard-nav";
+import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export default async function DashboardLayout({
   children,
@@ -33,8 +34,8 @@ export default async function DashboardLayout({
         <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Link href="/dashboard">
-              <div className="logo-capsule px-4 py-1.5 text-sm">
-                PnLCard
+              <div className="logo-capsule px-3 py-1.5 text-sm">
+                <PnLCardLogo size={18} />
               </div>
             </Link>
             <span className="hidden sm:inline text-sm text-muted-foreground">

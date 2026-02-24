@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import dynamic from "next/dynamic";
 const DemoSection = dynamic(() => import("@/components/landing/demo-section").then((m) => m.DemoSection), {
   ssr: false,
@@ -306,8 +307,8 @@ export default function LandingPage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <Link href="/">
-              <div className="logo-capsule px-4 py-1.5 text-sm">
-                PnLCard
+              <div className="logo-capsule px-3 py-1.5 text-sm">
+                <PnLCardLogo size={18} />
               </div>
             </Link>
             <span className="hidden sm:inline text-sm text-muted-foreground">
@@ -1080,9 +1081,9 @@ export default function LandingPage() {
             <div className="flex items-center gap-3">
               <a
                 href="#top"
-                className="logo-capsule px-3.5 py-1 text-xs hover:opacity-90 transition-opacity cursor-pointer"
+                className="logo-capsule px-2.5 py-1 text-xs hover:opacity-90 transition-opacity cursor-pointer"
               >
-                PnLCard
+                <PnLCardLogo size={14} />
               </a>
               <span className="text-sm text-muted-foreground">
                 Log. Share. Grow.

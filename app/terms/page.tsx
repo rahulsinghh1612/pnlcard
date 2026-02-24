@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata: Metadata = {
   title: "Terms of Service — PNLCard",
@@ -11,8 +12,8 @@ export default function TermsPage() {
     <main className="min-h-screen bg-page">
       <nav className="border-b border-border bg-white/80 backdrop-blur-lg">
         <div className="mx-auto flex h-16 max-w-4xl items-center px-6">
-          <Link href="/" className="logo-capsule px-4 py-1.5 text-sm">
-            PnLCard
+          <Link href="/" className="logo-capsule px-3 py-1.5 text-sm">
+            <PnLCardLogo size={18} />
           </Link>
         </div>
       </nav>

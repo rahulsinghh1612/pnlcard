@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Plus, BarChart3, CalendarDays, CalendarRange, CalendarCheck, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { DEMO_TRADES } from "@/lib/demo-trades";
@@ -39,8 +40,8 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
       <div className="rounded-xl border border-border bg-page overflow-hidden shadow-lg">
         <header className="border-b border-border bg-background/95 px-4 py-2.5">
           <div className="flex items-center justify-between">
-            <div className="logo-capsule px-3 py-1 text-xs">
-              PnLCard
+            <div className="logo-capsule px-2.5 py-1 text-xs">
+              <PnLCardLogo size={14} />
             </div>
             <div className="h-6 w-6 rounded-lg bg-muted" />
           </div>
