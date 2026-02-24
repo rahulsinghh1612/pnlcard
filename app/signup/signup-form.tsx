@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { validateEmail } from "@/lib/email-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,13 @@ export function SignupForm() {
       setError("Please enter your email and a password.");
       return;
     }
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;

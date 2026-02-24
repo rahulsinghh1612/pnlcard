@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { validateEmail } from "@/lib/email-validation";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,13 @@ function ConfirmContent() {
   const handleResend = async () => {
     const emailToUse = emailParam || email;
     if (!emailToUse) return;
+
+    const emailCheck = validateEmail(emailToUse);
+    if (!emailCheck.valid) {
+      setError(emailCheck.message);
+      return;
+    }
+
     setResending(true);
     setError(null);
     setResent(false);
