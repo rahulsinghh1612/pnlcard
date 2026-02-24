@@ -10,7 +10,7 @@ import {
   subMonths,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -267,15 +267,16 @@ export function CalendarHeatmap({
       ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length)
       : 0;
 
-  const BAR_MAX_H = 32;
+  const BAR_MAX_H = 36;
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm scrollbar-none">
       <div className={viewMode === "calendar" ? (showWeekly ? "min-w-[480px]" : "min-w-[380px]") : "min-w-0"}>
 
-      {/* Month navigation + view toggle */}
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1 flex-1 justify-center">
+      {/* Month navigation + view toggle — month centered in card */}
+      <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div />
+        <div className="flex items-center gap-1 justify-center">
           <Button
             variant="ghost"
             size="icon"
@@ -314,7 +315,8 @@ export function CalendarHeatmap({
         </div>
 
         {/* View mode toggle pill */}
-        <div className="flex items-center rounded-full border border-border bg-muted/50 p-0.5 shrink-0">
+        <div className="flex items-center justify-end">
+        <div className="flex items-center rounded-full border border-border bg-muted/50 p-0.5">
           <button
             type="button"
             onClick={() => changeViewMode("calendar")}
@@ -340,9 +342,10 @@ export function CalendarHeatmap({
             )}
             title="Weekly breakdown"
           >
-            <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            <span className="hidden sm:inline">Breakdown</span>
+            <LayoutList className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Weekly Breakdown</span>
           </button>
+        </div>
         </div>
       </div>
 
@@ -580,11 +583,11 @@ export function CalendarHeatmap({
                       </div>
                     </div>
 
-                    {/* Mini day bars */}
-                    <div className="grid grid-cols-7 gap-1.5">
+                    {/* Mini day bars — vertical columns (up/down) */}
+                    <div className="grid grid-cols-7 gap-2">
                       {week.dailyPnls.map((d, di) => {
                         const barH = d.hasTrade
-                          ? Math.max(6, Math.round((Math.abs(d.pnl) / barMaxPnl) * BAR_MAX_H))
+                          ? Math.max(8, Math.round((Math.abs(d.pnl) / barMaxPnl) * BAR_MAX_H))
                           : 0;
 
                         return (
@@ -593,30 +596,30 @@ export function CalendarHeatmap({
                             className="flex flex-col items-center"
                           >
                             <div
-                              className="w-full flex items-end justify-center"
-                              style={{ height: `${BAR_MAX_H + 2}px` }}
+                              className="w-3 flex items-end justify-center"
+                              style={{ height: `${BAR_MAX_H + 4}px` }}
                             >
                               {d.hasTrade ? (
                                 <div
-                                  className="w-full rounded-[4px] transition-all duration-500"
+                                  className="w-full min-w-[10px] rounded-t-[4px] transition-all duration-500"
                                   style={{
                                     height: `${barH}px`,
                                     backgroundColor:
                                       d.pnl >= 0
-                                        ? "rgb(16 185 129 / 0.2)"
-                                        : "rgb(239 68 68 / 0.2)",
+                                        ? "rgb(16 185 129 / 0.35)"
+                                        : "rgb(239 68 68 / 0.35)",
                                     borderWidth: "1px",
                                     borderColor:
                                       d.pnl >= 0
-                                        ? "rgb(16 185 129 / 0.35)"
-                                        : "rgb(239 68 68 / 0.35)",
+                                        ? "rgb(16 185 129 / 0.5)"
+                                        : "rgb(239 68 68 / 0.5)",
                                   }}
                                 />
                               ) : (
                                 <div className="w-1.5 h-1.5 rounded-full bg-muted/60" />
                               )}
                             </div>
-                            <span className="mt-1 text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
+                            <span className="mt-1.5 text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
                               {d.label}
                             </span>
                           </div>
