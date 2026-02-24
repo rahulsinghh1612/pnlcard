@@ -7,7 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles, Square, LayoutGrid } from "lucide-react";
+import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles, Square, LayoutGrid, Lock } from "lucide-react";
+import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import { toast } from "sonner";
 import {
   buildDailyCardParams,
@@ -45,6 +46,9 @@ type CardPreviewModalProps = {
     currency: string;
     timezone: string;
   };
+  isPremium?: boolean;
+  userEmail?: string;
+  userName?: string;
   onEditTrade: (trade: Trade) => void;
 };
 
@@ -121,8 +125,13 @@ export function CardPreviewModal({
   allTrades,
   baseUrl,
   profile,
+  isPremium = false,
+  userEmail = "",
+  userName = "",
   onEditTrade,
 }: CardPreviewModalProps) {
+  const isPremiumCard = cardType === "weekly" || cardType === "monthly";
+  const isLocked = isPremiumCard && !isPremium;
   const [theme, setTheme] = useState(profile.card_theme);
   const [showRoi, setShowRoi] = useState(profile.trading_capital != null);
   const [downloadFormat, setDownloadFormat] = useState<"square" | "story">("square");
@@ -339,190 +348,226 @@ export function CardPreviewModal({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Controls */}
-        <div className="flex items-center gap-2 px-5 pb-4">
-          {/* Light / Dark pill toggle */}
-          <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
-            <button
-              onClick={() => setTheme("light")}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                theme === "light"
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Sun className="h-3 w-3" />
-              Light
-            </button>
-            <button
-              onClick={() => setTheme("dark")}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                theme === "dark"
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Moon className="h-3 w-3" />
-              Dark
-            </button>
-          </div>
-
-          {/* ROI pill toggle */}
-          {hasRoi && (
-            <button
-              onClick={() => setShowRoi((v) => !v)}
-              className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
-                showRoi
-                  ? "bg-white border-border text-foreground shadow-sm"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-            >
-              {showRoi ? (
-                <Eye className="h-3 w-3" />
-              ) : (
-                <EyeOff className="h-3 w-3" />
+        {isLocked ? (
+          <div className="px-5 pb-5 space-y-4">
+            {/* Blurred preview */}
+            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 min-h-[200px]">
+              {imgSrc && (
+                <img
+                  src={imgSrc}
+                  alt={`${title} preview`}
+                  className="w-full h-auto blur-lg scale-105 opacity-60"
+                  onLoad={() => setImgLoaded(true)}
+                  onError={() => setImgError(true)}
+                />
               )}
-              ROI
-            </button>
-          )}
-
-          {/* Download format: Square (feed) vs Story */}
-          <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
-            <button
-              onClick={() => setDownloadFormat("square")}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
-                downloadFormat === "square"
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              title="Square (1080×1080) for feed"
-            >
-              <Square className="h-2.5 w-2.5" />
-              Square
-            </button>
-            <button
-              onClick={() => setDownloadFormat("story")}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
-                downloadFormat === "story"
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              title="Story (1080×1920) for Instagram"
-            >
-              <LayoutGrid className="h-2.5 w-2.5" />
-              Story
-            </button>
-          </div>
-        </div>
-
-        {/* Card image */}
-        <div className="px-5 pb-4">
-          <div className="relative rounded-xl overflow-hidden border border-border shadow-sm bg-muted/30 min-h-[200px]">
-            {/* Loading state: green for profit, neutral for loss */}
-            {imgSrc && !imgLoaded && !imgError && (
-              <div
-                className={`absolute inset-0 flex flex-col items-center justify-center gap-4 ${
-                  isProfit
-                    ? "bg-gradient-to-br from-slate-50 via-white to-emerald-50/30"
-                    : "bg-gradient-to-br from-slate-50 via-white to-slate-100/50"
-                }`}
-                aria-hidden="true"
-              >
-                <div className="relative">
-                  <div
-                    className={`absolute inset-0 animate-ping rounded-full ${
-                      isProfit ? "bg-emerald-200/40" : "bg-slate-200/40"
-                    }`}
-                  />
-                  <div
-                    className={`relative flex h-14 w-14 items-center justify-center rounded-full shadow-inner ${
-                      isProfit
-                        ? "bg-gradient-to-br from-emerald-100 to-emerald-50"
-                        : "bg-gradient-to-br from-slate-100 to-slate-50"
-                    }`}
-                  >
-                    <Sparkles
-                      className={`h-7 w-7 animate-pulse ${
-                        isProfit ? "text-emerald-600" : "text-slate-500"
-                      }`}
-                    />
-                  </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/40 backdrop-blur-sm">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100/80 shadow-inner">
+                  <Lock className="h-7 w-7 text-amber-700" />
                 </div>
-                <div className="space-y-2 text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    Generating your card
-                  </p>
-                  <div className="mx-auto h-1 w-24 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full w-8 animate-shimmer rounded-full ${
-                        isProfit ? "bg-emerald-400/70" : "bg-slate-400/60"
-                      }`}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-            {imgError && (
-              <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Couldn&apos;t load preview. Try again.
+                <p className="text-sm font-semibold text-foreground">Premium Feature</p>
+                <p className="text-xs text-muted-foreground text-center max-w-[220px]">
+                  Upgrade to Pro to unlock {cardType} recap cards, story downloads, and more.
                 </p>
+                <UpgradeButton userEmail={userEmail} userName={userName} />
               </div>
-            )}
-            {imgSrc && !imgError && (
-              <img
-                src={imgSrc}
-                alt={`${title} preview`}
-                className={`w-full h-auto transition-opacity duration-500 ${
-                  imgLoaded ? "opacity-100" : "opacity-0"
-                }`}
-                onLoad={() => setImgLoaded(true)}
-                onError={() => {
-                  setImgError(true);
-                  toast.error("Failed to load preview. Try refreshing.");
-                }}
-              />
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Controls */}
+            <div className="flex items-center gap-2 px-5 pb-4 flex-wrap">
+              {/* Light / Dark pill toggle */}
+              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    theme === "light"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Sun className="h-3 w-3" />
+                  Light
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    theme === "dark"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Moon className="h-3 w-3" />
+                  Dark
+                </button>
+              </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 px-5 pb-5">
-          <button
-            onClick={handleDownload}
-            className="btn-gradient-flow flex-1 border border-border rounded-lg px-4 py-2 text-sm font-medium"
-          >
-            <span className="flex items-center justify-center gap-1.5">
-              <Download className="h-3.5 w-3.5" />
-              Download
-            </span>
-          </button>
+              {/* ROI pill toggle */}
+              {hasRoi && (
+                <button
+                  onClick={() => setShowRoi((v) => !v)}
+                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium border transition-colors ${
+                    showRoi
+                      ? "bg-white border-border text-foreground shadow-sm"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                  }`}
+                >
+                  {showRoi ? (
+                    <Eye className="h-3 w-3" />
+                  ) : (
+                    <EyeOff className="h-3 w-3" />
+                  )}
+                  ROI
+                </button>
+              )}
 
-          <button
-            onClick={handleShareX}
-            className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
-            title="Share to X"
-          >
-            <span className="flex items-center justify-center gap-1.5">
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-              Share
-            </span>
-          </button>
+              {/* Download format: Square (feed) vs Story */}
+              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
+                <button
+                  onClick={() => setDownloadFormat("square")}
+                  className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                    downloadFormat === "square"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Square (1080×1080) for feed"
+                >
+                  <Square className="h-2.5 w-2.5" />
+                  Square
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isPremium) {
+                      toast("Story format is a Pro feature", { description: "Upgrade to unlock story downloads." });
+                      return;
+                    }
+                    setDownloadFormat("story");
+                  }}
+                  className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
+                    !isPremium
+                      ? "text-muted-foreground/50 cursor-not-allowed"
+                      : downloadFormat === "story"
+                        ? "bg-white text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title={isPremium ? "Story (1080×1920) for Instagram" : "Pro feature"}
+                >
+                  {!isPremium ? <Lock className="h-2.5 w-2.5" /> : <LayoutGrid className="h-2.5 w-2.5" />}
+                  Story
+                </button>
+              </div>
+            </div>
 
-          {cardType === "daily" && trade && (
-            <button
-              onClick={handleEdit}
-              className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
-            >
-              <span className="flex items-center justify-center gap-1.5">
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </span>
-            </button>
-          )}
-        </div>
+            {/* Card image */}
+            <div className="px-5 pb-4">
+              <div className="relative rounded-xl overflow-hidden border border-border shadow-sm bg-muted/30 min-h-[200px]">
+                {imgSrc && !imgLoaded && !imgError && (
+                  <div
+                    className={`absolute inset-0 flex flex-col items-center justify-center gap-4 ${
+                      isProfit
+                        ? "bg-gradient-to-br from-slate-50 via-white to-emerald-50/30"
+                        : "bg-gradient-to-br from-slate-50 via-white to-slate-100/50"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <div className="relative">
+                      <div
+                        className={`absolute inset-0 animate-ping rounded-full ${
+                          isProfit ? "bg-emerald-200/40" : "bg-slate-200/40"
+                        }`}
+                      />
+                      <div
+                        className={`relative flex h-14 w-14 items-center justify-center rounded-full shadow-inner ${
+                          isProfit
+                            ? "bg-gradient-to-br from-emerald-100 to-emerald-50"
+                            : "bg-gradient-to-br from-slate-100 to-slate-50"
+                        }`}
+                      >
+                        <Sparkles
+                          className={`h-7 w-7 animate-pulse ${
+                            isProfit ? "text-emerald-600" : "text-slate-500"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-center">
+                      <p className="text-sm font-medium text-foreground">
+                        Generating your card
+                      </p>
+                      <div className="mx-auto h-1 w-24 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={`h-full w-8 animate-shimmer rounded-full ${
+                            isProfit ? "bg-emerald-400/70" : "bg-slate-400/60"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {imgError && (
+                  <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Couldn&apos;t load preview. Try again.
+                    </p>
+                  </div>
+                )}
+                {imgSrc && !imgError && (
+                  <img
+                    src={imgSrc}
+                    alt={`${title} preview`}
+                    className={`w-full h-auto transition-opacity duration-500 ${
+                      imgLoaded ? "opacity-100" : "opacity-0"
+                    }`}
+                    onLoad={() => setImgLoaded(true)}
+                    onError={() => {
+                      setImgError(true);
+                      toast.error("Failed to load preview. Try refreshing.");
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 px-5 pb-5">
+              <button
+                onClick={handleDownload}
+                className="btn-gradient-flow flex-1 border border-border rounded-lg px-4 py-2 text-sm font-medium"
+              >
+                <span className="flex items-center justify-center gap-1.5">
+                  <Download className="h-3.5 w-3.5" />
+                  Download
+                </span>
+              </button>
+
+              <button
+                onClick={handleShareX}
+                className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
+                title="Share to X"
+              >
+                <span className="flex items-center justify-center gap-1.5">
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  Share
+                </span>
+              </button>
+
+              {cardType === "daily" && trade && (
+                <button
+                  onClick={handleEdit}
+                  className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
+                >
+                  <span className="flex items-center justify-center gap-1.5">
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </span>
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

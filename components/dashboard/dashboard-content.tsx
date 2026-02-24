@@ -7,7 +7,7 @@ import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 
 import {
   format,
@@ -40,6 +40,8 @@ type DashboardContentProps = {
   cardTheme: string;
   trades: Trade[];
   baseUrl?: string;
+  isPremium?: boolean;
+  userEmail?: string;
   /** For landing page demo: use these trades instead of props.trades */
   demoTrades?: Trade[];
   /** For landing page demo: force modal open (step 1) */
@@ -73,6 +75,8 @@ export function DashboardContent({
   cardTheme,
   trades,
   baseUrl = typeof window !== "undefined" ? window.location.origin : "https://pnlcard.com",
+  isPremium = false,
+  userEmail = "",
   demoTrades,
   forceModalOpen,
   demoMode = false,
@@ -241,8 +245,8 @@ export function DashboardContent({
                       : "bg-red-100 text-red-700 group-hover:bg-red-200"
                   }`}
                 >
-                  <Sparkles className="h-3 w-3" />
-                  Generate Monthly Card
+                  {isPremium ? <Sparkles className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                  {isPremium ? "Generate Monthly Card" : "Monthly Card — Pro"}
                 </span>
               )}
             </div>
@@ -378,7 +382,7 @@ export function DashboardContent({
                   const hasNext = weeklyIdx > 0;
                   return (
                     <div
-                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
+                      className={`group/card relative rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
                         current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
                       }`}
                       onClick={() => {
@@ -390,6 +394,12 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
+                      {!isPremium && (
+                        <span className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
+                          <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                          Pro
+                        </span>
+                      )}
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400">
                           <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -441,7 +451,7 @@ export function DashboardContent({
                   const hasNext = monthlyIdx > 0;
                   return (
                     <div
-                      className={`group/card rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
+                      className={`group/card relative rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/20 p-3 sm:p-4 transition-all duration-200 ${
                         current ? "cursor-pointer hover:shadow-md hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]" : ""
                       }`}
                       onClick={() => {
@@ -453,6 +463,12 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
+                      {!isPremium && (
+                        <span className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
+                          <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                          Pro
+                        </span>
+                      )}
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                           <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -575,6 +591,9 @@ export function DashboardContent({
           currency,
           timezone,
         }}
+        isPremium={isPremium}
+        userEmail={userEmail}
+        userName={displayName}
         onEditTrade={(trade) => {
           setModalExistingTrade(trade);
           setModalDefaultDate(undefined);

@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, currency, timezone, trading_capital, x_handle, card_theme")
+    .select("id, display_name, currency, timezone, trading_capital, x_handle, card_theme, plan")
     .eq("id", user.id)
     .single();
 
@@ -64,6 +64,8 @@ export default async function DashboardPage() {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://pnlcard.com";
 
+  const isPremium = profile.plan === "premium";
+
   return (
     <DashboardContent
       displayName={profile.display_name}
@@ -78,6 +80,8 @@ export default async function DashboardPage() {
       cardTheme={profile.card_theme ?? "light"}
       trades={tradesForClient}
       baseUrl={baseUrl}
+      isPremium={isPremium}
+      userEmail={user.email ?? ""}
     />
   );
 }
