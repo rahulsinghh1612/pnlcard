@@ -10,7 +10,7 @@ import {
   subMonths,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, X, BarChart3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -60,10 +60,13 @@ export function CalendarHeatmap({
     initialViewDate ? new Date(initialViewDate + "T12:00:00") : new Date()
   );
   const [showWeekly, setShowWeekly] = useState(true);
+  const [viewMode, setViewMode] = useState<"calendar" | "breakdown">("calendar");
 
   useEffect(() => {
     const stored = localStorage.getItem("pnlcard-show-weekly");
     if (stored !== null) setShowWeekly(stored === "true");
+    const storedMode = localStorage.getItem("pnlcard-view-mode");
+    if (storedMode === "calendar" || storedMode === "breakdown") setViewMode(storedMode);
   }, []);
 
   const toggleWeekly = () => {
@@ -71,6 +74,11 @@ export function CalendarHeatmap({
       localStorage.setItem("pnlcard-show-weekly", String(!prev));
       return !prev;
     });
+  };
+
+  const changeViewMode = (mode: "calendar" | "breakdown") => {
+    setViewMode(mode);
+    localStorage.setItem("pnlcard-view-mode", mode);
   };
 
   const tradesByDate = new Map<string, TradeForHeatmap>();
@@ -183,265 +191,499 @@ export function CalendarHeatmap({
     return "bg-red-50 dark:bg-red-950/20";
   };
 
+  // ── Breakdown view data ──────────────────────────────────────
+  const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+  type BreakdownDay = { label: string; pnl: number; hasTrade: boolean };
+  type BreakdownWeek = {
+    weekNum: number;
+    rangeLabel: string;
+    monthShort: string;
+    pnl: number;
+    wins: number;
+    losses: number;
+    mondayStr: string;
+    hasTrades: boolean;
+    dailyPnls: BreakdownDay[];
+  };
+
+  const breakdownWeeks: BreakdownWeek[] = weekRows.map((row, idx) => {
+    const summary = weekSummaries[idx];
+    const dailyPnls: BreakdownDay[] = [];
+    let wins = 0;
+    let losses = 0;
+
+    let monday: Date | null = null;
+    for (const day of row) {
+      if (day) {
+        const dayOfWeek = (day.getDay() + 6) % 7;
+        monday = new Date(day);
+        monday.setDate(monday.getDate() - dayOfWeek);
+        break;
+      }
+    }
+
+    for (let ci = 0; ci < 7; ci++) {
+      if (!monday) {
+        dailyPnls.push({ label: DAY_LABELS[ci], pnl: 0, hasTrade: false });
+        continue;
+      }
+      const dayDate = addDays(monday, ci);
+      const dateStr = format(dayDate, "yyyy-MM-dd");
+      const trade = tradesByDate.get(dateStr);
+      if (trade) {
+        const r = getFinalResult(trade);
+        dailyPnls.push({ label: DAY_LABELS[ci], pnl: r, hasTrade: true });
+        if (r >= 0) wins++;
+        else losses++;
+      } else {
+        dailyPnls.push({ label: DAY_LABELS[ci], pnl: 0, hasTrade: false });
+      }
+    }
+
+    return {
+      weekNum: idx + 1,
+      rangeLabel: summary.rangeLabel,
+      monthShort: format(viewDate, "MMM"),
+      pnl: summary.totalPnl,
+      wins,
+      losses,
+      mondayStr: summary.mondayStr,
+      hasTrades: wins + losses > 0,
+      dailyPnls,
+    };
+  }).filter((w) => w.hasTrades);
+
+  const maxDayAbs = Math.max(
+    ...breakdownWeeks.flatMap((w) =>
+      w.dailyPnls.filter((d) => d.hasTrade).map((d) => Math.abs(d.pnl))
+    ),
+    1,
+  );
+
+  const activeWeeks = breakdownWeeks.filter((w) => w.hasTrades);
+  const avgWeekly =
+    activeWeeks.length > 0
+      ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length)
+      : 0;
+
+  const BAR_MAX_H = 32;
+
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm scrollbar-none">
-      <div className={showWeekly ? "min-w-[480px]" : "min-w-[380px]"}>
-      {/* Month navigation */}
-      <div className="mb-4 flex items-center justify-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => setViewDate((d) => subMonths(d, 1))}
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        {monthTrades.length > 0 && onMonthClick ? (
-          <button
-            type="button"
-            onClick={() => {
-              const dateInMonth = format(monthStart, "yyyy-MM-dd");
-              onMonthClick(dateInMonth);
-            }}
-            className="min-w-[140px] text-center text-sm font-semibold text-foreground hover:text-primary transition-all duration-200 cursor-pointer rounded-md px-2 py-0.5 hover:bg-primary/5 active:scale-95"
-            title="Generate monthly card"
-          >
-            {format(viewDate, "MMMM yyyy")}
-          </button>
-        ) : (
-          <span className="min-w-[140px] text-center text-sm font-semibold text-foreground">
-            {format(viewDate, "MMMM yyyy")}
-          </span>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => setViewDate((d) => addMonths(d, 1))}
-          aria-label="Next month"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
+      <div className={viewMode === "calendar" ? (showWeekly ? "min-w-[480px]" : "min-w-[380px]") : "min-w-0"}>
 
-      {/* Header: 7 day columns + optional weekly summary column */}
-      <div className={cn(
-        "mb-1.5 grid gap-1 text-center",
-        showWeekly
-          ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
-          : "grid-cols-[repeat(7,1fr)]"
-      )}>
-        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-          <span
-            key={`${d}-${i}`}
-            className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
+      {/* Month navigation + view toggle */}
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 flex-1 justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setViewDate((d) => subMonths(d, 1))}
+            aria-label="Previous month"
           >
-            {d}
-          </span>
-        ))}
-        {showWeekly && (
-          <>
-            <span />
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          {monthTrades.length > 0 && onMonthClick ? (
             <button
               type="button"
-              onClick={toggleWeekly}
-              className="group/wk inline-flex items-center justify-center gap-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground rounded-full px-1.5 py-0.5 transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-90 cursor-pointer"
-              title="Hide weekly summary"
+              onClick={() => {
+                const dateInMonth = format(monthStart, "yyyy-MM-dd");
+                onMonthClick(dateInMonth);
+              }}
+              className="min-w-[140px] text-center text-sm font-semibold text-foreground hover:text-primary transition-all duration-200 cursor-pointer rounded-md px-2 py-0.5 hover:bg-primary/5 active:scale-95"
+              title="Generate monthly card"
             >
-              <span className="group-hover/wk:hidden">Wk</span>
-              <X className="h-3 w-3 hidden group-hover/wk:block" />
+              {format(viewDate, "MMMM yyyy")}
             </button>
-          </>
-        )}
+          ) : (
+            <span className="min-w-[140px] text-center text-sm font-semibold text-foreground">
+              {format(viewDate, "MMMM yyyy")}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setViewDate((d) => addMonths(d, 1))}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* View mode toggle pill */}
+        <div className="flex items-center rounded-full border border-border bg-muted/50 p-0.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => changeViewMode("calendar")}
+            className={cn(
+              "flex items-center gap-1 rounded-full px-2 py-1 text-[10px] sm:text-xs font-medium transition-all duration-200",
+              viewMode === "calendar"
+                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            title="Calendar view"
+          >
+            <CalendarDays className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Calendar</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => changeViewMode("breakdown")}
+            className={cn(
+              "flex items-center gap-1 rounded-full px-2 py-1 text-[10px] sm:text-xs font-medium transition-all duration-200",
+              viewMode === "breakdown"
+                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+            title="Weekly breakdown"
+          >
+            <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline">Breakdown</span>
+          </button>
+        </div>
       </div>
 
-      {/* Week rows */}
-      <div className="flex flex-col gap-1">
-        {weekRows.map((row, rowIdx) => {
-          const summary = weekSummaries[rowIdx];
+      {/* ── Calendar Grid View ──────────────────────────────── */}
+      {viewMode === "calendar" && (
+        <>
+          {/* Header: 7 day columns + optional weekly summary column */}
+          <div className={cn(
+            "mb-1.5 grid gap-1 text-center",
+            showWeekly
+              ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+              : "grid-cols-[repeat(7,1fr)]"
+          )}>
+            {DAY_LABELS.map((d, i) => (
+              <span
+                key={`${d}-${i}`}
+                className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
+              >
+                {d}
+              </span>
+            ))}
+            {showWeekly && (
+              <>
+                <span />
+                <button
+                  type="button"
+                  onClick={toggleWeekly}
+                  className="group/wk inline-flex items-center justify-center gap-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground rounded-full px-1.5 py-0.5 transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-90 cursor-pointer"
+                  title="Hide weekly summary"
+                >
+                  <span className="group-hover/wk:hidden">Wk</span>
+                  <X className="h-3 w-3 hidden group-hover/wk:block" />
+                </button>
+              </>
+            )}
+          </div>
 
-          return (
-            <div
-              key={`week-${rowIdx}`}
-              className={cn(
-                "grid gap-1 rounded-lg px-0.5 -mx-0.5 transition-colors duration-150 hover:bg-muted/20",
-                showWeekly
-                  ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
-                  : "grid-cols-[repeat(7,1fr)]"
-              )}
-            >
-              {/* Day cells */}
-              {row.map((day, colIdx) => {
-                if (day === null) {
-                  return (
-                    <div
-                      key={`pad-${rowIdx}-${colIdx}`}
-                      className="aspect-square min-w-0 rounded-lg"
-                    />
-                  );
-                }
+          {/* Week rows */}
+          <div className="flex flex-col gap-1">
+            {weekRows.map((row, rowIdx) => {
+              const summary = weekSummaries[rowIdx];
 
-                const dateStr = format(day, "yyyy-MM-dd");
-                const trade = tradesByDate.get(dateStr);
-                const isFuture = dateStr > todayStr;
+              return (
+                <div
+                  key={`week-${rowIdx}`}
+                  className={cn(
+                    "grid gap-1 rounded-lg px-0.5 -mx-0.5 transition-colors duration-150 hover:bg-muted/20",
+                    showWeekly
+                      ? "grid-cols-[repeat(7,1fr)_8px_minmax(60px,1.2fr)]"
+                      : "grid-cols-[repeat(7,1fr)]"
+                  )}
+                >
+                  {/* Day cells */}
+                  {row.map((day, colIdx) => {
+                    if (day === null) {
+                      return (
+                        <div
+                          key={`pad-${rowIdx}-${colIdx}`}
+                          className="aspect-square min-w-0 rounded-lg"
+                        />
+                      );
+                    }
 
-                let bgClass = "bg-muted/40";
-                let textClass = "text-muted-foreground";
-                if (trade) {
-                  const result = getFinalResult(trade);
-                  if (result >= 0) {
-                    bgClass = getProfitClasses(result);
-                    textClass = "text-emerald-700 dark:text-emerald-400";
-                  } else {
-                    bgClass = getLossClasses(result);
-                    textClass = "text-red-700 dark:text-red-400";
-                  }
-                }
+                    const dateStr = format(day, "yyyy-MM-dd");
+                    const trade = tradesByDate.get(dateStr);
+                    const isFuture = dateStr > todayStr;
 
-                const result = trade ? getFinalResult(trade) : 0;
-                const isProfit = trade && result >= 0;
+                    let bgClass = "bg-muted/40";
+                    let textClass = "text-muted-foreground";
+                    if (trade) {
+                      const result = getFinalResult(trade);
+                      if (result >= 0) {
+                        bgClass = getProfitClasses(result);
+                        textClass = "text-emerald-700 dark:text-emerald-400";
+                      } else {
+                        bgClass = getLossClasses(result);
+                        textClass = "text-red-700 dark:text-red-400";
+                      }
+                    }
+
+                    const result = trade ? getFinalResult(trade) : 0;
+                    const isProfit = trade && result >= 0;
+
+                    return (
+                      <button
+                        key={dateStr}
+                        type="button"
+                        onClick={() => {
+                          if (isFuture) return;
+                          onDayClick(dateStr, trade ?? null);
+                        }}
+                        disabled={isFuture}
+                        className={cn(
+                          "group/day relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                          bgClass,
+                          textClass,
+                          isFuture
+                            ? "cursor-not-allowed opacity-40"
+                            : trade
+                              ? "hover:scale-110 hover:z-10 hover:shadow-lg active:scale-95 cursor-pointer"
+                              : "hover:scale-105 hover:bg-muted/70 hover:shadow-sm active:scale-95 cursor-pointer",
+                          trade && isProfit && "hover:shadow-emerald-200/50 hover:ring-1 hover:ring-emerald-300/40",
+                          trade && !isProfit && "hover:shadow-red-200/50 hover:ring-1 hover:ring-red-300/40"
+                        )}
+                        title={
+                          isFuture
+                            ? "Cannot log future dates"
+                            : trade
+                              ? `${dateStr}: ${formatCompact(result, currency)}`
+                              : `Log trade for ${dateStr}`
+                        }
+                      >
+                        {trade && (
+                          <span className="absolute top-0.5 left-1 sm:top-1 sm:left-1.5 text-[8px] sm:text-[9px] font-medium leading-none opacity-70 group-hover/day:opacity-100 transition-opacity">
+                            {format(day, "d")}
+                          </span>
+                        )}
+                        {trade ? (
+                          <>
+                            <span className="text-[10px] sm:text-[12px] font-bold leading-tight truncate max-w-full transition-transform duration-200 group-hover/day:scale-105">
+                              {formatCompact(result, currency)}
+                            </span>
+                            <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-75 mt-0.5 transition-opacity duration-200 group-hover/day:opacity-100">
+                              {trade.num_trades === 1
+                                ? "1 Trade"
+                                : `${trade.num_trades} Trades`}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[11px] sm:text-xs font-medium transition-all duration-200 group-hover/day:text-foreground">
+                            {format(day, "d")}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {showWeekly && (
+                    <>
+                      <div className="flex items-center justify-center">
+                        <div className="h-3/4 border-l border-dashed border-border" />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (summary.totalTrades > 0 && onWeekClick) {
+                            onWeekClick(summary.mondayStr);
+                          }
+                        }}
+                        className={cn(
+                          "group/wk-cell aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                          summary.totalTrades === 0
+                            ? "bg-muted/30 text-muted-foreground cursor-default"
+                            : summary.totalPnl >= 0
+                              ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30 hover:scale-110 hover:z-10 hover:shadow-lg hover:shadow-emerald-200/50 hover:ring-1 hover:ring-emerald-300/40 active:scale-95")
+                              : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 cursor-pointer border border-red-200/50 dark:border-red-800/30 hover:scale-110 hover:z-10 hover:shadow-lg hover:shadow-red-200/50 hover:ring-1 hover:ring-red-300/40 active:scale-95")
+                        )}
+                        title={
+                          summary.totalTrades > 0
+                            ? `${summary.rangeLabel}: ${formatCompact(summary.totalPnl, currency)} — Click to generate weekly card`
+                            : `${summary.rangeLabel}: No trades`
+                        }
+                      >
+                        <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70 transition-opacity group-hover/wk-cell:opacity-100">
+                          {summary.rangeLabel}
+                        </span>
+                        {summary.totalTrades > 0 ? (
+                          <>
+                            <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full transition-transform duration-200 group-hover/wk-cell:scale-105">
+                              {formatCompact(summary.totalPnl, currency)}
+                            </span>
+                            <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70 transition-opacity group-hover/wk-cell:opacity-100">
+                              {`${summary.totalTrades} trades`}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[8px] sm:text-[9px] leading-none opacity-50">—</span>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* ── Weekly Breakdown View ──────────────────────────── */}
+      {viewMode === "breakdown" && (
+        <div className="flex flex-col gap-4">
+          {breakdownWeeks.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No trades this month.
+            </p>
+          ) : (
+            <>
+              {breakdownWeeks.map((week) => {
+                const barMaxPnl = maxDayAbs;
 
                 return (
                   <button
-                    key={dateStr}
+                    key={`bd-${week.weekNum}`}
                     type="button"
                     onClick={() => {
-                      if (isFuture) return;
-                      onDayClick(dateStr, trade ?? null);
+                      if (onWeekClick) onWeekClick(week.mondayStr);
                     }}
-                    disabled={isFuture}
-                    className={cn(
-                      "group/day relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                      bgClass,
-                      textClass,
-                      isFuture
-                        ? "cursor-not-allowed opacity-40"
-                        : trade
-                          ? "hover:scale-110 hover:z-10 hover:shadow-lg active:scale-95 cursor-pointer"
-                          : "hover:scale-105 hover:bg-muted/70 hover:shadow-sm active:scale-95 cursor-pointer",
-                      trade && isProfit && "hover:shadow-emerald-200/50 hover:ring-1 hover:ring-emerald-300/40",
-                      trade && !isProfit && "hover:shadow-red-200/50 hover:ring-1 hover:ring-red-300/40"
-                    )}
-                    title={
-                      isFuture
-                        ? "Cannot log future dates"
-                        : trade
-                          ? `${dateStr}: ${formatCompact(result, currency)}`
-                          : `Log trade for ${dateStr}`
-                    }
+                    className="text-left rounded-lg p-3 transition-all duration-200 hover:bg-muted/30 active:scale-[0.995] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                   >
-                    {trade && (
-                      <span className="absolute top-0.5 left-1 sm:top-1 sm:left-1.5 text-[8px] sm:text-[9px] font-medium leading-none opacity-70 group-hover/day:opacity-100 transition-opacity">
-                        {format(day, "d")}
-                      </span>
-                    )}
-                    {trade ? (
-                      <>
-                        <span className="text-[10px] sm:text-[12px] font-bold leading-tight truncate max-w-full transition-transform duration-200 group-hover/day:scale-105">
-                          {formatCompact(result, currency)}
+                    {/* Row header */}
+                    <div className="flex items-baseline justify-between mb-2.5">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[11px] sm:text-xs font-semibold text-foreground">
+                          Week {week.weekNum}
                         </span>
-                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-75 mt-0.5 transition-opacity duration-200 group-hover/day:opacity-100">
-                          {trade.num_trades === 1
-                            ? "1 Trade"
-                            : `${trade.num_trades} Trades`}
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                          {week.rangeLabel} {week.monthShort}
                         </span>
-                      </>
-                    ) : (
-                      <span className="text-[11px] sm:text-xs font-medium transition-all duration-200 group-hover/day:text-foreground">
-                        {format(day, "d")}
-                      </span>
-                    )}
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                          {week.wins}W · {week.losses}L
+                        </span>
+                        <span
+                          className={cn(
+                            "text-[11px] sm:text-xs font-bold",
+                            week.pnl >= 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-red-600 dark:text-red-400"
+                          )}
+                        >
+                          {formatCompact(week.pnl, currency)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Mini day bars */}
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {week.dailyPnls.map((d, di) => {
+                        const barH = d.hasTrade
+                          ? Math.max(6, Math.round((Math.abs(d.pnl) / barMaxPnl) * BAR_MAX_H))
+                          : 0;
+
+                        return (
+                          <div
+                            key={`bd-${week.weekNum}-${di}`}
+                            className="flex flex-col items-center"
+                          >
+                            <div
+                              className="w-full flex items-end justify-center"
+                              style={{ height: `${BAR_MAX_H + 2}px` }}
+                            >
+                              {d.hasTrade ? (
+                                <div
+                                  className="w-full rounded-[4px] transition-all duration-500"
+                                  style={{
+                                    height: `${barH}px`,
+                                    backgroundColor:
+                                      d.pnl >= 0
+                                        ? "rgb(16 185 129 / 0.2)"
+                                        : "rgb(239 68 68 / 0.2)",
+                                    borderWidth: "1px",
+                                    borderColor:
+                                      d.pnl >= 0
+                                        ? "rgb(16 185 129 / 0.35)"
+                                        : "rgb(239 68 68 / 0.35)",
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-1.5 h-1.5 rounded-full bg-muted/60" />
+                              )}
+                            </div>
+                            <span className="mt-1 text-[8px] sm:text-[9px] font-medium text-muted-foreground leading-none">
+                              {d.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </button>
                 );
               })}
 
-              {showWeekly && (
-                <>
-                  {/* Separator between days and weekly summary */}
-                  <div className="flex items-center justify-center">
-                    <div className="h-3/4 border-l border-dashed border-border" />
-                  </div>
-
-                  {/* Weekly summary column */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (summary.totalTrades > 0 && onWeekClick) {
-                        onWeekClick(summary.mondayStr);
-                      }
-                    }}
-                    className={cn(
-                      "group/wk-cell aspect-square min-w-0 rounded-lg p-0.5 sm:p-1 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-                      summary.totalTrades === 0
-                        ? "bg-muted/30 text-muted-foreground cursor-default"
-                        : summary.totalPnl >= 0
-                          ? cn(getProfitClasses(summary.totalPnl), "text-emerald-700 dark:text-emerald-400 cursor-pointer border border-emerald-200/50 dark:border-emerald-800/30 hover:scale-110 hover:z-10 hover:shadow-lg hover:shadow-emerald-200/50 hover:ring-1 hover:ring-emerald-300/40 active:scale-95")
-                          : cn(getLossClasses(summary.totalPnl), "text-red-700 dark:text-red-400 cursor-pointer border border-red-200/50 dark:border-red-800/30 hover:scale-110 hover:z-10 hover:shadow-lg hover:shadow-red-200/50 hover:ring-1 hover:ring-red-300/40 active:scale-95")
-                    )}
-                    title={
-                      summary.totalTrades > 0
-                        ? `${summary.rangeLabel}: ${formatCompact(summary.totalPnl, currency)} — Click to generate weekly card`
-                        : `${summary.rangeLabel}: No trades`
-                    }
-                  >
-                    <span className="text-[8px] sm:text-[9px] font-medium leading-none opacity-70 transition-opacity group-hover/wk-cell:opacity-100">
-                      {summary.rangeLabel}
-                    </span>
-                    {summary.totalTrades > 0 ? (
-                      <>
-                        <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full transition-transform duration-200 group-hover/wk-cell:scale-105">
-                          {formatCompact(summary.totalPnl, currency)}
-                        </span>
-                        <span className="text-[7px] sm:text-[8px] font-medium leading-none opacity-70 transition-opacity group-hover/wk-cell:opacity-100">
-                          {`${summary.totalTrades} trades`}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[8px] sm:text-[9px] leading-none opacity-50">—</span>
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              {/* Avg. Weekly P&L */}
+              <div className="pt-3 border-t border-border/60 flex items-center justify-between px-3">
+                <span className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Avg. Weekly P&L
+                </span>
+                <span
+                  className={cn(
+                    "text-sm sm:text-base font-bold",
+                    avgWeekly >= 0
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-600 dark:text-red-400"
+                  )}
+                >
+                  {formatCompact(avgWeekly, currency)}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       </div>
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="flex gap-0.5">
-            <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30" />
-            <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
-            <span className="h-3 w-3 rounded bg-emerald-200 dark:bg-emerald-900/40 border border-emerald-300/60 dark:border-emerald-800/30" />
+      {/* Legend — only in calendar mode */}
+      {viewMode === "calendar" && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="flex gap-0.5">
+              <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30" />
+              <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
+              <span className="h-3 w-3 rounded bg-emerald-200 dark:bg-emerald-900/40 border border-emerald-300/60 dark:border-emerald-800/30" />
+            </span>
+            Profit
           </span>
-          Profit
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="flex gap-0.5">
-            <span className="h-3 w-3 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/30" />
-            <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
-            <span className="h-3 w-3 rounded bg-red-200 dark:bg-red-900/40 border border-red-300/60 dark:border-red-800/30" />
+          <span className="flex items-center gap-1.5">
+            <span className="flex gap-0.5">
+              <span className="h-3 w-3 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/30" />
+              <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
+              <span className="h-3 w-3 rounded bg-red-200 dark:bg-red-900/40 border border-red-300/60 dark:border-red-800/30" />
+            </span>
+            Loss
           </span>
-          Loss
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
-          No trade
-        </span>
-        {!showWeekly && (
-          <button
-            type="button"
-            onClick={toggleWeekly}
-            className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
-          >
-            <BarChart3 className="h-3 w-3" />
-            Show weekly
-          </button>
-        )}
-      </div>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
+            No trade
+          </span>
+          {!showWeekly && (
+            <button
+              type="button"
+              onClick={toggleWeekly}
+              className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
+            >
+              <BarChart3 className="h-3 w-3" />
+              Show weekly
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

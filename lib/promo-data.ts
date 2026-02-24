@@ -11,8 +11,8 @@
  *   Sat: +1,800 | Sun: — | Total: +11,400 | 3W · 2L | ROI: +1.14%
  *
  * Loss week (8–14 Dec 2025):
- *   Mon: -3,200 | Tue: -6,400 | Wed: +4,800 | Thu: — | Fri: -4,400
- *   Sat: +1,200 | Sun: — | Total: -8,000 | 2W · 3L | ROI: -0.80%
+ *   Mon: -3,200 | Tue: — | Wed: -7,400 | Thu: +4,800 | Fri: -5,400
+ *   Sat: +1,200 | Sun: — | Total: -10,000 | 2W · 3L | ROI: -1.00%
  *
  * ── Monthly cards ────────────────────────────────────────────────
  * Profit (Jan 2026): +65,000 | 15W · 6L | +6.50% ROI | 21 trades
@@ -45,10 +45,10 @@ export const PROMO_DAILY_LOSS = {
   label: "Daily Loss",
   date: "30th Dec, 2025",
   trades: "3",
-  pnl: "-13,000",
+  pnl: "-7,000",
   charges: "200",
-  netPnl: "-13,200",
-  netRoi: "-1.32%",
+  netPnl: "-7,200",
+  netRoi: "-0.72%",
 };
 
 // ─── Weekly: Profit (5–11 Jan 2026, 5 bars + gap on Thu) ────────
@@ -74,7 +74,7 @@ export const PROMO_WEEKLY = {
   ],
 };
 
-// ─── Weekly: Loss (8–14 Dec 2025, 5 bars + gap on Thu) ──────────
+// ─── Weekly: Loss (8–14 Dec 2025, 5 bars + gap on Tue) ──────────
 
 export const PROMO_WEEKLY_LOSS = {
   type: "weekly" as const,
@@ -82,16 +82,16 @@ export const PROMO_WEEKLY_LOSS = {
   label: "Weekly Loss",
   range: "8 Dec – 14 Dec, 2025",
   totalTrades: "10",
-  netPnl: "-8,000",
-  roi: "-0.80%",
+  netPnl: "-10,000",
+  roi: "-1.00%",
   winRate: "40%",
   wl: "2W · 3L",
   days: [
     { day: "M", pnl: -3200, win: false },
-    { day: "T", pnl: -6400, win: false },
-    { day: "W", pnl: 4800, win: true },
     { day: "T", pnl: 0, win: false },
-    { day: "F", pnl: -4400, win: false },
+    { day: "W", pnl: -7400, win: false },
+    { day: "T", pnl: 4800, win: true },
+    { day: "F", pnl: -5400, win: false },
     { day: "S", pnl: 1200, win: true },
     { day: "S", pnl: 0, win: false },
   ],
@@ -128,10 +128,10 @@ export const PROMO_MONTHLY_LOSS = {
   winRate: "42%",
   wl: "8W · 11L",
   calendarData: {
-    1: -4200, 2: 3600, 3: -5800, 5: 2400, 6: -2600,
-    8: -3200, 9: -6400, 10: 4800, 12: -4400, 13: 1200,
-    15: 3200, 16: -5600, 17: 2800, 19: -3800, 22: -4600,
-    23: 3400, 24: -5200, 29: 2600, 30: -13200,
+    1: -5200, 2: 3600, 4: -5800, 5: 2400, 6: -2600,
+    8: -3200, 10: -7400, 11: 4800, 12: -5400, 13: 1200,
+    15: 3200, 16: -6600, 18: 2800, 19: -3800, 22: -5600,
+    23: 3400, 24: -6200, 29: 2600, 30: -7200,
   } as Record<number, number>,
 };
 

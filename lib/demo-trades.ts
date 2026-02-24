@@ -21,30 +21,30 @@ type DemoTrade = {
 };
 
 export const DEMO_TRADES_DEC_2025: DemoTrade[] = [
-  // Week 1 (Dec 1–7): 5 days — Mon Tue Wed . Fri Sat
-  { id: "dec-1",  trade_date: "2025-12-01", net_pnl: -4000, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  // Week 1 (Dec 1–7): 5 days — Mon Tue . Thu Fri Sat
+  { id: "dec-1",  trade_date: "2025-12-01", net_pnl: -5000, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
   { id: "dec-2",  trade_date: "2025-12-02", net_pnl: 3800,  charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "dec-3",  trade_date: "2025-12-03", net_pnl: -5550, charges: 250, num_trades: 3, capital_deployed: 1000000, note: null },
+  { id: "dec-3",  trade_date: "2025-12-04", net_pnl: -5550, charges: 250, num_trades: 3, capital_deployed: 1000000, note: null },
   { id: "dec-4",  trade_date: "2025-12-05", net_pnl: 2550,  charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
   { id: "dec-5",  trade_date: "2025-12-06", net_pnl: -2450, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  // Week 2 (Dec 8–14): 5 days — Mon Tue Wed . Fri Sat
+  // Week 2 (Dec 8–14): 5 days — Mon . Wed Thu Fri Sat
   { id: "dec-6",  trade_date: "2025-12-08", net_pnl: -3000, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "dec-7",  trade_date: "2025-12-09", net_pnl: -6200, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "dec-8",  trade_date: "2025-12-10", net_pnl: 5100,  charges: 300, num_trades: 3, capital_deployed: 1000000, note: null },
-  { id: "dec-9",  trade_date: "2025-12-12", net_pnl: -4200, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "dec-7",  trade_date: "2025-12-10", net_pnl: -7200, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "dec-8",  trade_date: "2025-12-11", net_pnl: 5100,  charges: 300, num_trades: 3, capital_deployed: 1000000, note: null },
+  { id: "dec-9",  trade_date: "2025-12-12", net_pnl: -5200, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
   { id: "dec-10", trade_date: "2025-12-13", net_pnl: 1350,  charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  // Week 3 (Dec 15–21): 4 days — Mon Tue Wed . Fri
+  // Week 3 (Dec 15–21): 4 days — Mon Tue . Thu Fri
   { id: "dec-11", trade_date: "2025-12-15", net_pnl: 3400,  charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "dec-12", trade_date: "2025-12-16", net_pnl: -5400, charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "dec-13", trade_date: "2025-12-17", net_pnl: 3050,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "dec-12", trade_date: "2025-12-16", net_pnl: -6400, charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
+  { id: "dec-13", trade_date: "2025-12-18", net_pnl: 3050,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
   { id: "dec-14", trade_date: "2025-12-19", net_pnl: -3650, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
   // Week 4 (Dec 22–28): 3 days — Mon Tue Wed (holiday season)
-  { id: "dec-15", trade_date: "2025-12-22", net_pnl: -4400, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "dec-15", trade_date: "2025-12-22", net_pnl: -5400, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
   { id: "dec-16", trade_date: "2025-12-23", net_pnl: 3600,  charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "dec-17", trade_date: "2025-12-24", net_pnl: -5050, charges: 150, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "dec-17", trade_date: "2025-12-24", net_pnl: -6050, charges: 150, num_trades: 2, capital_deployed: 1000000, note: null },
   // Week 5 (Dec 29–Jan 4): 2 days — Mon Tue
   { id: "dec-18", trade_date: "2025-12-29", net_pnl: 2750,  charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "dec-19", trade_date: "2025-12-30", net_pnl: -13000, charges: 200, num_trades: 3, capital_deployed: 1000000, note: null },
+  { id: "dec-19", trade_date: "2025-12-30", net_pnl: -7000, charges: 200, num_trades: 3, capital_deployed: 1000000, note: null },
 ];
 
 export const DEMO_TRADES: DemoTrade[] = [
