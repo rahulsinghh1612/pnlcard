@@ -10,7 +10,7 @@ import {
   subMonths,
   addDays,
 } from "date-fns";
-import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays, LayoutList } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, BarChart3, CalendarDays, ChartNoAxesColumn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,7 @@ export function CalendarHeatmap({
   const [viewDate, setViewDate] = useState(() =>
     initialViewDate ? new Date(initialViewDate + "T12:00:00") : new Date()
   );
-  const [showWeekly, setShowWeekly] = useState(true);
+  const [showWeekly, setShowWeekly] = useState(false);
   const [viewMode, setViewMode] = useState<"calendar" | "breakdown">("calendar");
 
   useEffect(() => {
@@ -263,8 +263,7 @@ export function CalendarHeatmap({
   const BAR_MAX_H = 32;
 
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm scrollbar-none">
-      <div className={viewMode === "calendar" ? (showWeekly ? "min-w-[480px]" : "min-w-[380px]") : "min-w-0"}>
+    <div className="w-full rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 dark:from-card dark:via-card dark:to-slate-900/30 p-4 sm:p-5 shadow-sm">
 
       {/* Month navigation + view toggle — month centered in card */}
       <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
@@ -307,8 +306,8 @@ export function CalendarHeatmap({
           </Button>
         </div>
 
-        {/* View mode toggle pill */}
-        <div className="flex items-center justify-end">
+        {/* View mode toggle pill — desktop only */}
+        <div className="hidden sm:flex items-center justify-end">
         <div className="flex items-center rounded-full border border-border bg-muted/50 p-0.5">
           <button
             type="button"
@@ -335,16 +334,20 @@ export function CalendarHeatmap({
             )}
             title="Weekly breakdown"
           >
-            <LayoutList className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <ChartNoAxesColumn className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span className="hidden sm:inline">Weekly Breakdown</span>
           </button>
         </div>
         </div>
+        {/* Empty spacer on mobile to keep month centered */}
+        <div className="sm:hidden" />
       </div>
 
       {/* ── Calendar Grid View ──────────────────────────────── */}
-      {viewMode === "calendar" && (
-        <>
+      {/* Mobile: always visible. Desktop: only when viewMode is "calendar". */}
+      <div className={cn(viewMode !== "calendar" && "sm:hidden")}>
+        <div className={cn("overflow-x-auto scrollbar-none", showWeekly ? "min-w-0" : "min-w-0")}>
+          <div className={showWeekly ? "min-w-[480px]" : "min-w-[380px] sm:min-w-0"}>
           {/* Header: 7 day columns + optional weekly summary column */}
           <div className={cn(
             "mb-1.5 grid gap-1 text-center",
@@ -525,11 +528,61 @@ export function CalendarHeatmap({
               );
             })}
           </div>
-        </>
-      )}
+          </div>
+        </div>
+      </div>
+
+      {/* Legend — always on mobile, only in calendar mode on desktop */}
+      <div className={cn(
+        "mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground",
+        viewMode !== "calendar" && "sm:hidden"
+      )}>
+        <span className="flex items-center gap-1.5">
+          <span className="flex gap-0.5">
+            <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30" />
+            <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
+            <span className="h-3 w-3 rounded bg-emerald-200 dark:bg-emerald-900/40 border border-emerald-300/60 dark:border-emerald-800/30" />
+          </span>
+          Profit
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="flex gap-0.5">
+            <span className="h-3 w-3 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/30" />
+            <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
+            <span className="h-3 w-3 rounded bg-red-200 dark:bg-red-900/40 border border-red-300/60 dark:border-red-800/30" />
+          </span>
+          Loss
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
+          No trade
+        </span>
+        {!showWeekly && (
+          <button
+            type="button"
+            onClick={toggleWeekly}
+            className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
+          >
+            <BarChart3 className="h-3 w-3" />
+            Show weekly
+          </button>
+        )}
+      </div>
+
+      {/* ── Mobile divider between calendar and breakdown ── */}
+      <div className="my-4 border-t border-border/40 sm:hidden" />
 
       {/* ── Weekly Breakdown View ──────────────────────────── */}
-      {viewMode === "breakdown" && (
+      {/* Mobile: always visible below calendar. Desktop: only when viewMode is "breakdown". */}
+      <div className={cn(viewMode !== "breakdown" && "sm:hidden")}>
+        {/* Mobile heading */}
+        <div className="mb-3 flex items-center gap-1.5 sm:hidden">
+          <ChartNoAxesColumn className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Weekly Breakdown
+          </span>
+        </div>
+
         <div className="flex flex-col gap-4">
           {breakdownWeeks.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
@@ -641,44 +694,7 @@ export function CalendarHeatmap({
             </>
           )}
         </div>
-      )}
-
       </div>
-      {/* Legend — only in calendar mode */}
-      {viewMode === "calendar" && (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="flex gap-0.5">
-              <span className="h-3 w-3 rounded bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/30" />
-              <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/25 border border-emerald-200/60 dark:border-emerald-800/30" />
-              <span className="h-3 w-3 rounded bg-emerald-200 dark:bg-emerald-900/40 border border-emerald-300/60 dark:border-emerald-800/30" />
-            </span>
-            Profit
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="flex gap-0.5">
-              <span className="h-3 w-3 rounded bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/30" />
-              <span className="h-3 w-3 rounded bg-red-100 dark:bg-red-900/25 border border-red-200/60 dark:border-red-800/30" />
-              <span className="h-3 w-3 rounded bg-red-200 dark:bg-red-900/40 border border-red-300/60 dark:border-red-800/30" />
-            </span>
-            Loss
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-muted/40 border border-border" />
-            No trade
-          </span>
-          {!showWeekly && (
-            <button
-              type="button"
-              onClick={toggleWeekly}
-              className="inline-flex items-center gap-1 text-muted-foreground/50 hover:text-foreground rounded-full px-2 py-0.5 transition-all duration-200 hover:bg-muted active:scale-95 cursor-pointer"
-            >
-              <BarChart3 className="h-3 w-3" />
-              Show weekly
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

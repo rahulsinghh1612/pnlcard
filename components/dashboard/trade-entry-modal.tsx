@@ -120,6 +120,7 @@ export function TradeEntryModal({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pnlSign, setPnlSign] = useState<"profit" | "loss">("profit");
   const [form, setForm] = useState<TradeFormData>({
     trade_date: "",
     num_trades: "1",
@@ -134,6 +135,7 @@ export function TradeEntryModal({
   useEffect(() => {
     if (open) {
       if (existingTrade) {
+        setPnlSign(existingTrade.net_pnl < 0 ? "loss" : "profit");
         setForm({
           trade_date: existingTrade.trade_date,
           num_trades: String(Math.max(1, existingTrade.num_trades)),
@@ -145,6 +147,7 @@ export function TradeEntryModal({
               : "",
         });
       } else {
+        setPnlSign("profit");
         setForm({
           trade_date: defaultDate ?? "",
           num_trades: "1",
@@ -390,12 +393,13 @@ export function TradeEntryModal({
                 <button
                   type="button"
                   onClick={() => {
+                    setPnlSign("profit");
                     const raw = form.net_pnl.replace(/-/g, "").replace(/,/g, "");
                     const abs = raw === "" || raw === "." ? "" : raw;
                     setForm((f) => ({ ...f, net_pnl: abs }));
                   }}
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    !form.net_pnl.startsWith("-") && form.net_pnl !== ""
+                    pnlSign === "profit"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
                       : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
@@ -405,12 +409,13 @@ export function TradeEntryModal({
                 <button
                   type="button"
                   onClick={() => {
+                    setPnlSign("loss");
                     const raw = form.net_pnl.replace(/-/g, "").replace(/,/g, "");
                     const abs = raw === "" || raw === "." ? "" : raw;
                     setForm((f) => ({ ...f, net_pnl: abs ? `-${abs}` : "-" }));
                   }}
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    form.net_pnl.startsWith("-")
+                    pnlSign === "loss"
                       ? "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
                       : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
                   }`}
@@ -424,12 +429,12 @@ export function TradeEntryModal({
                 inputMode="decimal"
                 className="no-spinner"
                 value={displayValue(form.net_pnl, currency)}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    net_pnl: stripToNumberString(e.target.value, true),
-                  }))
-                }
+                onChange={(e) => {
+                  const newVal = stripToNumberString(e.target.value, true);
+                  setForm((f) => ({ ...f, net_pnl: newVal }));
+                  if (newVal.startsWith("-")) setPnlSign("loss");
+                  else if (newVal !== "" && newVal !== ".") setPnlSign("profit");
+                }}
                 placeholder="e.g. 1,500.50"
               />
               <p className="text-xs text-muted-foreground">
