@@ -13,7 +13,21 @@
  */
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
+
+async function checkPremiumStatus(): Promise<boolean> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data } = await supabase
+    .from("profiles")
+    .select("plan")
+    .eq("id", user.id)
+    .single();
+  return data?.plan === "premium";
+}
 
 declare global {
   interface Window {
@@ -53,9 +67,30 @@ export function UpgradeButton({
   className,
   children,
 }: UpgradeButtonProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [cycle, setCycle] = useState<"monthly" | "yearly">(defaultCycle);
   const [showPicker, setShowPicker] = useState(false);
+
+  const pollForPremium = async () => {
+    let attempts = 0;
+    const maxAttempts = 15;
+    const check = async () => {
+      attempts++;
+      const isPremium = await checkPremiumStatus();
+      if (isPremium) {
+        toast.success("Premium activated!");
+        router.refresh();
+        return;
+      }
+      if (attempts < maxAttempts) {
+        setTimeout(check, 2000);
+      } else {
+        router.refresh();
+      }
+    };
+    setTimeout(check, 3000);
+  };
 
   const handleUpgrade = async (selectedCycle: "monthly" | "yearly") => {
     setLoading(true);
@@ -91,9 +126,9 @@ export function UpgradeButton({
         },
         handler: () => {
           toast.success(
-            "Payment successful! Your premium features will activate shortly."
+            "Payment successful! Activating premium features..."
           );
-          setTimeout(() => window.location.reload(), 2000);
+          pollForPremium();
         },
         modal: {
           ondismiss: () => {

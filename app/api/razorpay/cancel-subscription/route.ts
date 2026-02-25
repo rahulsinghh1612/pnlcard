@@ -33,18 +33,25 @@ export async function POST() {
       );
     }
 
+    // Look for any non-cancelled subscription for this user
     const { data: subscription } = await admin
       .from("subscriptions")
       .select("provider_subscription_id, status")
       .eq("user_id", user.id)
-      .eq("status", "active")
+      .neq("status", "cancelled")
+      .order("created_at", { ascending: false })
+      .limit(1)
       .single();
 
     if (!subscription?.provider_subscription_id) {
-      return NextResponse.json(
-        { error: "No active subscription found" },
-        { status: 404 }
-      );
+      // No subscription in DB — still downgrade the profile in case it was
+      // set manually or webhook-only
+      await admin
+        .from("profiles")
+        .update({ plan: "free", plan_expires_at: null })
+        .eq("id", user.id);
+
+      return NextResponse.json({ status: "cancelled" });
     }
 
     const razorpay = getRazorpayInstance();
