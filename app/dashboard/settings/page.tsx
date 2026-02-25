@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
+import { CancelSubscriptionButton } from "./cancel-subscription-button";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 
 export const dynamic = "force-dynamic";
@@ -87,6 +88,10 @@ export default async function SettingsPage() {
               userEmail={user.email ?? ""}
               userName={profile?.display_name ?? ""}
             />
+          )}
+
+          {plan === "premium" && (
+            <CancelSubscriptionButton />
           )}
         </CardContent>
       </Card>
