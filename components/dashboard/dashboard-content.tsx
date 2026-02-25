@@ -173,7 +173,7 @@ export function DashboardContent({
 
   const openCreateModal = (defaultDate?: string) => {
     setModalExistingTrade(null);
-    setModalDefaultDate(defaultDate);
+    setModalDefaultDate(defaultDate ?? format(new Date(), "yyyy-MM-dd"));
     setModalOpen(true);
   };
 

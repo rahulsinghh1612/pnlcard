@@ -64,6 +64,7 @@ export function LogTradeButton({
           currency={currency}
           tradingCapital={tradingCapital}
           existingTrade={null}
+          defaultDate={format(new Date(), "yyyy-MM-dd")}
         />
       )}
     </>
