@@ -341,7 +341,7 @@ export function CardPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden" style={{ minHeight: 420 }}>
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">
             {title}
@@ -350,18 +350,8 @@ export function CardPreviewModal({
 
         {isLocked ? (
           <div className="px-5 pb-5 space-y-4">
-            {/* Blurred preview */}
-            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30 min-h-[200px]">
-              {imgSrc && (
-                <img
-                  src={imgSrc}
-                  alt={`${title} preview`}
-                  className="w-full h-auto blur-lg scale-105 opacity-60"
-                  onLoad={() => setImgLoaded(true)}
-                  onError={() => setImgError(true)}
-                />
-              )}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/40 backdrop-blur-sm">
+            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30" style={{ minHeight: 340 }}>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-50 to-slate-100/80">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100/80 shadow-inner">
                   <Lock className="h-7 w-7 text-amber-700" />
                 </div>
@@ -369,7 +359,9 @@ export function CardPreviewModal({
                 <p className="text-xs text-muted-foreground text-center max-w-[220px]">
                   Upgrade to Pro to unlock {cardType} recap cards, story downloads, and more.
                 </p>
-                <UpgradeButton userEmail={userEmail} userName={userName} />
+                <div className="mt-1">
+                  <UpgradeButton userEmail={userEmail} userName={userName} />
+                </div>
               </div>
             </div>
           </div>
