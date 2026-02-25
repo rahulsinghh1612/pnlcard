@@ -165,7 +165,7 @@ export async function POST(req: Request) {
         redirect_to
       );
       await resend.emails.send({
-        from: "PnLCard <noreply@pnlcard.com>",
+        from: "PnLCard <noreply@contact.pnlcard.com>",
         to: [user.email_new || user.email],
         subject: subjectFor("email_change"),
         html: htmlFor("email_change", newEmailLink, email_data.token_new),
@@ -178,7 +178,7 @@ export async function POST(req: Request) {
         redirect_to
       );
       await resend.emails.send({
-        from: "PnLCard <noreply@pnlcard.com>",
+        from: "PnLCard <noreply@contact.pnlcard.com>",
         to: [user.email],
         subject: subjectFor("email_change"),
         html: htmlFor("email_change", currentEmailLink, token),
@@ -192,7 +192,7 @@ export async function POST(req: Request) {
       );
 
       const { data: sendData, error } = await resend.emails.send({
-        from: "PnLCard <noreply@pnlcard.com>",
+        from: "PnLCard <noreply@contact.pnlcard.com>",
         to: [user.email],
         subject: subjectFor(email_action_type),
         html: htmlFor(email_action_type, confirmLink, token),
