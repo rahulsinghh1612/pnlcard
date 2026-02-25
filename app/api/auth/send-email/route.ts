@@ -22,13 +22,14 @@ interface EmailHookPayload {
   };
 }
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pnlcard.com";
+
 function buildConfirmLink(
-  siteUrl: string,
   tokenHash: string,
   type: string,
   redirectTo: string
 ) {
-  const base = siteUrl.replace(/\/$/, "");
+  const base = APP_URL.replace(/\/$/, "");
   const params = new URLSearchParams({
     token_hash: tokenHash,
     type,
@@ -143,14 +144,11 @@ export async function POST(req: Request) {
   }
 
   const { user, email_data } = data;
-  const { email_action_type, token, token_hash, site_url, redirect_to } =
-    email_data;
+  const { email_action_type, token, token_hash, redirect_to } = email_data;
 
   console.log(
     `[send-email] Sending ${email_action_type} email to ${user.email}`
   );
-
-  const siteUrl = site_url || "https://pnlcard.com";
 
   try {
     if (
@@ -159,7 +157,6 @@ export async function POST(req: Request) {
       email_data.token_hash_new
     ) {
       const newEmailLink = buildConfirmLink(
-        siteUrl,
         token_hash,
         "email_change",
         redirect_to
@@ -172,7 +169,6 @@ export async function POST(req: Request) {
       });
 
       const currentEmailLink = buildConfirmLink(
-        siteUrl,
         email_data.token_hash_new,
         "email_change",
         redirect_to
@@ -185,7 +181,6 @@ export async function POST(req: Request) {
       });
     } else {
       const confirmLink = buildConfirmLink(
-        siteUrl,
         token_hash,
         email_action_type,
         redirect_to
