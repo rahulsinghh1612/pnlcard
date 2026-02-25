@@ -6,63 +6,34 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Button } from "@/components/ui/button";
-import { Mail, ArrowLeft } from "lucide-react";
-
-const CODE_LENGTH = 6;
+import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 
 function ConfirmContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const emailParam = searchParams.get("email") ?? "";
 
-  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
+  const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRefs.current[0]?.focus();
+    inputRef.current?.focus();
   }, []);
-
-  const handleChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return;
-
-    const newCode = [...code];
-
-    if (value.length > 1) {
-      const digits = value.replace(/\D/g, "").split("").slice(0, CODE_LENGTH);
-      digits.forEach((d, i) => {
-        if (index + i < CODE_LENGTH) newCode[index + i] = d;
-      });
-      setCode(newCode);
-      const nextIdx = Math.min(index + digits.length, CODE_LENGTH - 1);
-      inputRefs.current[nextIdx]?.focus();
-    } else {
-      newCode[index] = value;
-      setCode(newCode);
-      if (value && index < CODE_LENGTH - 1) {
-        inputRefs.current[index + 1]?.focus();
-      }
-    }
-
-    const fullCode = newCode.join("");
-    if (fullCode.length === CODE_LENGTH && newCode.every((d) => d)) {
-      verifyCode(fullCode);
-    }
-  };
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
 
   const verifyCode = async (otp: string) => {
     if (!emailParam) {
       setError("Email not found. Please go back and sign up again.");
+      return;
+    }
+
+    const trimmed = otp.trim();
+    if (trimmed.length < 6) {
+      setError("Please enter the full code from your email.");
       return;
     }
 
@@ -73,15 +44,15 @@ function ConfirmContent() {
       const supabase = createClient();
       const { error } = await supabase.auth.verifyOtp({
         email: emailParam,
-        token: otp,
+        token: trimmed,
         type: "email",
       });
 
       if (error) {
         setError(error.message);
         setVerifying(false);
-        setCode(Array(CODE_LENGTH).fill(""));
-        inputRefs.current[0]?.focus();
+        setCode("");
+        inputRef.current?.focus();
         return;
       }
 
@@ -91,6 +62,11 @@ function ConfirmContent() {
       setError("Something went wrong. Please try again.");
       setVerifying(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    verifyCode(code);
   };
 
   const handleResend = async () => {
@@ -143,35 +119,40 @@ function ConfirmContent() {
             Enter verification code
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            We sent a 6-digit code to{" "}
+            We sent a code to{" "}
             <span className="font-medium text-foreground">
               {emailParam || "your email"}
             </span>
           </p>
 
-          <div className="mt-6 flex justify-center gap-2">
-            {code.map((digit, i) => (
-              <input
-                key={i}
-                ref={(el) => { inputRefs.current[i] = el; }}
-                type="text"
-                inputMode="numeric"
-                maxLength={CODE_LENGTH}
-                value={digit}
-                onChange={(e) => handleChange(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                disabled={verifying}
-                className="w-11 h-13 text-center text-xl font-semibold border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 disabled:opacity-50 transition-all"
-                aria-label={`Digit ${i + 1}`}
-              />
-            ))}
-          </div>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
+              disabled={verifying}
+              placeholder="Enter code"
+              className="w-full text-center text-2xl font-semibold tracking-[0.3em] py-3 border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 disabled:opacity-50 transition-all placeholder:text-muted-foreground/40 placeholder:tracking-normal placeholder:text-base placeholder:font-normal"
+              autoComplete="one-time-code"
+            />
 
-          {verifying && (
-            <p className="mt-4 text-sm text-muted-foreground animate-pulse">
-              Verifying...
-            </p>
-          )}
+            <Button
+              type="submit"
+              disabled={verifying || code.length < 6}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify & continue"
+              )}
+            </Button>
+          </form>
 
           {error && (
             <p className="mt-4 text-sm text-destructive">{error}</p>

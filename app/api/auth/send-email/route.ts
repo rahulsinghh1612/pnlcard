@@ -22,21 +22,6 @@ interface EmailHookPayload {
   };
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pnlcard.com";
-
-function buildConfirmLink(
-  tokenHash: string,
-  type: string,
-  redirectTo: string
-) {
-  const base = APP_URL.replace(/\/$/, "");
-  const params = new URLSearchParams({
-    token_hash: tokenHash,
-    type,
-    next: redirectTo || "/dashboard",
-  });
-  return `${base}/auth/callback?${params.toString()}`;
-}
 
 function subjectFor(actionType: string): string {
   switch (actionType) {
@@ -55,11 +40,9 @@ function subjectFor(actionType: string): string {
   }
 }
 
-function htmlFor(actionType: string, link: string, token: string): string {
+function htmlFor(actionType: string, token: string): string {
   const codeStyle =
     "display:inline-block;padding:16px 32px;background-color:#f4f4f5;border:2px solid #e4e4e7;border-radius:12px;font-size:32px;font-weight:700;letter-spacing:8px;color:#18181b;font-family:monospace;";
-  const linkStyle =
-    "color:#16a34a;text-decoration:underline;font-size:13px;";
 
   switch (actionType) {
     case "signup":
@@ -71,7 +54,6 @@ function htmlFor(actionType: string, link: string, token: string): string {
             <span style="${codeStyle}">${token}</span>
           </div>
           <p style="color:#a1a1aa;font-size:13px;">This code expires in 1 hour.</p>
-          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to confirm directly.</p>
           <p style="color:#a1a1aa;font-size:13px;margin-top:16px;">If you didn't create this account, you can safely ignore this email.</p>
         </div>`;
     case "recovery":
@@ -83,7 +65,6 @@ function htmlFor(actionType: string, link: string, token: string): string {
             <span style="${codeStyle}">${token}</span>
           </div>
           <p style="color:#a1a1aa;font-size:13px;">This code expires in 1 hour.</p>
-          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to reset directly.</p>
           <p style="color:#a1a1aa;font-size:13px;margin-top:16px;">If you didn't request a password reset, you can safely ignore this email.</p>
         </div>`;
     case "email_change":
@@ -94,7 +75,7 @@ function htmlFor(actionType: string, link: string, token: string): string {
           <div style="margin:24px 0;text-align:center;">
             <span style="${codeStyle}">${token}</span>
           </div>
-          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to confirm directly.</p>
+          <p style="color:#a1a1aa;font-size:13px;">This code expires in 1 hour.</p>
         </div>`;
     default:
       return `
@@ -104,7 +85,7 @@ function htmlFor(actionType: string, link: string, token: string): string {
           <div style="margin:24px 0;text-align:center;">
             <span style="${codeStyle}">${token}</span>
           </div>
-          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to continue.</p>
+          <p style="color:#a1a1aa;font-size:13px;">This code expires in 1 hour.</p>
         </div>`;
   }
 }
@@ -148,7 +129,7 @@ export async function POST(req: Request) {
   }
 
   const { user, email_data } = data;
-  const { email_action_type, token, token_hash, redirect_to } = email_data;
+  const { email_action_type, token } = email_data;
 
   console.log(
     `[send-email] Sending ${email_action_type} email to ${user.email}`
@@ -160,41 +141,25 @@ export async function POST(req: Request) {
       email_data.token_new &&
       email_data.token_hash_new
     ) {
-      const newEmailLink = buildConfirmLink(
-        token_hash,
-        "email_change",
-        redirect_to
-      );
       await resend.emails.send({
         from: "PnLCard <noreply@contact.pnlcard.com>",
         to: [user.email_new || user.email],
         subject: subjectFor("email_change"),
-        html: htmlFor("email_change", newEmailLink, email_data.token_new),
+        html: htmlFor("email_change", email_data.token_new),
       });
 
-      const currentEmailLink = buildConfirmLink(
-        email_data.token_hash_new,
-        "email_change",
-        redirect_to
-      );
       await resend.emails.send({
         from: "PnLCard <noreply@contact.pnlcard.com>",
         to: [user.email],
         subject: subjectFor("email_change"),
-        html: htmlFor("email_change", currentEmailLink, token),
+        html: htmlFor("email_change", token),
       });
     } else {
-      const confirmLink = buildConfirmLink(
-        token_hash,
-        email_action_type,
-        redirect_to
-      );
-
       const { data: sendData, error } = await resend.emails.send({
         from: "PnLCard <noreply@contact.pnlcard.com>",
         to: [user.email],
         subject: subjectFor(email_action_type),
-        html: htmlFor(email_action_type, confirmLink, token),
+        html: htmlFor(email_action_type, token),
       });
 
       if (error) {
