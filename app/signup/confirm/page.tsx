@@ -1,34 +1,100 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { validateEmail } from "@/lib/email-validation";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Mail, ArrowLeft } from "lucide-react";
+
+const CODE_LENGTH = 6;
 
 function ConfirmContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const emailParam = searchParams.get("email") ?? "";
-  const [email, setEmail] = useState(emailParam);
+
+  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
+  const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const displayEmail = emailParam || email;
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleResend = async () => {
-    const emailToUse = emailParam || email;
-    if (!emailToUse) return;
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
 
-    const emailCheck = validateEmail(emailToUse);
-    if (!emailCheck.valid) {
-      setError(emailCheck.message);
+  const handleChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const newCode = [...code];
+
+    if (value.length > 1) {
+      const digits = value.replace(/\D/g, "").split("").slice(0, CODE_LENGTH);
+      digits.forEach((d, i) => {
+        if (index + i < CODE_LENGTH) newCode[index + i] = d;
+      });
+      setCode(newCode);
+      const nextIdx = Math.min(index + digits.length, CODE_LENGTH - 1);
+      inputRefs.current[nextIdx]?.focus();
+    } else {
+      newCode[index] = value;
+      setCode(newCode);
+      if (value && index < CODE_LENGTH - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
+    }
+
+    const fullCode = newCode.join("");
+    if (fullCode.length === CODE_LENGTH && newCode.every((d) => d)) {
+      verifyCode(fullCode);
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const verifyCode = async (otp: string) => {
+    if (!emailParam) {
+      setError("Email not found. Please go back and sign up again.");
       return;
     }
+
+    setVerifying(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.verifyOtp({
+        email: emailParam,
+        token: otp,
+        type: "email",
+      });
+
+      if (error) {
+        setError(error.message);
+        setVerifying(false);
+        setCode(Array(CODE_LENGTH).fill(""));
+        inputRefs.current[0]?.focus();
+        return;
+      }
+
+      router.push("/onboarding");
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setVerifying(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!emailParam) return;
 
     setResending(true);
     setError(null);
@@ -38,7 +104,7 @@ function ConfirmContent() {
       const supabase = createClient();
       const { error } = await supabase.auth.resend({
         type: "signup",
-        email: emailToUse,
+        email: emailParam,
       });
 
       if (error) {
@@ -74,43 +140,54 @@ function ConfirmContent() {
             </div>
           </div>
           <h1 className="text-xl font-semibold text-foreground">
-            Check your email
+            Enter verification code
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            We sent a confirmation link to{" "}
-            <span className="font-medium text-foreground">{displayEmail || "your email"}</span>.
-            Click the link to activate your account.
+            We sent a 6-digit code to{" "}
+            <span className="font-medium text-foreground">
+              {emailParam || "your email"}
+            </span>
           </p>
 
-          <p className="mt-4 text-xs text-muted-foreground">
-            Didn&apos;t receive it? Check your spam folder, or resend below.
-          </p>
-
-          {!emailParam && (
-            <div className="mt-4">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="rounded-lg"
+          <div className="mt-6 flex justify-center gap-2">
+            {code.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => { inputRefs.current[i] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={CODE_LENGTH}
+                value={digit}
+                onChange={(e) => handleChange(i, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(i, e)}
+                disabled={verifying}
+                className="w-11 h-13 text-center text-xl font-semibold border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 disabled:opacity-50 transition-all"
+                aria-label={`Digit ${i + 1}`}
               />
-            </div>
+            ))}
+          </div>
+
+          {verifying && (
+            <p className="mt-4 text-sm text-muted-foreground animate-pulse">
+              Verifying...
+            </p>
+          )}
+
+          {error && (
+            <p className="mt-4 text-sm text-destructive">{error}</p>
           )}
 
           <div className="mt-6 space-y-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleResend}
-              disabled={resending || !(emailParam || email)}
-            >
-              {resending ? "Sending…" : resent ? "Email sent!" : "Resend confirmation email"}
-            </Button>
-
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Didn&apos;t receive the code? Check spam, or{" "}
+              <button
+                onClick={handleResend}
+                disabled={resending || !emailParam}
+                className="text-emerald-600 hover:underline font-medium disabled:opacity-50"
+              >
+                {resending ? "sending..." : resent ? "sent!" : "resend code"}
+              </button>
+            </p>
 
             <Link href="/login" className="block">
               <Button variant="ghost" className="w-full text-muted-foreground">
@@ -127,11 +204,13 @@ function ConfirmContent() {
 
 export default function SignupConfirmPage() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen flex items-center justify-center bg-page">
-        <div className="animate-pulse text-muted-foreground">Loading…</div>
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center bg-page">
+          <div className="animate-pulse text-muted-foreground">Loading…</div>
+        </main>
+      }
+    >
       <ConfirmContent />
     </Suspense>
   );

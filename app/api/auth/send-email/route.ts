@@ -56,51 +56,55 @@ function subjectFor(actionType: string): string {
 }
 
 function htmlFor(actionType: string, link: string, token: string): string {
-  const buttonStyle =
-    "display:inline-block;padding:12px 32px;background-color:#16a34a;color:#ffffff;font-weight:600;text-decoration:none;border-radius:8px;font-size:16px;";
+  const codeStyle =
+    "display:inline-block;padding:16px 32px;background-color:#f4f4f5;border:2px solid #e4e4e7;border-radius:12px;font-size:32px;font-weight:700;letter-spacing:8px;color:#18181b;font-family:monospace;";
+  const linkStyle =
+    "color:#16a34a;text-decoration:underline;font-size:13px;";
 
   switch (actionType) {
     case "signup":
       return `
         <div style="font-family:system-ui,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:32px;">
           <h2 style="color:#18181b;margin-bottom:8px;">Welcome to PnLCard!</h2>
-          <p style="color:#52525b;line-height:1.6;">Click the button below to confirm your email and activate your account.</p>
-          <div style="margin:24px 0;">
-            <a href="${link}" style="${buttonStyle}">Confirm Email</a>
+          <p style="color:#52525b;line-height:1.6;">Enter this code on the verification page to confirm your account:</p>
+          <div style="margin:24px 0;text-align:center;">
+            <span style="${codeStyle}">${token}</span>
           </div>
-          <p style="color:#a1a1aa;font-size:13px;">Or use this code: <strong>${token}</strong></p>
-          <p style="color:#a1a1aa;font-size:13px;">If you didn't create this account, you can safely ignore this email.</p>
+          <p style="color:#a1a1aa;font-size:13px;">This code expires in 1 hour.</p>
+          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to confirm directly.</p>
+          <p style="color:#a1a1aa;font-size:13px;margin-top:16px;">If you didn't create this account, you can safely ignore this email.</p>
         </div>`;
     case "recovery":
       return `
         <div style="font-family:system-ui,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:32px;">
           <h2 style="color:#18181b;margin-bottom:8px;">Reset your password</h2>
-          <p style="color:#52525b;line-height:1.6;">Click the button below to reset your PnLCard password.</p>
-          <div style="margin:24px 0;">
-            <a href="${link}" style="${buttonStyle}">Reset Password</a>
+          <p style="color:#52525b;line-height:1.6;">Enter this code to reset your PnLCard password:</p>
+          <div style="margin:24px 0;text-align:center;">
+            <span style="${codeStyle}">${token}</span>
           </div>
-          <p style="color:#a1a1aa;font-size:13px;">Or use this code: <strong>${token}</strong></p>
-          <p style="color:#a1a1aa;font-size:13px;">If you didn't request a password reset, you can safely ignore this email.</p>
+          <p style="color:#a1a1aa;font-size:13px;">This code expires in 1 hour.</p>
+          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to reset directly.</p>
+          <p style="color:#a1a1aa;font-size:13px;margin-top:16px;">If you didn't request a password reset, you can safely ignore this email.</p>
         </div>`;
     case "email_change":
       return `
         <div style="font-family:system-ui,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:32px;">
           <h2 style="color:#18181b;margin-bottom:8px;">Confirm your new email</h2>
-          <p style="color:#52525b;line-height:1.6;">Click the button below to confirm your email change on PnLCard.</p>
-          <div style="margin:24px 0;">
-            <a href="${link}" style="${buttonStyle}">Confirm Email Change</a>
+          <p style="color:#52525b;line-height:1.6;">Enter this code to confirm your email change:</p>
+          <div style="margin:24px 0;text-align:center;">
+            <span style="${codeStyle}">${token}</span>
           </div>
-          <p style="color:#a1a1aa;font-size:13px;">Or use this code: <strong>${token}</strong></p>
+          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to confirm directly.</p>
         </div>`;
     default:
       return `
         <div style="font-family:system-ui,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:32px;">
           <h2 style="color:#18181b;margin-bottom:8px;">PnLCard</h2>
-          <p style="color:#52525b;line-height:1.6;">Click below to continue.</p>
-          <div style="margin:24px 0;">
-            <a href="${link}" style="${buttonStyle}">Continue</a>
+          <p style="color:#52525b;line-height:1.6;">Your verification code:</p>
+          <div style="margin:24px 0;text-align:center;">
+            <span style="${codeStyle}">${token}</span>
           </div>
-          <p style="color:#a1a1aa;font-size:13px;">Code: <strong>${token}</strong></p>
+          <p style="color:#a1a1aa;font-size:13px;">Or <a href="${link}" style="${linkStyle}">click here</a> to continue.</p>
         </div>`;
   }
 }
