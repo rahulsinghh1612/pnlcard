@@ -22,39 +22,28 @@ export function DeleteAccountButton() {
 
   const handleDelete = async () => {
     setDeleting(true);
-    const supabase = createClient();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      const data = await res.json();
 
-    if (!user) return;
+      if (!res.ok) {
+        toast.error(data.error || "Failed to delete account.");
+        setDeleting(false);
+        return;
+      }
 
-    const { error: tradesError } = await supabase
-      .from("trades")
-      .delete()
-      .eq("user_id", user.id);
+      // Sign out locally after server-side deletion
+      const supabase = createClient();
+      await supabase.auth.signOut();
 
-    if (tradesError) {
-      toast.error("Failed to delete trades.");
+      toast.success("Account deleted successfully.");
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong. Please try again.");
       setDeleting(false);
-      return;
     }
-
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", user.id);
-
-    if (profileError) {
-      toast.error("Failed to delete profile.");
-      setDeleting(false);
-      return;
-    }
-
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
   };
 
   return (
