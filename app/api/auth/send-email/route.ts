@@ -105,9 +105,20 @@ function htmlFor(actionType: string, link: string, token: string): string {
 }
 
 export async function POST(req: Request) {
+  console.log("[send-email] Hook called");
+
   if (!hookSecret) {
+    console.error("[send-email] Missing SEND_EMAIL_HOOK_SECRET env var");
     return NextResponse.json(
       { error: { message: "Missing SEND_EMAIL_HOOK_SECRET" } },
+      { status: 500 }
+    );
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    console.error("[send-email] Missing RESEND_API_KEY env var");
+    return NextResponse.json(
+      { error: { message: "Missing RESEND_API_KEY" } },
       { status: 500 }
     );
   }
@@ -115,14 +126,16 @@ export async function POST(req: Request) {
   const payload = await req.text();
   const headers = Object.fromEntries(req.headers);
 
-  // Strip the "v1,whsec_" prefix if present — standardwebhooks expects raw base64
+  console.log("[send-email] Verifying webhook signature...");
+
   const secret = hookSecret.replace("v1,whsec_", "");
   const wh = new Webhook(secret);
 
   let data: EmailHookPayload;
   try {
     data = wh.verify(payload, headers) as EmailHookPayload;
-  } catch {
+  } catch (err) {
+    console.error("[send-email] Signature verification failed:", err);
     return NextResponse.json(
       { error: { message: "Invalid webhook signature" } },
       { status: 401 }
@@ -133,6 +146,10 @@ export async function POST(req: Request) {
   const { email_action_type, token, token_hash, site_url, redirect_to } =
     email_data;
 
+  console.log(
+    `[send-email] Sending ${email_action_type} email to ${user.email}`
+  );
+
   const siteUrl = site_url || "https://pnlcard.com";
 
   try {
@@ -141,8 +158,6 @@ export async function POST(req: Request) {
       email_data.token_new &&
       email_data.token_hash_new
     ) {
-      // Secure email change: send two emails
-      // New email gets token_new + token_hash
       const newEmailLink = buildConfirmLink(
         siteUrl,
         token_hash,
@@ -156,7 +171,6 @@ export async function POST(req: Request) {
         html: htmlFor("email_change", newEmailLink, email_data.token_new),
       });
 
-      // Current email gets token + token_hash_new
       const currentEmailLink = buildConfirmLink(
         siteUrl,
         email_data.token_hash_new,
@@ -170,7 +184,6 @@ export async function POST(req: Request) {
         html: htmlFor("email_change", currentEmailLink, token),
       });
     } else {
-      // Standard flow: signup, recovery, magic link, etc.
       const confirmLink = buildConfirmLink(
         siteUrl,
         token_hash,
@@ -178,7 +191,7 @@ export async function POST(req: Request) {
         redirect_to
       );
 
-      const { error } = await resend.emails.send({
+      const { data: sendData, error } = await resend.emails.send({
         from: "PnLCard <noreply@pnlcard.com>",
         to: [user.email],
         subject: subjectFor(email_action_type),
@@ -186,17 +199,22 @@ export async function POST(req: Request) {
       });
 
       if (error) {
+        console.error("[send-email] Resend error:", JSON.stringify(error));
         throw error;
       }
+
+      console.log("[send-email] Email sent successfully:", sendData);
     }
   } catch (error: unknown) {
     const errMsg =
       error instanceof Error ? error.message : "Failed to send email";
+    console.error("[send-email] Failed:", errMsg);
     return NextResponse.json(
       { error: { message: errMsg } },
       { status: 500 }
     );
   }
 
+  console.log("[send-email] Done — returning 200");
   return NextResponse.json({});
 }
