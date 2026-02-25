@@ -65,7 +65,7 @@ export function SignupForm() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${redirect}` },
@@ -73,6 +73,18 @@ export function SignupForm() {
 
       if (error) {
         setError(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Supabase returns a fake user with empty identities when the email
+      // is already registered (to prevent email enumeration)
+      if (
+        signUpData.user &&
+        signUpData.user.identities &&
+        signUpData.user.identities.length === 0
+      ) {
+        setError("An account with this email already exists. Please sign in instead.");
         setIsLoading(false);
         return;
       }
