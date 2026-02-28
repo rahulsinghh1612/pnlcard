@@ -1103,7 +1103,7 @@ export default function LandingPage() {
                 Terms
               </a>
               <a
-                href="https://x.com/pnlcard"
+                href="https://x.com/nextalphabet_"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
