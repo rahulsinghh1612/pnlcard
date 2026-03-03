@@ -14,7 +14,7 @@ import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import dynamic from "next/dynamic";
 const DemoSection = dynamic(() => import("@/components/landing/demo-section").then((m) => m.DemoSection), {
   ssr: false,
-  loading: () => <div className="h-[520px]" />,
+  loading: () => <div className="h-[728px] min-h-[728px]" aria-hidden="true" />,
 });
 const ReviewShowcase = dynamic(() => import("@/components/landing/review-showcase").then((m) => m.ReviewShowcase), {
   ssr: false,
@@ -493,6 +493,17 @@ function HeroDashboard() {
         </div>
       </div>
 
+      {/* Bridge copy between cards */}
+      <p
+        className="text-center text-sm text-slate-500 transition-all duration-700 ease-out"
+        style={{
+          opacity: step >= 3 ? 1 : 0,
+          transform: `translateY(${step >= 3 ? 0 : 8}px)`,
+        }}
+      >
+        See how each week shaped up
+      </p>
+
       {/* ── Card 2: Weekly Breakdown ── */}
       <div
         className="rounded-xl border border-slate-200/60 bg-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.08)] overflow-hidden transition-all duration-700 ease-out"
@@ -888,7 +899,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Interactive Demo ──────────────────────────────── */}
-      <section id="how-it-works" className="scroll-mt-24 pt-20 sm:pt-24 pb-6">
+      <section id="how-it-works" className="scroll-mt-24 pt-20 sm:pt-24 pb-6 min-h-[832px]">
         <DemoSection />
       </section>
 

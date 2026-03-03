@@ -103,7 +103,7 @@ function DemoEnterPnl({ active }: { active: boolean }) {
           {PNL_FIELDS.map((f, i) => (
             <div
               key={f.id}
-              className="space-y-2 transition-all duration-500 ease-out"
+              className="space-y-2 transition-[opacity,transform] duration-500 ease-out"
               style={{
                 opacity: revealed > i ? 1 : 0,
                 transform: `translateY(${revealed > i ? 0 : 16}px)`,
@@ -123,7 +123,7 @@ function DemoEnterPnl({ active }: { active: boolean }) {
 
         {/* Net result summary */}
         <div
-          className="mt-6 rounded-lg bg-emerald-50/60 border border-emerald-200/60 p-3 text-center transition-all duration-500 ease-out"
+          className="mt-6 rounded-lg bg-emerald-50/60 border border-emerald-200/60 p-3 text-center transition-[opacity,transform] duration-500 ease-out"
           style={{
             opacity: revealed > PNL_FIELDS.length ? 1 : 0,
             transform: `translateY(${revealed > PNL_FIELDS.length ? 0 : 12}px)`,
@@ -184,7 +184,7 @@ function DemoDiscipline({ active }: { active: boolean }) {
               return (
                 <div
                   key={score}
-                  className={`relative h-9 w-9 rounded-full border-2 transition-all duration-300 ${
+                  className={`relative h-9 w-9 rounded-full border-2 transition-[opacity,transform] duration-300 ${
                     filled
                       ? `${colors.bg} border-transparent`
                       : phase >= 1
@@ -207,7 +207,7 @@ function DemoDiscipline({ active }: { active: boolean }) {
             })}
           </div>
           <p
-            className="text-[11px] text-muted-foreground text-center transition-all duration-400"
+            className="text-[11px] text-muted-foreground text-center transition-[opacity,transform] duration-400"
             style={{
               opacity: phase >= 2 ? 1 : phase >= 1 ? 0.6 : 0,
               transform: phase >= 2 ? "translateY(0)" : "translateY(4px)",
@@ -256,7 +256,7 @@ function DemoMistakes({ active }: { active: boolean }) {
               return (
                 <span
                   key={tag.value}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-[opacity,transform] duration-300 ${
                     selected
                       ? "border-red-500 bg-red-50 text-red-700"
                       : "border-border bg-muted/30 text-muted-foreground"
@@ -273,7 +273,7 @@ function DemoMistakes({ active }: { active: boolean }) {
             })}
           </div>
           <p
-            className="text-[11px] text-muted-foreground text-center transition-all duration-400"
+            className="text-[11px] text-muted-foreground text-center transition-opacity duration-400"
             style={{ opacity: phase >= 1 ? 0.6 : 0 }}
           >
             {phase >= 2 ? "1 mistake tagged" : "Tap any that apply"}
@@ -281,7 +281,7 @@ function DemoMistakes({ active }: { active: boolean }) {
         </div>
 
         <div
-          className="mt-6 transition-all duration-500 ease-out"
+          className="mt-6 transition-[opacity,transform] duration-500 ease-out"
           style={{
             opacity: phase >= 3 ? 1 : 0,
             transform: `translateY(${phase >= 3 ? 0 : 12}px)`,
@@ -824,11 +824,11 @@ export function DemoSection() {
   }
 
   return (
-    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-20 sm:pb-32 scroll-mt-24">
+    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-20 sm:pb-32 scroll-mt-24 min-h-[720px]">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {/* Heading */}
         <div
-          className={`text-center mb-8 sm:mb-10 transition-all duration-700 ${
+          className={`text-center mb-8 sm:mb-10 transition-[opacity,transform] duration-700 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
@@ -845,7 +845,7 @@ export function DemoSection() {
 
         {/* Step switcher pills */}
         <div
-          className={`flex justify-center mb-6 transition-all duration-700 delay-150 ${
+          className={`flex justify-center mb-6 transition-[opacity,transform] duration-700 delay-150 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
@@ -882,7 +882,7 @@ export function DemoSection() {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="relative h-[420px] sm:h-[400px] overflow-hidden">
+          <div className="relative h-[420px] min-h-[420px] overflow-hidden" style={{ contain: "layout" }}>
             {/* Step 1: Enter P&L */}
             <div
               className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
