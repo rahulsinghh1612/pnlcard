@@ -9,7 +9,7 @@ type Trade = {
   charges: number | null;
   num_trades: number;
   execution_tag: string | null;
-  mood_tag: string | null;
+  discipline_score: number | null;
 };
 
 type RecentEntriesProps = {
@@ -23,18 +23,9 @@ function getFinalResult(t: Trade): number {
 }
 
 const TAG_LABELS: Record<string, string> = {
-  followed_plan: "Followed Plan",
   overtraded: "Overtraded",
-  revenge_traded: "Revenge Traded",
-  fomo_entry: "FOMO",
-  cut_early: "Cut Early",
-  stayed_out: "Stayed Out",
-  avoided_fomo: "Avoided FOMO",
-  calm: "Calm",
-  confident: "Confident",
-  anxious: "Anxious",
-  frustrated: "Frustrated",
-  tired: "Tired",
+  fomo_entry: "FOMO Entry",
+  no_stop_loss: "No Stop Loss",
 };
 
 function formatPnl(value: number, currency: string): string {
@@ -92,15 +83,18 @@ export function RecentEntries({ trades, currency, onEntryClick }: RecentEntriesP
                     {t.num_trades} trade{t.num_trades !== 1 ? "s" : ""}
                   </p>
                   {t.execution_tag && t.execution_tag.split(",").map((tag) => (
-                    <span key={tag} className="inline-flex rounded-full bg-primary/8 px-1.5 py-0.5 text-[10px] font-medium text-primary/70">
+                    <span key={tag} className="inline-flex rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
                       {TAG_LABELS[tag] ?? tag}
                     </span>
                   ))}
-                  {t.mood_tag && t.mood_tag.split(",").map((tag) => (
-                    <span key={tag} className="inline-flex rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {TAG_LABELS[tag] ?? tag}
+                  {t.discipline_score != null && (
+                    <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      t.discipline_score >= 4 ? "bg-emerald-50 text-emerald-600" :
+                      t.discipline_score >= 3 ? "bg-muted text-muted-foreground" : "bg-red-50 text-red-600"
+                    }`}>
+                      {t.discipline_score}/5
                     </span>
-                  ))}
+                  )}
                 </div>
               </div>
 

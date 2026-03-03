@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, endOfWeek, parseISO, isWithinInterval } from "date-fns";
-import { ArrowDownToLine, Upload, Trash2, ChevronDown, ChevronUp, Check, Flame } from "lucide-react";
+import { ArrowDownToLine, Upload, Trash2, ChevronDown, ChevronUp, Check } from "lucide-react";
 
 const tradeSchema = z.object({
   trade_date: z.string().min(1, "Date is required"),
@@ -71,25 +71,10 @@ function displayValue(raw: string, currency: string): string {
   return formatWithLocale(n, currency);
 }
 
-const EXECUTION_TAGS = [
-  { value: "followed_plan", label: "Followed Plan", sentiment: "positive" },
-  { value: "overtraded", label: "Overtraded", sentiment: "negative" },
-  { value: "revenge_traded", label: "Revenge Traded", sentiment: "negative" },
-  { value: "fomo_entry", label: "FOMO Entry", sentiment: "negative" },
-  { value: "cut_early", label: "Cut Early", sentiment: "negative" },
-] as const;
-
-const REST_DAY_TAGS = [
-  { value: "stayed_out", label: "Stayed Out", sentiment: "positive" },
-  { value: "avoided_fomo", label: "Avoided FOMO", sentiment: "positive" },
-] as const;
-
-const MOOD_TAGS = [
-  { value: "calm", label: "Calm", sentiment: "positive" },
-  { value: "confident", label: "Confident", sentiment: "positive" },
-  { value: "anxious", label: "Anxious", sentiment: "negative" },
-  { value: "frustrated", label: "Frustrated", sentiment: "negative" },
-  { value: "tired", label: "Tired", sentiment: "negative" },
+const MISTAKE_TAGS = [
+  { value: "overtraded", label: "Overtraded" },
+  { value: "fomo_entry", label: "FOMO Entry" },
+  { value: "no_stop_loss", label: "Didn't Respect Stop Loss" },
 ] as const;
 
 const PILL_GREEN =
@@ -99,19 +84,14 @@ const PILL_RED =
 const PILL_UNSELECTED =
   "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50";
 
-function pillStyle(selected: boolean, sentiment: "positive" | "negative") {
-  if (!selected) return PILL_UNSELECTED;
-  return sentiment === "positive" ? PILL_GREEN : PILL_RED;
-}
-
 type TradeFormData = {
   trade_date: string;
   num_trades: string;
   net_pnl: string;
   charges: string;
   capital_deployed: string;
-  execution_tags: string[];
-  mood_tags: string[];
+  discipline_score: number | null;
+  mistake_tags: string[];
   note: string;
 };
 
@@ -124,7 +104,7 @@ type TradeEntry = {
   capital_deployed: number | null;
   note: string | null;
   execution_tag: string | null;
-  mood_tag: string | null;
+  discipline_score: number | null;
 };
 
 type TradeEntryModalProps = {
@@ -173,8 +153,8 @@ export function TradeEntryModal({
     net_pnl: "",
     charges: "",
     capital_deployed: "",
-    execution_tags: [],
-    mood_tags: [],
+    discipline_score: null,
+    mistake_tags: [],
     note: "",
   });
 
@@ -194,7 +174,7 @@ export function TradeEntryModal({
           existingTrade.charges != null ||
           existingTrade.capital_deployed != null ||
           existingTrade.execution_tag != null ||
-          existingTrade.mood_tag != null ||
+          existingTrade.discipline_score != null ||
           (existingTrade.note != null && existingTrade.note.length > 0);
         setShowDetails(hasDetails);
         setForm({
@@ -206,8 +186,8 @@ export function TradeEntryModal({
             existingTrade.capital_deployed != null
               ? String(existingTrade.capital_deployed)
               : "",
-          execution_tags: existingTrade.execution_tag ? existingTrade.execution_tag.split(",") : [],
-          mood_tags: existingTrade.mood_tag ? existingTrade.mood_tag.split(",") : [],
+          discipline_score: existingTrade.discipline_score ?? null,
+          mistake_tags: existingTrade.execution_tag ? existingTrade.execution_tag.split(",") : [],
           note: existingTrade.note ?? "",
         });
       } else {
@@ -220,8 +200,8 @@ export function TradeEntryModal({
           net_pnl: "",
           charges: "",
           capital_deployed: "",
-          execution_tags: [],
-          mood_tags: [],
+          discipline_score: null,
+          mistake_tags: [],
           note: "",
         });
       }
@@ -283,8 +263,8 @@ export function TradeEntryModal({
       charges: data.charges != null ? round2(data.charges) : null,
       capital_deployed: data.capital_deployed != null ? round2(data.capital_deployed) : null,
       note: trimmedNote.length > 0 ? trimmedNote : null,
-      execution_tag: form.execution_tags.length > 0 ? form.execution_tags.join(",") : null,
-      mood_tag: form.mood_tags.length > 0 ? form.mood_tags.join(",") : null,
+      discipline_score: form.discipline_score,
+      execution_tag: form.mistake_tags.length > 0 ? form.mistake_tags.join(",") : null,
     };
 
     setIsLoading(true);
@@ -371,9 +351,6 @@ export function TradeEntryModal({
   const roi = capitalNum != null ? (finalResult / capitalNum) * 100 : null;
 
   const newWeekLogCount = isEdit ? weekLogCount : weekLogCount + 1;
-  const newStreak = isEdit ? loggingStreak : loggingStreak + 1;
-
-  const activeTags = noTrade ? REST_DAY_TAGS : EXECUTION_TAGS;
 
   return (
     <>
@@ -393,10 +370,6 @@ export function TradeEntryModal({
               </p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Day {newWeekLogCount}/7 this week</span>
-                <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold">
-                  <Flame className="h-4 w-4" />
-                  {newStreak}-day streak
-                </span>
               </div>
             </div>
           ) : (
@@ -428,7 +401,7 @@ export function TradeEntryModal({
                   </div>
                 ) : (
                   <DialogTitle className="text-center">
-                    Log a trade
+                    Log trade
                   </DialogTitle>
                 )}
               </DialogHeader>
@@ -578,7 +551,88 @@ export function TradeEntryModal({
                     )}
                   </div>
 
-                  {/* === Collapsible details section === */}
+                  {/* Discipline Score (1-5 dots, dynamic color) — always visible */}
+                  {!noTrade && (
+                    <div className="space-y-2.5">
+                      <Label>Discipline Score</Label>
+                      <div className="flex items-center justify-center gap-3">
+                        {([1, 2, 3, 4, 5] as const).map((score) => {
+                          const filled = form.discipline_score != null && score <= form.discipline_score;
+
+                          const SCORE_COLORS: Record<number, { bg: string; border: string; hover: string }> = {
+                            1: { bg: "bg-red-500 border-red-500", border: "border-red-500", hover: "hover:border-red-300 hover:bg-red-50" },
+                            2: { bg: "bg-orange-500 border-orange-500", border: "border-orange-500", hover: "hover:border-orange-300 hover:bg-orange-50" },
+                            3: { bg: "bg-yellow-500 border-yellow-500", border: "border-yellow-500", hover: "hover:border-yellow-300 hover:bg-yellow-50" },
+                            4: { bg: "bg-emerald-400 border-emerald-400", border: "border-emerald-400", hover: "hover:border-emerald-300 hover:bg-emerald-50" },
+                            5: { bg: "bg-emerald-600 border-emerald-600", border: "border-emerald-600", hover: "hover:border-emerald-400 hover:bg-emerald-50" },
+                          };
+
+                          const activeColor = form.discipline_score != null ? SCORE_COLORS[form.discipline_score] : null;
+
+                          return (
+                            <button
+                              key={score}
+                              type="button"
+                              onClick={() =>
+                                setForm((f) => ({
+                                  ...f,
+                                  discipline_score: f.discipline_score === score ? null : score,
+                                }))
+                              }
+                              className={`relative h-9 w-9 rounded-full border-2 transition-all duration-200 ${
+                                filled && activeColor
+                                  ? `${activeColor.bg} text-white shadow-sm`
+                                  : `border-border bg-muted/30 text-muted-foreground ${SCORE_COLORS[score].hover}`
+                              }`}
+                            >
+                              <span className="text-xs font-bold">{score}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground text-center">
+                        {form.discipline_score === null && "How disciplined were you today?"}
+                        {form.discipline_score === 1 && "Broke all my rules"}
+                        {form.discipline_score === 2 && "Slipped on a few rules"}
+                        {form.discipline_score === 3 && "Mostly stuck to the plan"}
+                        {form.discipline_score === 4 && "Followed the plan well"}
+                        {form.discipline_score === 5 && "Executed flawlessly"}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Mistake Tags (multi-select) — always visible */}
+                  {!noTrade && (
+                    <div className="space-y-2.5">
+                      <Label>Any mistakes?</Label>
+                      <div className="flex flex-wrap justify-center gap-1.5">
+                        {MISTAKE_TAGS.map((tag) => {
+                          const selected = form.mistake_tags.includes(tag.value);
+                          return (
+                            <button
+                              key={tag.value}
+                              type="button"
+                              onClick={() =>
+                                setForm((f) => ({
+                                  ...f,
+                                  mistake_tags: selected
+                                    ? f.mistake_tags.filter((t) => t !== tag.value)
+                                    : [...f.mistake_tags, tag.value],
+                                }))
+                              }
+                              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                selected ? PILL_RED : PILL_UNSELECTED
+                              }`}
+                            >
+                              {tag.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* === Collapsible details: Charges, Capital, Notes === */}
                   {!showDetails && (
                     <button
                       type="button"
@@ -696,64 +750,6 @@ export function TradeEntryModal({
                           </div>
                         </>
                       )}
-
-                      {/* Execution / rest-day tags (multi-select) */}
-                      <div className="space-y-2.5">
-                        <Label>{noTrade ? "What did you do?" : "How did you execute?"}</Label>
-                        <div className="flex flex-wrap justify-center gap-1.5">
-                          {activeTags.map((tag) => {
-                            const selected = form.execution_tags.includes(tag.value);
-                            return (
-                              <button
-                                key={tag.value}
-                                type="button"
-                                onClick={() =>
-                                  setForm((f) => ({
-                                    ...f,
-                                    execution_tags: selected
-                                      ? f.execution_tags.filter((t) => t !== tag.value)
-                                      : [...f.execution_tags, tag.value],
-                                  }))
-                                }
-                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                                  pillStyle(selected, tag.sentiment)
-                                }`}
-                              >
-                                {tag.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Mood tags (multi-select) */}
-                      <div className="space-y-2.5">
-                        <Label>How are you feeling?</Label>
-                        <div className="flex flex-wrap justify-center gap-1.5">
-                          {MOOD_TAGS.map((tag) => {
-                            const selected = form.mood_tags.includes(tag.value);
-                            return (
-                              <button
-                                key={tag.value}
-                                type="button"
-                                onClick={() =>
-                                  setForm((f) => ({
-                                    ...f,
-                                    mood_tags: selected
-                                      ? f.mood_tags.filter((t) => t !== tag.value)
-                                      : [...f.mood_tags, tag.value],
-                                  }))
-                                }
-                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                                  pillStyle(selected, tag.sentiment)
-                                }`}
-                              >
-                                {tag.label}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
 
                       {/* Note */}
                       <div className="space-y-2.5">

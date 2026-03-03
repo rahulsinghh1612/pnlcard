@@ -18,7 +18,7 @@ type Trade = {
   capital_deployed: number | null;
   note: string | null;
   execution_tag: string | null;
-  mood_tag: string | null;
+  discipline_score: number | null;
 };
 
 type TradeDetailModalProps = {
@@ -32,24 +32,10 @@ type TradeDetailModalProps = {
 };
 
 const TAG_LABELS: Record<string, string> = {
-  followed_plan: "Followed Plan",
   overtraded: "Overtraded",
-  revenge_traded: "Revenge Traded",
   fomo_entry: "FOMO Entry",
-  cut_early: "Cut Early",
-  stayed_out: "Stayed Out",
-  avoided_fomo: "Avoided FOMO",
-  calm: "Calm",
-  confident: "Confident",
-  anxious: "Anxious",
-  frustrated: "Frustrated",
-  tired: "Tired",
+  no_stop_loss: "Didn't Respect Stop Loss",
 };
-
-const POSITIVE_TAGS = new Set([
-  "followed_plan", "stayed_out", "avoided_fomo",
-  "calm", "confident",
-]);
 
 function formatPnl(value: number, currency: string): string {
   const symbol = currency === "INR" ? "\u20B9" : "$";
@@ -99,7 +85,6 @@ export function TradeDetailModal({
   const isRestDay = trade.num_trades === 0;
 
   const executionTags = parseTags(trade.execution_tag);
-  const moodTags = parseTags(trade.mood_tag);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -162,54 +147,47 @@ export function TradeDetailModal({
             )}
           </div>
 
-          {/* Execution tags */}
-          {executionTags.length > 0 && (
+          {/* Discipline Score */}
+          {trade.discipline_score != null && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Execution
+                Discipline
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {executionTags.map((tag) => {
-                  const isPositive = POSITIVE_TAGS.has(tag);
-                  return (
-                    <span
-                      key={tag}
-                      className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
-                        isPositive
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                          : "border-red-400 bg-red-50 text-red-700"
-                      }`}
-                    >
-                      {TAG_LABELS[tag] ?? tag}
-                    </span>
-                  );
-                })}
+              <div className="flex items-center gap-1.5">
+                {[1, 2, 3, 4, 5].map((score) => (
+                  <div
+                    key={score}
+                    className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      score <= trade.discipline_score!
+                        ? "bg-emerald-500 text-white"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {score}
+                  </div>
+                ))}
+                <span className="text-xs text-muted-foreground ml-1">
+                  {trade.discipline_score}/5
+                </span>
               </div>
             </div>
           )}
 
-          {/* Mood tags */}
-          {moodTags.length > 0 && (
+          {/* Mistake tags */}
+          {executionTags.length > 0 && (
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Mood
+                Mistakes
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {moodTags.map((tag) => {
-                  const isPositive = POSITIVE_TAGS.has(tag);
-                  return (
-                    <span
-                      key={tag}
-                      className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
-                        isPositive
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                          : "border-red-400 bg-red-50 text-red-700"
-                      }`}
-                    >
-                      {TAG_LABELS[tag] ?? tag}
-                    </span>
-                  );
-                })}
+                {executionTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-red-400 bg-red-50 text-red-700 px-2.5 py-1 text-xs font-medium"
+                  >
+                    {TAG_LABELS[tag] ?? tag}
+                  </span>
+                ))}
               </div>
             </div>
           )}

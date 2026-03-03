@@ -29,7 +29,7 @@ It is NOT a full trading journal. It is a content creation tool for traders who 
 | Product Name | PNLCard |
 | Company | Next Alphabet |
 | Domain | pnlcard.com |
-| Tagline | Log. Share. Grow. |
+| Tagline | Your Trading Journal |
 | Target User | Indian retail traders active on X/Instagram who post trading content |
 | Core Value Prop | Dead-simple P\&L logging \+ stunning shareable cards \= viral growth loop |
 
@@ -77,7 +77,7 @@ Landing Page → Sign Up (Google/Email) → Onboarding (first visit) → Dashboa
 
 \<meta name="description" content="Log your daily P\&L in 60 seconds and generate stunning shareable cards for X and Instagram. Free forever." /\>
 
-\<meta property="og:title" content="PNLCard — Log. Share. Grow." /\>
+\<meta property="og:title" content="PNLCard — Your Trading Journal" /\>
 
 \<meta property="og:description" content="Generate beautiful trading recap cards for social media." /\>
 
@@ -662,7 +662,7 @@ Next.js middleware checks auth on all /dashboard/\* routes using @supabase/ssr. 
 | :---- | :---- |
 | title | PNLCard — Beautiful Trading Recap Cards for Social Media |
 | meta description | Log your daily P\&L in 60 seconds and generate stunning shareable cards for X and Instagram. Free forever. |
-| og:title | PNLCard — Log. Share. Grow. |
+| og:title | PNLCard — Your Trading Journal |
 | og:description | Generate beautiful trading recap cards for social media. |
 | og:image | https://pnlcard.com/og-landing.png (1200x630) |
 | og:url | https://pnlcard.com |

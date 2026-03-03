@@ -11,7 +11,8 @@ import {
 import {
   type WeeklyDebrief,
   type WeeklyPnlPoint,
-  type TagPnlCorrelation,
+  type DisciplineScatterPoint,
+  type MistakeFrequency,
 } from "@/lib/debrief";
 import { format, parseISO, subWeeks, addWeeks } from "date-fns";
 
@@ -85,7 +86,7 @@ export function DebriefReport({
           </div>
           <div>
             <h1 className="text-xl font-semibold text-foreground">
-              Weekly Debrief
+              Weekly Review
             </h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
               Get a beautiful weekly report with insights on what went well,
@@ -111,7 +112,7 @@ export function DebriefReport({
               </li>
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                Execution & mood pattern analysis
+                Discipline vs P&L scatter & mistake tracking
               </li>
             </ul>
           </div>
@@ -174,12 +175,12 @@ export function DebriefReport({
          ════════════════════════════════════════════════════════════ */}
       <div className="rounded-2xl border border-border bg-white px-6 py-6 sm:px-8">
         <p className="text-xs font-medium text-muted-foreground">
-          Weekly Debrief · {debrief.weekRange}
+          Weekly Review · {debrief.weekRange}
         </p>
 
         {!hasActivity ? (
           <p className="text-sm text-muted-foreground mt-4">
-            No trades logged this week. Log your trades to see your debrief.
+            No trades logged this week. Log your trades to see your review.
           </p>
         ) : (
           <>
@@ -225,79 +226,64 @@ export function DebriefReport({
               Day by Day
             </p>
             <div className="space-y-1">
-              {debrief.days.map((day) => {
-                const hasTrade = day.numTrades > 0;
-                const barPct = hasTrade
-                  ? Math.max(4, (Math.abs(day.pnl) / maxAbsPnl) * 50)
-                  : 0;
+              {debrief.days
+                .filter((day) => day.numTrades > 0)
+                .map((day) => {
+                  const barPct = Math.max(
+                    4,
+                    (Math.abs(day.pnl) / maxAbsPnl) * 50
+                  );
 
-                return (
-                  <div
-                    key={day.date}
-                    className="flex items-center gap-0 h-7"
-                  >
-                    {/* Day label */}
-                    <span
-                      className={`w-7 text-right text-[11px] font-semibold shrink-0 pr-2 ${
-                        hasTrade
-                          ? "text-foreground"
-                          : "text-muted-foreground/40"
-                      }`}
+                  return (
+                    <div
+                      key={day.date}
+                      className="flex items-center gap-0 h-7"
                     >
-                      {day.dayShort}
-                    </span>
+                      <span className="w-10 text-left text-[11px] font-semibold shrink-0 pr-2 text-foreground">
+                        {day.dayShort}
+                      </span>
 
-                    {hasTrade ? (
-                      <>
-                        {/* Left half (losses) */}
-                        <div className="flex-1 flex justify-end items-center">
-                          {day.pnl < 0 && (
-                            <>
-                              <span className="text-[10px] font-semibold tabular-nums text-red-600 mr-1.5 shrink-0">
-                                {formatPnlShort(day.pnl, currency)}
-                              </span>
-                              <div
-                                className="h-[18px] rounded-l-sm bg-red-400/70"
-                                style={{
-                                  width: `${barPct}%`,
-                                  minWidth: "4px",
-                                }}
-                              />
-                            </>
-                          )}
-                        </div>
+                      {/* Left half (losses) */}
+                      <div className="flex-1 flex justify-end items-center">
+                        {day.pnl < 0 && (
+                          <>
+                            <span className="text-[10px] font-semibold tabular-nums text-red-600 mr-1.5 shrink-0">
+                              {formatPnlShort(day.pnl, currency)}
+                            </span>
+                            <div
+                              className="h-[18px] rounded-l-sm bg-red-400/70"
+                              style={{
+                                width: `${barPct}%`,
+                                minWidth: "4px",
+                              }}
+                            />
+                          </>
+                        )}
+                      </div>
 
-                        {/* Center baseline */}
-                        <div className="w-px h-5 bg-border shrink-0" />
+                      {/* Center baseline */}
+                      <div className="w-px h-5 bg-border shrink-0" />
 
-                        {/* Right half (profits) */}
-                        <div className="flex-1 flex justify-start items-center">
-                          {day.pnl >= 0 && (
-                            <>
-                              <div
-                                className="h-[18px] rounded-r-sm bg-emerald-400/70"
-                                style={{
-                                  width: `${barPct}%`,
-                                  minWidth: "4px",
-                                }}
-                              />
-                              <span className="text-[10px] font-semibold tabular-nums text-emerald-600 ml-1.5 shrink-0">
-                                {formatPnlShort(day.pnl, currency)}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex-1" />
-                        <div className="w-px h-5 bg-border shrink-0" />
-                        <div className="flex-1" />
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+                      {/* Right half (profits) */}
+                      <div className="flex-1 flex justify-start items-center">
+                        {day.pnl >= 0 && (
+                          <>
+                            <div
+                              className="h-[18px] rounded-r-sm bg-emerald-400/70"
+                              style={{
+                                width: `${barPct}%`,
+                                minWidth: "4px",
+                              }}
+                            />
+                            <span className="text-[10px] font-semibold tabular-nums text-emerald-600 ml-1.5 shrink-0">
+                              {formatPnlShort(day.pnl, currency)}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
 
@@ -317,51 +303,49 @@ export function DebriefReport({
           )}
 
           {/* ════════════════════════════════════════════════════════
-              CARD 4 — Mood & Execution → P&L correlation
+              CARD 4 — Discipline Donut
              ════════════════════════════════════════════════════════ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {debrief.executionCorrelation.length > 0 && (
-              <div className="rounded-2xl border border-border bg-white px-5 py-5 sm:px-6">
-                <div className="mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Execution Impact
-                    </p>
-                    <span className="group relative">
-                      <Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
-                      <span className="invisible group-hover:visible absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 rounded-lg bg-foreground px-3 py-2 text-[11px] text-background leading-snug z-10">
-                        Avg P&L on days you tagged each execution style this week.
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <CorrelationBars
-                  data={debrief.executionCorrelation}
-                  currency={currency}
-                />
+          {debrief.disciplineScatter.length >= 1 && (
+            <div className="rounded-2xl border border-border bg-white px-6 py-5 sm:px-8">
+              <div className="flex items-center gap-1.5 mb-5">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Discipline
+                </p>
+                <span className="group relative">
+                  <Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                  <span className="invisible group-hover:visible absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-52 rounded-lg bg-foreground px-3 py-2 text-[11px] text-background leading-snug z-10">
+                    How your P&L relates to your discipline score. Higher discipline = better results.
+                  </span>
+                </span>
               </div>
-            )}
-            {debrief.moodCorrelation.length > 0 && (
-              <div className="rounded-2xl border border-border bg-white px-5 py-5 sm:px-6">
-                <div className="mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Mood Impact
-                    </p>
-                    <span className="group relative">
-                      <Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
-                      <span className="invisible group-hover:visible absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 rounded-lg bg-foreground px-3 py-2 text-[11px] text-background leading-snug z-10">
-                        Avg P&L on days you tagged each mood this week.
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <CorrelationBars
-                  data={debrief.moodCorrelation}
-                  currency={currency}
-                />
-              </div>
-            )}
+              <DisciplineDonutCard
+                data={debrief.disciplineScatter}
+                avgScore={debrief.avgDisciplineScore}
+                currency={currency}
+              />
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════
+              CARD 5 — Mistake Frequency
+             ════════════════════════════════════════════════════════ */}
+          <div className="rounded-2xl border border-border bg-white px-6 py-5 sm:px-8">
+            <div className="flex items-center gap-1.5 mb-4">
+              <p className="text-xs font-medium text-muted-foreground">
+                Mistakes
+              </p>
+              <span className="group relative">
+                <Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                <span className="invisible group-hover:visible absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 rounded-lg bg-foreground px-3 py-2 text-[11px] text-background leading-snug z-10">
+                  How often each mistake was tagged this period.
+                </span>
+              </span>
+            </div>
+            <MistakeFrequencyCard
+              data={debrief.mistakeFrequency}
+              tradingDays={debrief.tradingDays}
+              totalMistakeDays={debrief.totalMistakeDays}
+            />
           </div>
 
         </>
@@ -635,54 +619,235 @@ function PnlTrendChart({
   );
 }
 
-/* ─── Correlation Bars (tag → avg P&L) ─── */
+/* ─── Discipline Donut Card ─── */
 
-function CorrelationBars({
+type DisciplineBucketInfo = {
+  label: string;
+  range: string;
+  color: string;
+  textClass: string;
+  dotClass: string;
+  count: number;
+  avgPnl: number;
+};
+
+function DisciplineDonutCard({
   data,
+  avgScore,
   currency,
 }: {
-  data: TagPnlCorrelation[];
+  data: DisciplineScatterPoint[];
+  avgScore: number | null;
   currency: string;
 }) {
-  const maxAbs = Math.max(...data.map((d) => Math.abs(d.avgPnl)), 1);
+  const bucketDefs = [
+    { label: "High", range: "4–5", min: 4, max: 5, color: "#34d399", textClass: "text-emerald-600", dotClass: "bg-emerald-400" },
+    { label: "Medium", range: "3", min: 3, max: 3, color: "#eab308", textClass: "text-yellow-600", dotClass: "bg-yellow-500" },
+    { label: "Low", range: "1–2", min: 1, max: 2, color: "#f87171", textClass: "text-red-600", dotClass: "bg-red-400" },
+  ];
+
+  const buckets: DisciplineBucketInfo[] = bucketDefs.map((def) => {
+    const matching = data.filter((d) => d.score >= def.min && d.score <= def.max);
+    const totalPnl = matching.reduce((s, d) => s + d.pnl, 0);
+    return {
+      label: def.label,
+      range: def.range,
+      color: def.color,
+      textClass: def.textClass,
+      dotClass: def.dotClass,
+      count: matching.length,
+      avgPnl: matching.length > 0 ? totalPnl / matching.length : 0,
+    };
+  });
+
+  const activeBuckets = buckets.filter((b) => b.count > 0);
+  const totalDays = data.length;
+
+  const R = 46;
+  const CX = 56;
+  const CY = 56;
+  const STROKE = 10;
+  const circumference = 2 * Math.PI * R;
+  const GAP = totalDays > 0 && activeBuckets.length > 1 ? 4 : 0;
+  const totalGap = GAP * activeBuckets.length;
+  const usable = circumference - totalGap;
+
+  let offset = -circumference / 4;
+  const arcs = activeBuckets.map((bucket) => {
+    const frac = totalDays > 0 ? bucket.count / totalDays : 0;
+    const arcLen = frac * usable;
+    const arc = {
+      ...bucket,
+      dasharray: `${arcLen} ${circumference - arcLen}`,
+      dashoffset: -offset,
+      arcLen,
+    };
+    offset += arcLen + GAP;
+    return arc;
+  });
+
+  const scoreColor =
+    avgScore != null
+      ? avgScore >= 4 ? "text-emerald-600" : avgScore >= 3 ? "text-foreground" : "text-red-600"
+      : "text-foreground";
 
   return (
-    <div className="space-y-2.5">
-      {data.map((item) => {
-        const barPct = Math.max(6, (Math.abs(item.avgPnl) / maxAbs) * 100);
-        const isPositive = item.avgPnl >= 0;
+    <div className="flex items-center gap-6 sm:gap-8">
+      {/* Donut ring */}
+      <div className="relative shrink-0" style={{ width: 112, height: 112 }}>
+        <svg viewBox="0 0 112 112" className="w-full h-full donut-ring">
+          {/* Background track */}
+          <circle
+            cx={CX}
+            cy={CY}
+            r={R}
+            fill="none"
+            stroke="#f1f5f9"
+            strokeWidth={STROKE}
+          />
+          {/* Colored arcs */}
+          {arcs.map((arc, i) => (
+            <circle
+              key={arc.label}
+              cx={CX}
+              cy={CY}
+              r={R}
+              fill="none"
+              stroke={arc.color}
+              strokeWidth={STROKE}
+              strokeLinecap="round"
+              strokeDasharray={arc.dasharray}
+              strokeDashoffset={arc.dashoffset}
+              className="donut-arc"
+              style={{ animationDelay: `${i * 120}ms` }}
+            />
+          ))}
+        </svg>
+        {/* Center text */}
+        {avgScore != null && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={`text-2xl font-bold tabular-nums leading-none ${scoreColor}`}>
+              {avgScore.toFixed(1)}
+            </span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">/5</span>
+          </div>
+        )}
+      </div>
 
-        return (
-          <div key={item.label}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[13px] font-medium text-foreground">
-                {item.label}
-              </span>
+      {/* Stat rows */}
+      <div className="flex-1 space-y-3 min-w-0">
+        {buckets.map((bucket, i) => (
+          <div
+            key={bucket.label}
+            className={`donut-stat-row flex items-center gap-2.5 ${bucket.count === 0 ? "opacity-30" : ""}`}
+            style={{ animationDelay: `${200 + i * 80}ms` }}
+          >
+            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${bucket.dotClass}`} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-1">
+                <span className="text-[13px] font-medium text-foreground">
+                  {bucket.label}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  ({bucket.range})
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {bucket.count > 0
+                  ? `${bucket.count} day${bucket.count !== 1 ? "s" : ""}`
+                  : "No data"}
+              </p>
+            </div>
+            {bucket.count > 0 && (
               <span
-                className={`text-[11px] font-semibold tabular-nums ${
-                  isPositive ? "text-emerald-600" : "text-red-600"
+                className={`text-xs font-semibold tabular-nums shrink-0 ${
+                  bucket.avgPnl >= 0 ? "text-emerald-600" : "text-red-600"
                 }`}
               >
-                {formatPnlShort(Math.round(item.avgPnl), currency)}
-                <span className="text-muted-foreground font-normal ml-0.5">
-                  avg
-                </span>
+                {formatPnlShort(Math.round(bucket.avgPnl), currency)} avg
               </span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-muted/50">
-              <div
-                className={`h-2 rounded-full ${
-                  isPositive ? "bg-emerald-400" : "bg-red-400"
-                }`}
-                style={{ width: `${barPct}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              {item.count} day{item.count !== 1 ? "s" : ""}
-            </p>
+            )}
           </div>
-        );
-      })}
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Mistake Frequency Card ─── */
+
+function MistakeFrequencyCard({
+  data,
+  tradingDays,
+  totalMistakeDays,
+}: {
+  data: MistakeFrequency[];
+  tradingDays: number;
+  totalMistakeDays: number;
+}) {
+  const hasMistakes = data.some((d) => d.count > 0);
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
+
+  if (!hasMistakes) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 gap-2">
+        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-50 border border-emerald-200">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M6 10l3 3 5-6"
+              stroke="#059669"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mistake-check"
+            />
+          </svg>
+        </div>
+        <p className="text-sm font-medium text-emerald-700">
+          No mistakes logged
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          Clean {tradingDays > 0 ? `${tradingDays}-day` : ""} stretch — keep it up
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {data.map((item, i) => {
+          if (item.count === 0) return null;
+          const barPct = Math.max(8, (item.count / maxCount) * 100);
+
+          return (
+            <div key={item.tag} className="mistake-row" style={{ animationDelay: `${i * 60}ms` }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[13px] font-medium text-foreground">
+                  {item.label}
+                </span>
+                <span className="text-xs font-semibold tabular-nums text-red-600">
+                  {item.count} day{item.count !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-red-50">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-red-400 to-red-500 mistake-bar"
+                  style={{
+                    width: `${barPct}%`,
+                    animationDelay: `${i * 60 + 100}ms`,
+                  }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {totalMistakeDays > 0 && tradingDays > 0 && (
+        <p className="text-[11px] text-muted-foreground text-center pt-1 border-t border-border/50">
+          Mistakes on {totalMistakeDays} of {tradingDays} trading day{tradingDays !== 1 ? "s" : ""}
+        </p>
+      )}
     </div>
   );
 }

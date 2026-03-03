@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { CalendarDays, CalendarRange, CalendarCheck } from "lucide-react";
 import {
   DEMO_TRADES,
   DEMO_MONTHS,
@@ -32,10 +31,6 @@ function formatCompact(value: number): string {
 
 const HIGHLIGHT = DEMO_TRADES.find((t) => t.trade_date === "2026-01-15")!;
 const H_FINAL = getFinalResult(HIGHLIGHT);
-const H_ROI =
-  HIGHLIGHT.capital_deployed != null
-    ? ((H_FINAL / HIGHLIGHT.capital_deployed) * 100).toFixed(2)
-    : null;
 
 /* ─── Month grid builder ──────────────────────────────────── */
 
@@ -78,65 +73,34 @@ function lossBg(v: number, max: number): string {
   return "bg-red-50";
 }
 
-/* ─── DemoLogTrade ───────────────────────────────────────── */
+/* ─── Step 1: DemoEnterPnl ─────────────────────────────────── */
 
-type Field = {
-  label: string;
-  value: string;
-  id: string;
-  subLabel?: string;
-  subValue?: string;
-  subPositive?: boolean;
-};
-
-const FORM_FIELDS: Field[] = [
-  { label: "Date *", value: "15/01/2026", id: "date" },
-  { label: "Number of trades *", value: String(HIGHLIGHT.num_trades), id: "num" },
-  { label: "P&L (₹) *", value: formatINR(HIGHLIGHT.net_pnl), id: "pnl" },
-  {
-    label: "Charges & taxes (₹)",
-    value: formatINR(HIGHLIGHT.charges),
-    id: "charges",
-    subLabel: "Net P&L",
-    subValue: formatCompact(H_FINAL),
-    subPositive: H_FINAL >= 0,
-  },
-  {
-    label: "Capital (₹) deployed for ROI",
-    value: "10,00,000",
-    id: "capital",
-    subLabel: "ROI",
-    subValue: `+${H_ROI}%`,
-    subPositive: true,
-  },
+const PNL_FIELDS = [
+  { label: "Date", value: "15/01/2026", id: "date" },
+  { label: "Number of trades", value: String(HIGHLIGHT.num_trades), id: "num" },
+  { label: "P&L (₹)", value: formatINR(HIGHLIGHT.net_pnl), id: "pnl", positive: HIGHLIGHT.net_pnl >= 0 },
 ];
 
-function DemoLogTrade({ active }: { active: boolean }) {
+function DemoEnterPnl({ active }: { active: boolean }) {
   const [revealed, setRevealed] = useState(0);
 
   useEffect(() => {
-    if (!active) {
-      setRevealed(0);
-      return;
-    }
+    if (!active) { setRevealed(0); return; }
     let count = 0;
     const id = setInterval(() => {
       count++;
       setRevealed(count);
-      if (count >= FORM_FIELDS.length + 1) clearInterval(id);
-    }, 550);
+      if (count >= PNL_FIELDS.length + 1) clearInterval(id);
+    }, 600);
     return () => clearInterval(id);
   }, [active]);
 
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="rounded-xl border border-border bg-background p-6 shadow-xl">
-        <h3 className="text-base font-semibold text-foreground text-center mb-6">
-          Log a trade
-        </h3>
-
-        <div className="space-y-6">
-          {FORM_FIELDS.map((f, i) => (
+        <h3 className="text-base font-semibold text-foreground text-center mb-6">Log trade</h3>
+        <div className="space-y-5">
+          {PNL_FIELDS.map((f, i) => (
             <div
               key={f.id}
               className="space-y-2 transition-all duration-500 ease-out"
@@ -145,36 +109,182 @@ function DemoLogTrade({ active }: { active: boolean }) {
                 transform: `translateY(${revealed > i ? 0 : 16}px)`,
               }}
             >
-              <label className="block text-sm font-medium text-foreground">
-                {f.label}
-              </label>
-              <div className="flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-sm">
-                {f.value}
+              <label className="block text-sm font-medium text-foreground">{f.label}</label>
+              <div className={`flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 text-sm shadow-sm ${
+                f.id === "pnl"
+                  ? f.positive ? "text-emerald-600 font-semibold" : "text-red-600 font-semibold"
+                  : "text-foreground"
+              }`}>
+                {f.id === "pnl" ? `${f.positive ? "+" : "-"}₹${f.value}` : f.value}
               </div>
-              {f.subLabel && (
-                <p
-                  className="text-sm transition-opacity duration-300 delay-200"
-                  style={{ opacity: revealed > i ? 1 : 0 }}
-                >
-                  {f.subLabel}:{" "}
-                  <span
-                    className={`font-medium ${
-                      f.subPositive ? "text-emerald-600" : "text-red-600"
-                    }`}
-                  >
-                    {f.subValue}
-                  </span>
-                </p>
-              )}
             </div>
           ))}
         </div>
 
+        {/* Net result summary */}
         <div
-          className="mt-8 transition-all duration-500 ease-out"
+          className="mt-6 rounded-lg bg-emerald-50/60 border border-emerald-200/60 p-3 text-center transition-all duration-500 ease-out"
           style={{
-            opacity: revealed > FORM_FIELDS.length ? 1 : 0,
-            transform: `translateY(${revealed > FORM_FIELDS.length ? 0 : 16}px)`,
+            opacity: revealed > PNL_FIELDS.length ? 1 : 0,
+            transform: `translateY(${revealed > PNL_FIELDS.length ? 0 : 12}px)`,
+          }}
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">P&L</p>
+          <p className={`text-lg font-bold ${H_FINAL >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {formatCompact(H_FINAL)}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Step 2: DemoDiscipline ──────────────────────────────── */
+
+const SCORE_COLORS: Record<number, { bg: string; ring: string }> = {
+  1: { bg: "bg-red-500", ring: "ring-red-500" },
+  2: { bg: "bg-orange-400", ring: "ring-orange-400" },
+  3: { bg: "bg-yellow-400", ring: "ring-yellow-400" },
+  4: { bg: "bg-emerald-400", ring: "ring-emerald-400" },
+  5: { bg: "bg-emerald-600", ring: "ring-emerald-600" },
+};
+
+const SCORE_LABELS: Record<number, string> = {
+  1: "Broke all my rules",
+  2: "Slipped on a few rules",
+  3: "Mostly stuck to the plan",
+  4: "Followed the plan well",
+  5: "Executed flawlessly",
+};
+
+const DEMO_DISCIPLINE_SCORE = 4;
+
+function DemoDiscipline({ active }: { active: boolean }) {
+  const [phase, setPhase] = useState(0); // 0=hidden, 1=dots visible, 2=score selected
+
+  useEffect(() => {
+    if (!active) { setPhase(0); return; }
+    const t1 = setTimeout(() => setPhase(1), 200);
+    const t2 = setTimeout(() => setPhase(2), 1200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [active]);
+
+  return (
+    <div className="w-full max-w-sm mx-auto">
+      <div className="rounded-xl border border-border bg-background p-6 shadow-xl">
+        <h3 className="text-base font-semibold text-foreground text-center mb-2">Log trade</h3>
+        <p className="text-xs text-muted-foreground text-center mb-8">Step 2 of 3</p>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-foreground text-center">Discipline Score</label>
+          <div className="flex items-center justify-center gap-3">
+            {([1, 2, 3, 4, 5] as const).map((score, i) => {
+              const filled = phase >= 2 && score <= DEMO_DISCIPLINE_SCORE;
+              const colors = SCORE_COLORS[phase >= 2 ? DEMO_DISCIPLINE_SCORE : score];
+              return (
+                <div
+                  key={score}
+                  className={`relative h-9 w-9 rounded-full border-2 transition-all duration-300 ${
+                    filled
+                      ? `${colors.bg} border-transparent`
+                      : phase >= 1
+                        ? "border-border bg-transparent"
+                        : "border-transparent bg-transparent"
+                  }`}
+                  style={{
+                    opacity: phase >= 1 ? 1 : 0,
+                    transform: phase >= 1 ? "scale(1)" : "scale(0.5)",
+                    transitionDelay: phase === 1 ? `${i * 80}ms` : phase === 2 ? `${i * 60}ms` : "0ms",
+                  }}
+                >
+                  <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
+                    filled ? "text-white" : "text-muted-foreground"
+                  }`}>
+                    {score}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p
+            className="text-[11px] text-muted-foreground text-center transition-all duration-400"
+            style={{
+              opacity: phase >= 2 ? 1 : phase >= 1 ? 0.6 : 0,
+              transform: phase >= 2 ? "translateY(0)" : "translateY(4px)",
+            }}
+          >
+            {phase >= 2 ? SCORE_LABELS[DEMO_DISCIPLINE_SCORE] : "How disciplined were you today?"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Step 3: DemoMistakes ────────────────────────────────── */
+
+const DEMO_MISTAKE_TAGS = [
+  { value: "overtraded", label: "Overtraded" },
+  { value: "fomo_entry", label: "FOMO Entry" },
+  { value: "no_stop_loss", label: "Didn't Respect SL" },
+];
+
+const DEMO_SELECTED_MISTAKE = "fomo_entry";
+
+function DemoMistakes({ active }: { active: boolean }) {
+  const [phase, setPhase] = useState(0); // 0=hidden, 1=pills visible, 2=one selected, 3=save visible
+
+  useEffect(() => {
+    if (!active) { setPhase(0); return; }
+    const t1 = setTimeout(() => setPhase(1), 200);
+    const t2 = setTimeout(() => setPhase(2), 1400);
+    const t3 = setTimeout(() => setPhase(3), 2200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [active]);
+
+  return (
+    <div className="w-full max-w-sm mx-auto">
+      <div className="rounded-xl border border-border bg-background p-6 shadow-xl">
+        <h3 className="text-base font-semibold text-foreground text-center mb-2">Log trade</h3>
+        <p className="text-xs text-muted-foreground text-center mb-8">Step 3 of 3</p>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-foreground text-center">Any mistakes?</label>
+          <div className="flex flex-wrap justify-center gap-2">
+            {DEMO_MISTAKE_TAGS.map((tag, i) => {
+              const selected = phase >= 2 && tag.value === DEMO_SELECTED_MISTAKE;
+              return (
+                <span
+                  key={tag.value}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-300 ${
+                    selected
+                      ? "border-red-500 bg-red-50 text-red-700"
+                      : "border-border bg-muted/30 text-muted-foreground"
+                  }`}
+                  style={{
+                    opacity: phase >= 1 ? 1 : 0,
+                    transform: phase >= 1 ? "translateY(0) scale(1)" : "translateY(12px) scale(0.9)",
+                    transitionDelay: phase === 1 ? `${i * 100}ms` : phase === 2 ? `${i * 50}ms` : "0ms",
+                  }}
+                >
+                  {tag.label}
+                </span>
+              );
+            })}
+          </div>
+          <p
+            className="text-[11px] text-muted-foreground text-center transition-all duration-400"
+            style={{ opacity: phase >= 1 ? 0.6 : 0 }}
+          >
+            {phase >= 2 ? "1 mistake tagged" : "Tap any that apply"}
+          </p>
+        </div>
+
+        <div
+          className="mt-6 transition-all duration-500 ease-out"
+          style={{
+            opacity: phase >= 3 ? 1 : 0,
+            transform: `translateY(${phase >= 3 ? 0 : 12}px)`,
           }}
         >
           <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
@@ -653,122 +763,53 @@ export function DemoWeeklyBreakdown() {
   );
 }
 
-/* ─── DemoCreateCards ───────────────────────────────────── */
-
-const JAN_PNL = DEMO_TRADES.reduce((s, t) => s + getFinalResult(t), 0);
-
-const JAN_WEEK_PNL = DEMO_TRADES
-  .filter((t) => t.trade_date >= "2026-01-26" && t.trade_date <= "2026-02-01")
-  .reduce((s, t) => s + getFinalResult(t), 0);
-
-const CARD_OPTIONS = [
-  { type: "Daily", pnl: formatCompact(getFinalResult(DEMO_TRADES[DEMO_TRADES.length - 1])), date: "31 Jan 2026", Icon: CalendarDays, iconBg: "bg-blue-50 text-blue-600" },
-  { type: "Weekly", pnl: formatCompact(JAN_WEEK_PNL), date: "26 Jan – 1 Feb", Icon: CalendarRange, iconBg: "bg-purple-50 text-purple-600" },
-  { type: "Monthly", pnl: formatCompact(JAN_PNL), date: "Jan 2026", Icon: CalendarCheck, iconBg: "bg-amber-50 text-amber-600" },
-];
-
-function DemoCreateCards({ active }: { active: boolean }) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (!active) {
-      setShow(false);
-      return;
-    }
-    const id = setTimeout(() => setShow(true), 150);
-    return () => clearTimeout(id);
-  }, [active]);
-
-  return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 shadow-xl">
-        <h3 className="text-base font-semibold text-foreground text-center mb-6">
-          Generate your card
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {CARD_OPTIONS.map((opt, i) => (
-            <div
-              key={opt.type}
-              className={`rounded-xl border border-border bg-white p-4 transition-all duration-500 flex items-center gap-3 sm:block ${
-                show ? "opacity-100 scale-100" : "opacity-0 scale-95"
-              }`}
-              style={{
-                transitionDelay: show ? `${i * 120}ms` : "0ms",
-              }}
-            >
-              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${opt.iconBg} sm:mb-2`}>
-                <opt.Icon className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {opt.type}
-                </p>
-                <p className="mt-0.5 text-sm font-bold text-emerald-600">{opt.pnl}</p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{opt.date}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div
-          className={`mt-6 transition-all duration-500 ${show ? "opacity-100" : "opacity-0"}`}
-          style={{ transitionDelay: show ? "400ms" : "0ms" }}
-        >
-          <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
-            <span className="relative z-[1]">Generate Daily Card</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main: DemoSection (2 steps: Log Trade + Create Cards) */
+/* ─── Main: DemoSection (3 steps) ─────────────────────────── */
 
 const STEPS = [
-  { id: 0 as const, label: "Log a Trade" },
-  { id: 1 as const, label: "Create Cards" },
-];
+  { id: 0, label: "Enter P&L" },
+  { id: 1, label: "Rate Discipline" },
+  { id: 2, label: "Tag Mistakes" },
+] as const;
 
-const AUTO_MS = 6000;
+type StepId = (typeof STEPS)[number]["id"];
+
+const STEP_MS = [5000, 5000, 6000];
 
 export function DemoSection() {
-  const [step, setStep] = useState<0 | 1>(0);
+  const [step, setStep] = useState<StepId>(0);
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setInterval>>();
+  const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) setVisible(true);
-      },
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
       { threshold: 0.15 },
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  const startTimer = useCallback(() => {
-    clearInterval(timer.current);
-    timer.current = setInterval(
-      () => setStep((p) => (p === 0 ? 1 : 0)),
-      AUTO_MS,
-    );
+  const scheduleNext = useCallback((current: StepId) => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const next = ((current + 1) % STEPS.length) as StepId;
+      setStep(next);
+    }, STEP_MS[current]);
   }, []);
 
   useEffect(() => {
     if (!visible) return;
-    startTimer();
-    return () => clearInterval(timer.current);
-  }, [visible, startTimer]);
+    scheduleNext(step);
+    return () => clearTimeout(timer.current);
+  }, [visible, step, scheduleNext]);
 
   useEffect(() => {
     const handleHashChange = () => {
       if (typeof window !== "undefined" && window.location.hash === "#demo") {
         setStep(0);
-        startTimer();
       }
     };
     if (typeof window !== "undefined" && window.location.hash === "#demo") {
@@ -776,38 +817,57 @@ export function DemoSection() {
     }
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [startTimer]);
+  }, []);
 
-  function pickStep(s: 0 | 1) {
+  function pickStep(s: StepId) {
     setStep(s);
-    startTimer();
   }
+
+  const slideOffset = (target: StepId) => {
+    if (step === target) return 0;
+    return target > step ? 30 : -30;
+  };
 
   return (
     <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-32 scroll-mt-24">
       <div className="mx-auto max-w-5xl px-6">
+        {/* Heading */}
+        <div
+          className={`text-center mb-10 transition-all duration-700 ${
+            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+        >
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            Log a trade in{" "}
+            <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+              60 seconds
+            </span>
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Enter your P&amp;L, rate your discipline, tag any mistakes &mdash; done.
+          </p>
+        </div>
+
         {/* Step switcher pills */}
         <div
           className={`flex justify-center mb-6 transition-all duration-700 delay-150 ${
-            visible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-8"
+            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="inline-flex items-center rounded-full border border-border bg-muted/50 p-1">
+          <div className="inline-flex items-center rounded-full border border-border bg-muted/50 p-1 gap-0.5">
             {STEPS.map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => pickStep(s.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-5 py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-4 py-2 text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                   step === s.id
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-300 shrink-0 ${
+                  className={`flex h-4.5 w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-bold transition-colors duration-300 shrink-0 ${
                     step === s.id
                       ? "bg-foreground text-background"
                       : "bg-muted-foreground/20 text-muted-foreground"
@@ -815,7 +875,7 @@ export function DemoSection() {
                 >
                   {s.id + 1}
                 </span>
-                <span className="whitespace-nowrap">{s.label}</span>
+                <span className="whitespace-nowrap hidden sm:inline">{s.label}</span>
               </button>
             ))}
           </div>
@@ -824,32 +884,44 @@ export function DemoSection() {
         {/* Demo content area */}
         <div
           className={`relative transition-all duration-700 delay-300 ${
-            visible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-8"
+            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="relative h-[560px] sm:h-[520px]">
+          <div className="relative h-[440px] sm:h-[400px]">
+            {/* Step 1: Enter P&L */}
             <div
               className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
               style={{
                 opacity: step === 0 ? 1 : 0,
-                transform: `translateX(${step === 0 ? 0 : -30}px)`,
+                transform: `translateX(${slideOffset(0)}px)`,
                 pointerEvents: step === 0 ? "auto" : "none",
               }}
             >
-              <DemoLogTrade active={step === 0 && visible} />
+              <DemoEnterPnl active={step === 0 && visible} />
             </div>
 
+            {/* Step 2: Rate Discipline */}
             <div
               className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
               style={{
                 opacity: step === 1 ? 1 : 0,
-                transform: `translateX(${step === 1 ? 0 : 30}px)`,
+                transform: `translateX(${slideOffset(1)}px)`,
                 pointerEvents: step === 1 ? "auto" : "none",
               }}
             >
-              <DemoCreateCards active={step === 1 && visible} />
+              <DemoDiscipline active={step === 1 && visible} />
+            </div>
+
+            {/* Step 3: Tag Mistakes */}
+            <div
+              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
+              style={{
+                opacity: step === 2 ? 1 : 0,
+                transform: `translateX(${slideOffset(2)}px)`,
+                pointerEvents: step === 2 ? "auto" : "none",
+              }}
+            >
+              <DemoMistakes active={step === 2 && visible} />
             </div>
           </div>
         </div>

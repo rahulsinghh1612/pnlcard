@@ -374,3 +374,52 @@
 .animate-pnl-pulse {
   animation: pnl-pulse 2.5s ease-in-out infinite;
 }
+
+/* Discipline donut ring animation */
+@keyframes donut-draw {
+  from { stroke-dashoffset: 289; opacity: 0; }
+  to { opacity: 1; }
+}
+.donut-arc {
+  animation: donut-draw 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+.donut-ring {
+  transform: rotate(0deg);
+}
+
+@keyframes donut-stat-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.donut-stat-row {
+  opacity: 0;
+  animation: donut-stat-in 0.35s ease-out forwards;
+}
+
+/* Mistake frequency animations */
+@keyframes mistake-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mistake-row {
+  opacity: 0;
+  animation: mistake-row-in 0.3s ease-out forwards;
+}
+
+@keyframes mistake-bar-grow {
+  from { width: 0; }
+}
+.mistake-bar {
+  animation: mistake-bar-grow 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 20; }
+  to { stroke-dashoffset: 0; }
+}
+.mistake-check {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: check-draw 0.5s ease-out 0.2s forwards;
+}

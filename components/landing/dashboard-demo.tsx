@@ -79,7 +79,7 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
               className="btn-gradient-flow group relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm"
             >
               <Plus className="h-3.5 w-3.5 transition-transform duration-200 group-hover:rotate-90" />
-              Log a trade
+              Log trade
             </button>
           </div>
 
@@ -97,7 +97,7 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
                 className="mt-4 btn-gradient-flow inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Log a trade
+                Log trade
               </button>
             </Card>
           ) : (
@@ -185,7 +185,7 @@ export function DashboardDemo({ step }: DashboardDemoProps) {
       {step === 1 && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 rounded-xl p-4">
           <div className="w-full max-w-sm rounded-xl border border-border bg-background shadow-xl p-5">
-            <h3 className="text-sm font-semibold text-foreground text-center mb-4">Log a trade</h3>
+            <h3 className="text-sm font-semibold text-foreground text-center mb-4">Log trade</h3>
             <form className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="demo_date" className="text-xs">Date *</Label>

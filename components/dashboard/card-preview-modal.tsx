@@ -29,7 +29,7 @@ type Trade = {
   capital_deployed: number | null;
   note: string | null;
   execution_tag: string | null;
-  mood_tag: string | null;
+  discipline_score: number | null;
 };
 
 type CardPreviewModalProps = {

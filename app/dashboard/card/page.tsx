@@ -99,7 +99,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
           Generate Card
         </h1>
         <p className="text-muted-foreground">
-          No trade found for {dateParam}. Log a trade for this date first, or
+          No trade found for {dateParam}. Log trade for this date first, or
           choose a date from your recent entries.
         </p>
       </div>

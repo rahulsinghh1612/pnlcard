@@ -1,11 +1,10 @@
 /**
- * Weekly Debrief analysis engine.
+ * Weekly & Monthly Debrief analysis engine.
  *
- * Takes a week's trades (with tags) and produces structured insights:
- * - What went well / what hurt
- * - Execution & mood pattern correlations
+ * Takes a week/month's trades and produces structured insights:
+ * - Discipline score analytics
+ * - Mistake cost analysis
  * - Scoreboard (P&L, win rate, streak, best/worst day)
- * - A single "constraint" recommendation for next week
  */
 import {
   format,
@@ -30,7 +29,7 @@ export type TradeForDebrief = {
   num_trades: number;
   capital_deployed: number | null;
   execution_tag: string | null;
-  mood_tag: string | null;
+  discipline_score: number | null;
   note: string | null;
 };
 
@@ -42,28 +41,11 @@ function isWin(t: TradeForDebrief): boolean {
   return getFinalResult(t) > 0;
 }
 
-const EXECUTION_LABELS: Record<string, string> = {
-  followed_plan: "Followed Plan",
+const MISTAKE_LABELS: Record<string, string> = {
   overtraded: "Overtraded",
-  revenge_traded: "Revenge Traded",
   fomo_entry: "FOMO Entry",
-  cut_early: "Cut Early",
-  stayed_out: "Stayed Out",
-  avoided_fomo: "Avoided FOMO",
+  no_stop_loss: "Didn't Respect Stop Loss",
 };
-
-const MOOD_LABELS: Record<string, string> = {
-  calm: "Calm",
-  confident: "Confident",
-  anxious: "Anxious",
-  frustrated: "Frustrated",
-  tired: "Tired",
-};
-
-const POSITIVE_EXECUTION = new Set(["followed_plan", "stayed_out", "avoided_fomo"]);
-const NEGATIVE_EXECUTION = new Set(["overtraded", "revenge_traded", "fomo_entry", "cut_early"]);
-const POSITIVE_MOOD = new Set(["calm", "confident"]);
-const NEGATIVE_MOOD = new Set(["anxious", "frustrated", "tired"]);
 
 export type DebriefInsight = {
   type: "positive" | "negative";
@@ -76,8 +58,8 @@ export type DebriefDay = {
   dayShort: string;
   pnl: number;
   numTrades: number;
-  executionTags: string[];
-  moodTags: string[];
+  mistakeTags: string[];
+  disciplineScore: number | null;
   isWin: boolean;
   isRestDay: boolean;
 };
@@ -88,9 +70,16 @@ export type WeeklyPnlPoint = {
   isCurrent: boolean;
 };
 
-export type TagPnlCorrelation = {
+export type DisciplineScatterPoint = {
+  score: number;
+  pnl: number;
+  date: string;
+  dayLabel: string;
+};
+
+export type MistakeFrequency = {
   label: string;
-  avgPnl: number;
+  tag: string;
   count: number;
 };
 
@@ -121,21 +110,15 @@ export type WeeklyDebrief = {
   whatWentWell: DebriefInsight[];
   whatHurt: DebriefInsight[];
 
-  // Tag frequency
-  topExecutionTag: { tag: string; label: string; count: number } | null;
-  topMoodTag: { tag: string; label: string; count: number } | null;
-
-  // Best combo (execution + mood → avg P&L)
-  bestCombo: { execution: string; mood: string; avgPnl: number; count: number } | null;
-  worstCombo: { execution: string; mood: string; avgPnl: number; count: number } | null;
-
   // Single constraint for next week
   constraint: string;
 
   // Analytics
   weeklyPnlTrend: WeeklyPnlPoint[];
-  moodCorrelation: TagPnlCorrelation[];
-  executionCorrelation: TagPnlCorrelation[];
+  avgDisciplineScore: number | null;
+  disciplineScatter: DisciplineScatterPoint[];
+  mistakeFrequency: MistakeFrequency[];
+  totalMistakeDays: number;
 
   hasEnoughData: boolean;
 };
@@ -174,12 +157,41 @@ export function getCurrentWeekMonday(): string {
  */
 export function isCurrentWeekComplete(): boolean {
   const now = new Date();
-  return getDay(now) === 0; // Sunday
+  return getDay(now) === 0;
 }
 
 function parseTags(tagStr: string | null): string[] {
   if (!tagStr) return [];
   return tagStr.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function computeDisciplineScatter(trades: TradeForDebrief[]): DisciplineScatterPoint[] {
+  return trades
+    .filter((t) => t.num_trades > 0 && t.discipline_score != null)
+    .map((t) => ({
+      score: t.discipline_score!,
+      pnl: getFinalResult(t),
+      date: t.trade_date,
+      dayLabel: format(parseISO(t.trade_date), "EEE, d MMM"),
+    }));
+}
+
+function computeMistakeFrequency(trades: TradeForDebrief[]): MistakeFrequency[] {
+  const ALL_MISTAKES = ["overtraded", "fomo_entry", "no_stop_loss"];
+  const countMap = new Map<string, number>();
+
+  for (const t of trades) {
+    if (t.num_trades === 0) continue;
+    for (const tag of parseTags(t.execution_tag)) {
+      countMap.set(tag, (countMap.get(tag) ?? 0) + 1);
+    }
+  }
+
+  return ALL_MISTAKES.map((tag) => ({
+    label: MISTAKE_LABELS[tag] ?? tag,
+    tag,
+    count: countMap.get(tag) ?? 0,
+  }));
 }
 
 /**
@@ -199,13 +211,12 @@ export function buildWeeklyDebrief(
 
   const weekRange = `${format(start, "d MMM")} – ${format(end, "d MMM yyyy")}`;
 
-  // Build day-by-day breakdown (Mon–Fri only for display, but include Sat/Sun if traded)
   const dayMap = new Map<string, TradeForDebrief>();
   for (const t of weekTrades) {
     dayMap.set(t.trade_date, t);
   }
 
-  const WEEKDAY_SHORTS = ["M", "T", "W", "T", "F", "S", "S"];
+  const WEEKDAY_SHORTS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const days: DebriefDay[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(start);
@@ -220,8 +231,8 @@ export function buildWeeklyDebrief(
       dayShort: WEEKDAY_SHORTS[i],
       pnl: trade ? getFinalResult(trade) : 0,
       numTrades: trade?.num_trades ?? 0,
-      executionTags: trade ? parseTags(trade.execution_tag) : [],
-      moodTags: trade ? parseTags(trade.mood_tag) : [],
+      mistakeTags: trade ? parseTags(trade.execution_tag) : [],
+      disciplineScore: trade?.discipline_score ?? null,
       isWin: trade ? isWin(trade) : false,
       isRestDay,
     });
@@ -273,125 +284,54 @@ export function buildWeeklyDebrief(
     : null;
   const pnlChange = prevWeekPnl != null ? totalPnl - prevWeekPnl : null;
 
-  // Tag frequency analysis
-  const execCounts = new Map<string, number>();
-  const moodCounts = new Map<string, number>();
+  // Mistake frequency
+  const mistakeCounts = new Map<string, number>();
   for (const t of weekTrades) {
     for (const tag of parseTags(t.execution_tag)) {
-      execCounts.set(tag, (execCounts.get(tag) ?? 0) + 1);
+      mistakeCounts.set(tag, (mistakeCounts.get(tag) ?? 0) + 1);
     }
-    for (const tag of parseTags(t.mood_tag)) {
-      moodCounts.set(tag, (moodCounts.get(tag) ?? 0) + 1);
-    }
-  }
-
-  const topExecutionTag = execCounts.size > 0
-    ? Array.from(execCounts.entries()).sort((a, b) => b[1] - a[1]).map(([tag, count]) => ({
-        tag, label: EXECUTION_LABELS[tag] ?? tag, count,
-      }))[0]
-    : null;
-
-  const topMoodTag = moodCounts.size > 0
-    ? Array.from(moodCounts.entries()).sort((a, b) => b[1] - a[1]).map(([tag, count]) => ({
-        tag, label: MOOD_LABELS[tag] ?? tag, count,
-      }))[0]
-    : null;
-
-  // Combo analysis: execution × mood → avg P&L
-  const combos = new Map<string, { total: number; count: number }>();
-  for (const t of activeTrades) {
-    const execTags = parseTags(t.execution_tag);
-    const moodTagsList = parseTags(t.mood_tag);
-    if (execTags.length === 0 || moodTagsList.length === 0) continue;
-    for (const exec of execTags) {
-      for (const mood of moodTagsList) {
-        const key = `${exec}|${mood}`;
-        const existing = combos.get(key) ?? { total: 0, count: 0 };
-        existing.total += getFinalResult(t);
-        existing.count += 1;
-        combos.set(key, existing);
-      }
-    }
-  }
-
-  let bestCombo: WeeklyDebrief["bestCombo"] = null;
-  let worstCombo: WeeklyDebrief["worstCombo"] = null;
-  if (combos.size > 0) {
-    const comboArr = Array.from(combos.entries())
-      .filter(([, v]) => v.count >= 1)
-      .map(([key, v]) => {
-        const [exec, mood] = key.split("|");
-        return {
-          execution: EXECUTION_LABELS[exec] ?? exec,
-          mood: MOOD_LABELS[mood] ?? mood,
-          avgPnl: v.total / v.count,
-          count: v.count,
-        };
-      })
-      .sort((a, b) => b.avgPnl - a.avgPnl);
-    if (comboArr.length > 0) bestCombo = comboArr[0];
-    if (comboArr.length > 1) worstCombo = comboArr[comboArr.length - 1];
   }
 
   // Generate insights
   const whatWentWell: DebriefInsight[] = [];
   const whatHurt: DebriefInsight[] = [];
 
-  // Win rate insight
   if (winRate != null && winRate >= 60) {
     whatWentWell.push({ type: "positive", text: `${winRate}% win rate — strong week` });
   } else if (winRate != null && winRate < 40 && wins + losses >= 3) {
     whatHurt.push({ type: "negative", text: `${winRate}% win rate — tough week` });
   }
 
-  // Execution tag insights
-  const followedPlanCount = execCounts.get("followed_plan") ?? 0;
-  if (followedPlanCount >= 3) {
-    whatWentWell.push({ type: "positive", text: `Followed your plan ${followedPlanCount} out of ${tradingDays} days` });
+  // Discipline insights
+  const scoredTrades = activeTrades.filter((t) => t.discipline_score != null);
+  if (scoredTrades.length > 0) {
+    const avgScore = scoredTrades.reduce((s, t) => s + t.discipline_score!, 0) / scoredTrades.length;
+    if (avgScore >= 4) {
+      whatWentWell.push({ type: "positive", text: `Avg discipline ${avgScore.toFixed(1)}/5 — very disciplined` });
+    } else if (avgScore <= 2) {
+      whatHurt.push({ type: "negative", text: `Avg discipline ${avgScore.toFixed(1)}/5 — needs improvement` });
+    }
   }
 
-  const overtradedCount = execCounts.get("overtraded") ?? 0;
+  // Mistake insights
+  const overtradedCount = mistakeCounts.get("overtraded") ?? 0;
   if (overtradedCount >= 2) {
     whatHurt.push({ type: "negative", text: `Overtraded on ${overtradedCount} days` });
   }
 
-  const revengeCount = execCounts.get("revenge_traded") ?? 0;
-  if (revengeCount >= 1) {
-    whatHurt.push({ type: "negative", text: `Revenge traded on ${revengeCount} day${revengeCount > 1 ? "s" : ""}` });
-  }
-
-  const fomoCount = execCounts.get("fomo_entry") ?? 0;
+  const fomoCount = mistakeCounts.get("fomo_entry") ?? 0;
   if (fomoCount >= 1) {
     whatHurt.push({ type: "negative", text: `FOMO entries on ${fomoCount} day${fomoCount > 1 ? "s" : ""}` });
   }
 
-  // Mood insights
-  const calmCount = moodCounts.get("calm") ?? 0;
-  const confidentCount = moodCounts.get("confident") ?? 0;
-  if (calmCount + confidentCount >= 3) {
-    whatWentWell.push({ type: "positive", text: `Stayed calm/confident ${calmCount + confidentCount} days` });
+  const noStopCount = mistakeCounts.get("no_stop_loss") ?? 0;
+  if (noStopCount >= 1) {
+    whatHurt.push({ type: "negative", text: `Didn't respect stop loss on ${noStopCount} day${noStopCount > 1 ? "s" : ""}` });
   }
 
-  const anxiousCount = moodCounts.get("anxious") ?? 0;
-  const frustratedCount = moodCounts.get("frustrated") ?? 0;
-  if (anxiousCount + frustratedCount >= 2) {
-    whatHurt.push({ type: "negative", text: `Felt anxious or frustrated ${anxiousCount + frustratedCount} days` });
-  }
-
-  // Best combo insight
-  if (bestCombo && bestCombo.avgPnl > 0 && bestCombo.count >= 2) {
-    whatWentWell.push({
-      type: "positive",
-      text: `${bestCombo.execution} + ${bestCombo.mood} = profitable (${bestCombo.count} days)`,
-    });
-  }
-
-  // Worst combo insight
-  if (worstCombo && worstCombo.avgPnl < 0 && worstCombo.count >= 2) {
-    whatHurt.push({
-      type: "negative",
-      text: `${worstCombo.execution} + ${worstCombo.mood} = losses (${worstCombo.count} days)`,
-    });
+  const totalMistakes = overtradedCount + fomoCount + noStopCount;
+  if (totalMistakes === 0 && tradingDays >= 3) {
+    whatWentWell.push({ type: "positive", text: "Zero mistakes logged — clean week" });
   }
 
   // Rest day insight
@@ -399,30 +339,30 @@ export function buildWeeklyDebrief(
     whatWentWell.push({ type: "positive", text: `Took ${restDays} rest day${restDays > 1 ? "s" : ""} — discipline` });
   }
 
-  // Previous week comparison
   if (pnlChange != null && pnlChange > 0) {
     whatWentWell.push({ type: "positive", text: "Improved over last week" });
   }
 
-  // Generate constraint (single rule for next week)
+  // Generate constraint
   let constraint = "Keep logging every day — consistency is the edge.";
-  if (revengeCount >= 1) {
-    constraint = "No revenge trades. Walk away after a loss.";
+  if (noStopCount >= 1) {
+    constraint = "Always respect your stop loss. No exceptions.";
   } else if (overtradedCount >= 2) {
     constraint = "Set a max trade limit before market open.";
   } else if (fomoCount >= 1) {
     constraint = "Only take setups from your watchlist. No chasing.";
-  } else if (anxiousCount + frustratedCount >= 2) {
-    constraint = "If you feel anxious, reduce position size by 50%.";
   } else if (winRate != null && winRate < 40 && wins + losses >= 3) {
     constraint = "Focus on fewer, higher-conviction trades.";
-  } else if (followedPlanCount >= 3 && winRate != null && winRate >= 60) {
-    constraint = "You're in a groove. Don't change anything — repeat.";
+  } else if (scoredTrades.length > 0) {
+    const avgScore = scoredTrades.reduce((s, t) => s + t.discipline_score!, 0) / scoredTrades.length;
+    if (avgScore >= 4 && winRate != null && winRate >= 60) {
+      constraint = "You're in a groove. Don't change anything — repeat.";
+    }
   }
 
   const hasEnoughData = weekTrades.length >= 3;
 
-  // ── Analytics: Weekly P&L trend (last 6 weeks including current) ──
+  // Weekly P&L trend (last 6 weeks including current)
   const weeklyPnlTrend: WeeklyPnlPoint[] = [];
   for (let w = 5; w >= 0; w--) {
     const wMonday = subWeeks(start, w);
@@ -433,49 +373,23 @@ export function buildWeeklyDebrief(
     });
     const wPnl = wTrades.reduce((s, t) => s + getFinalResult(t), 0);
     weeklyPnlTrend.push({
-      weekLabel: format(wMonday, "d MMM"),
+      weekLabel: `${format(wMonday, "d")}–${format(wSunday, "d MMM")}`,
       pnl: wPnl,
       isCurrent: w === 0,
     });
   }
 
-  // ── Analytics: Mood → avg P&L (this week only) ──
-  const moodPnlMap = new Map<string, { total: number; count: number }>();
-  for (const t of weekTrades) {
-    if (t.num_trades === 0) continue;
-    for (const tag of parseTags(t.mood_tag)) {
-      const existing = moodPnlMap.get(tag) ?? { total: 0, count: 0 };
-      existing.total += getFinalResult(t);
-      existing.count += 1;
-      moodPnlMap.set(tag, existing);
-    }
-  }
-  const moodCorrelation: TagPnlCorrelation[] = Array.from(moodPnlMap.entries())
-    .map(([tag, v]) => ({
-      label: MOOD_LABELS[tag] ?? tag,
-      avgPnl: v.total / v.count,
-      count: v.count,
-    }))
-    .sort((a, b) => b.avgPnl - a.avgPnl);
+  // Discipline analytics
+  const avgDisciplineScore =
+    scoredTrades.length > 0
+      ? scoredTrades.reduce((s, t) => s + t.discipline_score!, 0) / scoredTrades.length
+      : null;
 
-  // ── Analytics: Execution → avg P&L (this week only) ──
-  const execPnlMap = new Map<string, { total: number; count: number }>();
-  for (const t of weekTrades) {
-    if (t.num_trades === 0) continue;
-    for (const tag of parseTags(t.execution_tag)) {
-      const existing = execPnlMap.get(tag) ?? { total: 0, count: 0 };
-      existing.total += getFinalResult(t);
-      existing.count += 1;
-      execPnlMap.set(tag, existing);
-    }
-  }
-  const executionCorrelation: TagPnlCorrelation[] = Array.from(execPnlMap.entries())
-    .map(([tag, v]) => ({
-      label: EXECUTION_LABELS[tag] ?? tag,
-      avgPnl: v.total / v.count,
-      count: v.count,
-    }))
-    .sort((a, b) => b.avgPnl - a.avgPnl);
+  const disciplineScatter = computeDisciplineScatter(weekTrades);
+  const mistakeFrequency = computeMistakeFrequency(weekTrades);
+  const totalMistakeDays = weekTrades.filter(
+    (t) => t.num_trades > 0 && parseTags(t.execution_tag).length > 0,
+  ).length;
 
   return {
     weekRange,
@@ -497,14 +411,12 @@ export function buildWeeklyDebrief(
     pnlChange,
     whatWentWell,
     whatHurt,
-    topExecutionTag,
-    topMoodTag,
-    bestCombo,
-    worstCombo,
     constraint,
     weeklyPnlTrend,
-    moodCorrelation,
-    executionCorrelation,
+    avgDisciplineScore,
+    disciplineScatter,
+    mistakeFrequency,
+    totalMistakeDays,
     hasEnoughData,
   };
 }
@@ -569,19 +481,15 @@ export type MonthlyDebrief = {
   whatWentWell: DebriefInsight[];
   whatHurt: DebriefInsight[];
 
-  // Tag frequency
-  topExecutionTag: { tag: string; label: string; count: number } | null;
-  topMoodTag: { tag: string; label: string; count: number } | null;
-  bestCombo: { execution: string; mood: string; avgPnl: number; count: number } | null;
-  worstCombo: { execution: string; mood: string; avgPnl: number; count: number } | null;
-
   // Theme for next month
   theme: string;
 
   // Analytics
   monthlyPnlTrend: MonthlyPnlPoint[];
-  moodCorrelation: TagPnlCorrelation[];
-  executionCorrelation: TagPnlCorrelation[];
+  avgDisciplineScore: number | null;
+  disciplineScatter: DisciplineScatterPoint[];
+  mistakeFrequency: MistakeFrequency[];
+  totalMistakeDays: number;
 
   hasEnoughData: boolean;
 };
@@ -713,64 +621,12 @@ export function buildMonthlyDebrief(
     worstDayOfWeek = sorted[sorted.length - 1];
   }
 
-  // Tag frequency analysis (reuse same logic as weekly)
-  const execCounts = new Map<string, number>();
-  const moodCounts = new Map<string, number>();
+  // Mistake frequency
+  const mistakeCounts = new Map<string, number>();
   for (const t of monthTrades) {
     for (const tag of parseTags(t.execution_tag)) {
-      execCounts.set(tag, (execCounts.get(tag) ?? 0) + 1);
+      mistakeCounts.set(tag, (mistakeCounts.get(tag) ?? 0) + 1);
     }
-    for (const tag of parseTags(t.mood_tag)) {
-      moodCounts.set(tag, (moodCounts.get(tag) ?? 0) + 1);
-    }
-  }
-
-  const topExecutionTag = execCounts.size > 0
-    ? Array.from(execCounts.entries()).sort((a, b) => b[1] - a[1]).map(([tag, count]) => ({
-        tag, label: EXECUTION_LABELS[tag] ?? tag, count,
-      }))[0]
-    : null;
-
-  const topMoodTag = moodCounts.size > 0
-    ? Array.from(moodCounts.entries()).sort((a, b) => b[1] - a[1]).map(([tag, count]) => ({
-        tag, label: MOOD_LABELS[tag] ?? tag, count,
-      }))[0]
-    : null;
-
-  // Combo analysis
-  const combos = new Map<string, { total: number; count: number }>();
-  for (const t of activeTrades) {
-    const execTags = parseTags(t.execution_tag);
-    const moodTagsList = parseTags(t.mood_tag);
-    if (execTags.length === 0 || moodTagsList.length === 0) continue;
-    for (const exec of execTags) {
-      for (const mood of moodTagsList) {
-        const key = `${exec}|${mood}`;
-        const existing = combos.get(key) ?? { total: 0, count: 0 };
-        existing.total += getFinalResult(t);
-        existing.count += 1;
-        combos.set(key, existing);
-      }
-    }
-  }
-
-  let bestCombo: MonthlyDebrief["bestCombo"] = null;
-  let worstCombo: MonthlyDebrief["worstCombo"] = null;
-  if (combos.size > 0) {
-    const comboArr = Array.from(combos.entries())
-      .filter(([, v]) => v.count >= 2)
-      .map(([key, v]) => {
-        const [exec, mood] = key.split("|");
-        return {
-          execution: EXECUTION_LABELS[exec] ?? exec,
-          mood: MOOD_LABELS[mood] ?? mood,
-          avgPnl: v.total / v.count,
-          count: v.count,
-        };
-      })
-      .sort((a, b) => b.avgPnl - a.avgPnl);
-    if (comboArr.length > 0) bestCombo = comboArr[0];
-    if (comboArr.length > 1) worstCombo = comboArr[comboArr.length - 1];
   }
 
   // Generate insights
@@ -783,50 +639,35 @@ export function buildMonthlyDebrief(
     whatHurt.push({ type: "negative", text: `${winRate}% win rate — below breakeven` });
   }
 
-  const followedPlanCount = execCounts.get("followed_plan") ?? 0;
-  if (followedPlanCount >= 5) {
-    whatWentWell.push({ type: "positive", text: `Followed your plan ${followedPlanCount} out of ${tradingDays} days` });
+  // Discipline insights
+  const scoredTrades = activeTrades.filter((t) => t.discipline_score != null);
+  if (scoredTrades.length > 0) {
+    const avgScore = scoredTrades.reduce((s, t) => s + t.discipline_score!, 0) / scoredTrades.length;
+    if (avgScore >= 4) {
+      whatWentWell.push({ type: "positive", text: `Avg discipline ${avgScore.toFixed(1)}/5 — consistently disciplined` });
+    } else if (avgScore <= 2) {
+      whatHurt.push({ type: "negative", text: `Avg discipline ${avgScore.toFixed(1)}/5 — needs improvement` });
+    }
   }
 
-  const overtradedCount = execCounts.get("overtraded") ?? 0;
+  const overtradedCount = mistakeCounts.get("overtraded") ?? 0;
   if (overtradedCount >= 3) {
     whatHurt.push({ type: "negative", text: `Overtraded on ${overtradedCount} days this month` });
   }
 
-  const revengeCount = execCounts.get("revenge_traded") ?? 0;
-  if (revengeCount >= 2) {
-    whatHurt.push({ type: "negative", text: `Revenge traded on ${revengeCount} days` });
-  }
-
-  const fomoCount = execCounts.get("fomo_entry") ?? 0;
+  const fomoCount = mistakeCounts.get("fomo_entry") ?? 0;
   if (fomoCount >= 2) {
     whatHurt.push({ type: "negative", text: `FOMO entries on ${fomoCount} days` });
   }
 
-  const calmCount = moodCounts.get("calm") ?? 0;
-  const confidentCount = moodCounts.get("confident") ?? 0;
-  if (calmCount + confidentCount >= 5) {
-    whatWentWell.push({ type: "positive", text: `Calm/confident mindset ${calmCount + confidentCount} days` });
+  const noStopCount = mistakeCounts.get("no_stop_loss") ?? 0;
+  if (noStopCount >= 2) {
+    whatHurt.push({ type: "negative", text: `Didn't respect stop loss on ${noStopCount} days` });
   }
 
-  const anxiousCount = moodCounts.get("anxious") ?? 0;
-  const frustratedCount = moodCounts.get("frustrated") ?? 0;
-  if (anxiousCount + frustratedCount >= 4) {
-    whatHurt.push({ type: "negative", text: `Felt anxious or frustrated ${anxiousCount + frustratedCount} days` });
-  }
-
-  if (bestCombo && bestCombo.avgPnl > 0 && bestCombo.count >= 3) {
-    whatWentWell.push({
-      type: "positive",
-      text: `${bestCombo.execution} + ${bestCombo.mood} = your winning formula (${bestCombo.count} days)`,
-    });
-  }
-
-  if (worstCombo && worstCombo.avgPnl < 0 && worstCombo.count >= 3) {
-    whatHurt.push({
-      type: "negative",
-      text: `${worstCombo.execution} + ${worstCombo.mood} = consistent losses (${worstCombo.count} days)`,
-    });
+  const totalMistakes = overtradedCount + fomoCount + noStopCount;
+  if (totalMistakes === 0 && tradingDays >= 5) {
+    whatWentWell.push({ type: "positive", text: "Zero mistakes logged — disciplined month" });
   }
 
   if (bestDayOfWeek && worstDayOfWeek && bestDayOfWeek.day !== worstDayOfWeek.day) {
@@ -846,7 +687,7 @@ export function buildMonthlyDebrief(
     whatWentWell.push({ type: "positive", text: `${restDays} rest days — good discipline` });
   }
 
-  // ── Analytics: Monthly P&L trend (last 6 months including current) ──
+  // Monthly P&L trend (last 6 months including current)
   const monthlyPnlTrend: MonthlyPnlPoint[] = [];
   for (let m = 5; m >= 0; m--) {
     const mStart = startOfMonth(subMonths(start, m));
@@ -863,56 +704,33 @@ export function buildMonthlyDebrief(
     });
   }
 
-  // ── Analytics: Mood → avg P&L (this month only) ──
-  const moodPnlMap = new Map<string, { total: number; count: number }>();
-  for (const t of activeTrades) {
-    for (const tag of parseTags(t.mood_tag)) {
-      const existing = moodPnlMap.get(tag) ?? { total: 0, count: 0 };
-      existing.total += getFinalResult(t);
-      existing.count += 1;
-      moodPnlMap.set(tag, existing);
-    }
-  }
-  const monthlyMoodCorrelation: TagPnlCorrelation[] = Array.from(moodPnlMap.entries())
-    .map(([tag, v]) => ({
-      label: MOOD_LABELS[tag] ?? tag,
-      avgPnl: v.total / v.count,
-      count: v.count,
-    }))
-    .sort((a, b) => b.avgPnl - a.avgPnl);
+  // Discipline analytics
+  const avgDisciplineScore =
+    scoredTrades.length > 0
+      ? scoredTrades.reduce((s, t) => s + t.discipline_score!, 0) / scoredTrades.length
+      : null;
 
-  // ── Analytics: Execution → avg P&L (this month only) ──
-  const execPnlMap = new Map<string, { total: number; count: number }>();
-  for (const t of activeTrades) {
-    for (const tag of parseTags(t.execution_tag)) {
-      const existing = execPnlMap.get(tag) ?? { total: 0, count: 0 };
-      existing.total += getFinalResult(t);
-      existing.count += 1;
-      execPnlMap.set(tag, existing);
-    }
-  }
-  const monthlyExecCorrelation: TagPnlCorrelation[] = Array.from(execPnlMap.entries())
-    .map(([tag, v]) => ({
-      label: EXECUTION_LABELS[tag] ?? tag,
-      avgPnl: v.total / v.count,
-      count: v.count,
-    }))
-    .sort((a, b) => b.avgPnl - a.avgPnl);
+  const disciplineScatter = computeDisciplineScatter(monthTrades);
+  const mistakeFrequency = computeMistakeFrequency(monthTrades);
+  const totalMistakeDays = monthTrades.filter(
+    (t) => t.num_trades > 0 && parseTags(t.execution_tag).length > 0,
+  ).length;
 
   // Theme for next month
   let theme = "Stay consistent — keep logging, keep improving.";
-  if (revengeCount >= 2) {
-    theme = "Eliminate revenge trading. One bad trade doesn't need to become two.";
+  if (noStopCount >= 2) {
+    theme = "Respect your stop loss every single trade. No exceptions.";
   } else if (overtradedCount >= 3) {
     theme = "Quality over quantity. Fewer trades, better setups.";
   } else if (fomoCount >= 2) {
     theme = "Patience. Only trade setups you planned before market open.";
-  } else if (anxiousCount + frustratedCount >= 4) {
-    theme = "Protect your mental game. Size down when emotions run high.";
   } else if (winRate != null && winRate < 40 && wins + losses >= 5) {
     theme = "Back to basics. Review your edge and trade only A+ setups.";
-  } else if (followedPlanCount >= 10 && winRate != null && winRate >= 60) {
-    theme = "You're doing great. Don't fix what isn't broken — repeat.";
+  } else if (scoredTrades.length > 0) {
+    const avgScore = scoredTrades.reduce((s, t) => s + t.discipline_score!, 0) / scoredTrades.length;
+    if (avgScore >= 4 && winRate != null && winRate >= 60) {
+      theme = "You're doing great. Don't fix what isn't broken — repeat.";
+    }
   } else if (bestDayOfWeek && worstDayOfWeek && worstDayOfWeek.avgPnl < 0) {
     theme = `Watch your ${worstDayOfWeek.day}s — consider reducing size or sitting out.`;
   }
@@ -941,14 +759,12 @@ export function buildMonthlyDebrief(
     worstDayOfWeek,
     whatWentWell,
     whatHurt,
-    topExecutionTag,
-    topMoodTag,
-    bestCombo,
-    worstCombo,
     theme,
     monthlyPnlTrend,
-    moodCorrelation: monthlyMoodCorrelation,
-    executionCorrelation: monthlyExecCorrelation,
+    avgDisciplineScore,
+    disciplineScatter,
+    mistakeFrequency,
+    totalMistakeDays,
     hasEnoughData: monthTrades.length >= 5,
   };
 }

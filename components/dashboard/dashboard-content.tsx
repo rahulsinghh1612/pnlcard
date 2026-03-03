@@ -8,7 +8,7 @@ import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
 import { TradeDetailModal } from "@/components/dashboard/trade-detail-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, Flame, FileText, ArrowRight } from "lucide-react";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, FileText, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -32,7 +32,7 @@ type Trade = {
   capital_deployed: number | null;
   note: string | null;
   execution_tag: string | null;
-  mood_tag: string | null;
+  discipline_score: number | null;
 };
 
 type DashboardContentProps = {
@@ -282,12 +282,6 @@ export function DashboardContent({
               <h1 className="text-2xl font-semibold text-muted-foreground">
                 Hi, {displayName}
               </h1>
-              {loggingStreak > 0 && (
-                <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                  <Flame className="h-3.5 w-3.5" />
-                  {loggingStreak}-day streak
-                </div>
-              )}
             </div>
             <div className="sm:text-right">
               <p className="text-xs font-medium tracking-wider text-muted-foreground">
@@ -317,47 +311,53 @@ export function DashboardContent({
                   }`}
                 >
                   <Sparkles className="h-3 w-3" />
-                  View Monthly Debrief
+                  View Monthly Review
                 </span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Weekly Debrief prompt */}
+        {/* Weekly Review prompt */}
         {debriefReady && !debriefDismissed && (
           <Link
             href="/dashboard/debrief"
             onClick={() => {
-              setDebriefDismissed(true);
               try {
                 const weekKey = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
                 localStorage.setItem("pnlcard_debrief_dismissed", weekKey);
               } catch {}
             }}
-            className="group flex items-center justify-between rounded-xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:border-primary/20 hover:shadow-sm"
+            className="group relative flex items-center justify-between rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/80 via-white to-white px-4 py-3.5 transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"
           >
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1 rounded-l-2xl bg-amber-400/70" />
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                <FileText className="h-4 w-4" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-amber-200/80">
+                <Sparkles className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground">Your weekly debrief is ready</p>
+                  <p className="text-sm font-semibold text-foreground">Your weekly review is ready</p>
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    New
+                  </span>
                   {!isPremium && (
                     <span className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
                       Pro
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {isPremium
-                    ? "See what went well and what to improve"
-                    : "Unlock insights on your trading patterns"}
+                    ? "Tap to see what worked, what hurt, and your next action"
+                    : "Unlock your weekly insights and trading patterns"}
                 </p>
               </div>
             </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            <div className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1 text-[11px] font-semibold text-background transition-colors group-hover:bg-foreground/90">
+              View
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            </div>
           </Link>
         )}
 
@@ -430,7 +430,7 @@ export function DashboardContent({
                       }}
                     >
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
-                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                           <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         {dailyChips.length > 1 && (
@@ -499,7 +499,7 @@ export function DashboardContent({
                         </span>
                       )}
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
-                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400">
+                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                           <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         {weeklyChips.length > 1 && (
@@ -568,7 +568,7 @@ export function DashboardContent({
                         </span>
                       )}
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
-                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                        <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                           <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         {monthlyChips.length > 1 && (
@@ -632,7 +632,7 @@ export function DashboardContent({
             charges: t.charges,
             num_trades: t.num_trades,
             execution_tag: t.execution_tag,
-            mood_tag: t.mood_tag,
+            discipline_score: t.discipline_score,
           }))}
           currency={currency}
           onEntryClick={(tradeId) => {

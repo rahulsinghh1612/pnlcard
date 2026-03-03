@@ -105,7 +105,7 @@ function ConfirmContent() {
             </div>
           </Link>
           <span className="text-sm font-medium text-foreground/80">
-            Log. Share. Grow.
+            Your Trading Journal
           </span>
         </div>
 

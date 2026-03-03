@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { DashboardNav } from "./dashboard-nav";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
+import { Sparkles } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -39,16 +40,17 @@ export default async function DashboardLayout({
               </div>
             </Link>
             <span className="hidden sm:inline text-sm text-muted-foreground">
-              Log. Share. Grow.
+              Your Trading Journal
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
               href="/dashboard/debrief"
-              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50/80 px-3 py-1.5 text-sm font-semibold text-amber-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100/80 hover:shadow"
             >
-              Debrief
+              <Sparkles className="h-3.5 w-3.5 transition-transform group-hover:rotate-12" />
+              Review
             </Link>
             <DashboardNav displayName={profile?.display_name ?? "User"} plan={(profile?.plan as "free" | "premium") ?? "free"} />
           </div>

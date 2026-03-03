@@ -108,27 +108,61 @@ export function getWeekWinRate(
   return Math.round((wins / total) * 100);
 }
 
+function getPreviousWeekday(d: Date): Date {
+  let prev = subDays(d, 1);
+  while (prev.getDay() === 0 || prev.getDay() === 6) {
+    prev = subDays(prev, 1);
+  }
+  return prev;
+}
+
 /**
  * Logging streak: consecutive weekdays (Mon–Fri) with a logged trade,
  * counting backwards from the most recent trade. Weekends are skipped
  * automatically — they don't break the streak.
+ *
+ * Streak is only "active" if the user has logged today or the previous weekday.
+ * If the most recent log is older than that, the streak is broken (returns 0).
  */
 export function getLoggingStreak(tradeDates: string[]): number {
   if (tradeDates.length === 0) return 0;
 
   const dateSet = new Set(tradeDates);
   const sorted = [...tradeDates].sort().reverse();
+  const mostRecent = sorted[0];
+  const mostRecentDate = parseISO(mostRecent);
+
+  const now = new Date();
+  const todayStr = format(now, "yyyy-MM-dd");
+  const todayDate = parseISO(todayStr);
+  const dayOfWeek = todayDate.getDay();
+
+  // Reference date: if weekend, use last Friday; else use today
+  let referenceDate: Date;
+  if (dayOfWeek === 0) {
+    referenceDate = subDays(todayDate, 2); // Sunday -> Friday
+  } else if (dayOfWeek === 6) {
+    referenceDate = subDays(todayDate, 1); // Saturday -> Friday
+  } else {
+    referenceDate = todayDate;
+  }
+
+  const prevWeekday = getPreviousWeekday(referenceDate);
+  const referenceStr = format(referenceDate, "yyyy-MM-dd");
+  const prevWeekdayStr = format(prevWeekday, "yyyy-MM-dd");
+
+  // Streak is only active if most recent log is within the current window (today or previous weekday)
+  if (mostRecent !== referenceStr && mostRecent !== prevWeekdayStr) {
+    return 0;
+  }
+
   let streak = 1;
-  let current = parseISO(sorted[0]);
+  let current = mostRecentDate;
 
   // Walk backwards through weekdays
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    let prev = subDays(current, 1);
-    // Skip weekends (0 = Sunday, 6 = Saturday)
-    while (prev.getDay() === 0 || prev.getDay() === 6) {
-      prev = subDays(prev, 1);
-    }
+    const prev = getPreviousWeekday(current);
     const prevStr = format(prev, "yyyy-MM-dd");
     if (!dateSet.has(prevStr)) break;
     streak++;

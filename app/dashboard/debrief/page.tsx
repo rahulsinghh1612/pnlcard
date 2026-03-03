@@ -11,7 +11,7 @@ import { DebriefReport } from "./debrief-report";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Weekly Debrief — PNLCard",
+  title: "Weekly Review — PNLCard",
   description: "Your weekly trading performance report.",
 };
 
@@ -41,7 +41,7 @@ export default async function DebriefPage({
   const { data: trades } = await supabase
     .from("trades")
     .select(
-      "id, trade_date, net_pnl, charges, num_trades, capital_deployed, execution_tag, mood_tag, note"
+      "id, trade_date, net_pnl, charges, num_trades, capital_deployed, execution_tag, discipline_score, note"
     )
     .eq("user_id", user.id)
     .order("trade_date", { ascending: false });
@@ -54,7 +54,7 @@ export default async function DebriefPage({
     num_trades: Number(t.num_trades),
     capital_deployed: t.capital_deployed != null ? Number(t.capital_deployed) : null,
     execution_tag: t.execution_tag ?? null,
-    mood_tag: t.mood_tag ?? null,
+    discipline_score: t.discipline_score != null ? Number(t.discipline_score) : null,
     note: t.note ?? null,
   }));
 

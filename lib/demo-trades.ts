@@ -6,7 +6,7 @@
  * Each week has 4–5 trading days with natural gaps (no 6-day weeks).
  *
  * Dec 2025: loss month  → -35,000 (-3.50% ROI) | 8W · 11L | 19 trades
- * Jan 2026: profit month → +65,000 (+6.50% ROI) | 15W · 6L | 21 trades
+ * Jan 2026: profit month → +63,200 (+6.32% ROI) | 14W · 7L | 21 trades
  * Feb 2026: profit month → +68,000 (+6.80% ROI) | 14W · 6L | 20 trades
  */
 
@@ -48,32 +48,32 @@ export const DEMO_TRADES_DEC_2025: DemoTrade[] = [
 ];
 
 export const DEMO_TRADES: DemoTrade[] = [
-  // Week 1 (Dec 29–Jan 4): 2 days — Fri Sat
+  // Week 1 (Jan 1–4): 2 days — . . . . Fri Sat .  → 2W·0L = +₹10,600
   { id: "demo-1",  trade_date: "2026-01-02", net_pnl: 8650,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
   { id: "demo-2",  trade_date: "2026-01-03", net_pnl: 2350,  charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  // Week 2 (Jan 5–11): 5 days — Mon Tue Wed . Fri Sat
-  { id: "demo-3",  trade_date: "2026-01-05", net_pnl: 6000,  charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "demo-4",  trade_date: "2026-01-06", net_pnl: -3200, charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "demo-5",  trade_date: "2026-01-07", net_pnl: 10300, charges: 300, num_trades: 3, capital_deployed: 1000000, note: null },
+  // Week 2 (Jan 5–11): 5 days — Mon Tue Wed . Fri Sat  → 2W·3L = -₹4,800
+  { id: "demo-3",  trade_date: "2026-01-05", net_pnl: -3200, charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
+  { id: "demo-4",  trade_date: "2026-01-06", net_pnl: -6000, charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "demo-5",  trade_date: "2026-01-07", net_pnl: 3400,  charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
   { id: "demo-6",  trade_date: "2026-01-09", net_pnl: -2650, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "demo-7",  trade_date: "2026-01-10", net_pnl: 1900,  charges: 100, num_trades: 1, capital_deployed: 1000000, note: null },
-  // Week 3 (Jan 12–18): 4 days — Mon . Wed Thu Fri
-  { id: "demo-8",  trade_date: "2026-01-12", net_pnl: 6650,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "demo-9",  trade_date: "2026-01-14", net_pnl: 5400,  charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "demo-10", trade_date: "2026-01-15", net_pnl: 7450,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "demo-11", trade_date: "2026-01-16", net_pnl: -3450, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  // Week 4 (Jan 19–25): 5 days — Mon Tue Wed . Fri
+  { id: "demo-7",  trade_date: "2026-01-10", net_pnl: 4600,  charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  // Week 3 (Jan 12–18): 4 days — Mon . Wed Thu Fri  → 3W·1L = +₹22,400
+  { id: "demo-8",  trade_date: "2026-01-12", net_pnl: 10100, charges: 300, num_trades: 3, capital_deployed: 1000000, note: null },
+  { id: "demo-9",  trade_date: "2026-01-14", net_pnl: 6400,  charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
+  { id: "demo-10", trade_date: "2026-01-15", net_pnl: 8650,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "demo-11", trade_date: "2026-01-16", net_pnl: -1850, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
+  // Week 4 (Jan 19–25): 5 days — Mon Tue Wed Thu Fri  → 3W·2L = +₹14,400
   { id: "demo-12", trade_date: "2026-01-19", net_pnl: 7900,  charges: 300, num_trades: 3, capital_deployed: 1000000, note: null },
   { id: "demo-13", trade_date: "2026-01-20", net_pnl: -2250, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
   { id: "demo-14", trade_date: "2026-01-21", net_pnl: 5000,  charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
   { id: "demo-15", trade_date: "2026-01-22", net_pnl: -3000, charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
   { id: "demo-16", trade_date: "2026-01-23", net_pnl: 7850,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
-  // Week 5 (Jan 26–Feb 1): 5 days — . Tue Wed Thu Fri Sat
-  { id: "demo-17", trade_date: "2026-01-27", net_pnl: 7000,  charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "demo-18", trade_date: "2026-01-28", net_pnl: -2450, charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
-  { id: "demo-19", trade_date: "2026-01-29", net_pnl: 3600,  charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
+  // Week 5 (Jan 26–31): 5 days — . Tue Wed Thu Fri Sat  → 4W·1L = +₹20,600
+  { id: "demo-17", trade_date: "2026-01-27", net_pnl: 8400,  charges: 200, num_trades: 2, capital_deployed: 1000000, note: null },
+  { id: "demo-18", trade_date: "2026-01-28", net_pnl: 6550,  charges: 150, num_trades: 1, capital_deployed: 1000000, note: null },
+  { id: "demo-19", trade_date: "2026-01-29", net_pnl: -1600, charges: 200, num_trades: 1, capital_deployed: 1000000, note: null },
   { id: "demo-20", trade_date: "2026-01-30", net_pnl: 5850,  charges: 250, num_trades: 2, capital_deployed: 1000000, note: null },
-  { id: "demo-21", trade_date: "2026-01-31", net_pnl: 1700,  charges: 100, num_trades: 1, capital_deployed: 1000000, note: null },
+  { id: "demo-21", trade_date: "2026-01-31", net_pnl: 2300,  charges: 100, num_trades: 1, capital_deployed: 1000000, note: null },
 ];
 
 export const DEMO_TRADES_FEB_2026: DemoTrade[] = [

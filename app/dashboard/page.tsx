@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
   const { data: trades } = await supabase
     .from("trades")
-    .select("id, trade_date, net_pnl, charges, num_trades, capital_deployed, note, execution_tag, mood_tag")
+    .select("id, trade_date, net_pnl, charges, num_trades, capital_deployed, note, execution_tag, discipline_score")
     .eq("user_id", user.id)
     .order("trade_date", { ascending: false });
 
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
       t.capital_deployed != null ? Number(t.capital_deployed) : null,
     note: t.note ?? null,
     execution_tag: t.execution_tag ?? null,
-    mood_tag: t.mood_tag ?? null,
+    discipline_score: t.discipline_score != null ? Number(t.discipline_score) : null,
   }));
 
   const baseUrl =

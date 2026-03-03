@@ -8,7 +8,7 @@
 
 **PNLCard** is a social-first trading recap card generator. Traders log their daily P&L in under 60 seconds and generate shareable image cards for X (Twitter) and Instagram.
 
-- **Tagline:** Log. Share. Grow.
+- **Tagline:** Your Trading Journal
 - **Domain:** pnlcard.com
 - **Company:** Next Alphabet
 - **Target users:** Indian retail traders who post trading content on social media

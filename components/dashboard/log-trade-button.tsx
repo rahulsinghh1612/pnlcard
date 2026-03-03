@@ -51,7 +51,7 @@ export function LogTradeButton({
           {children ?? (
             <>
               <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
-              Log a trade
+              Log trade
             </>
           )}
         </span>
