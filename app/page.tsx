@@ -320,10 +320,10 @@ function HeroDashboard() {
   const goNext = () => { stopAutoCycle(); setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length); };
 
   return (
-    <div ref={ref} className={`w-full max-w-[680px] ${done ? "animate-hero-float" : ""}`}>
-      {/* Browser-style window frame */}
+    <div ref={ref} className={`w-full max-w-[680px] space-y-5 sm:space-y-6 ${done ? "animate-hero-float" : ""}`}>
+      {/* ── Card 1: P&L + Calendar Heatmap ── */}
       <div className="rounded-xl border border-slate-200/60 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden">
-        {/* Title bar — subtle, hidden on very small screens */}
+        {/* Title bar */}
         <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-50/80 border-b border-slate-100">
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-slate-300/80" />
@@ -338,7 +338,6 @@ function HeroDashboard() {
           </div>
         </div>
 
-        {/* Dashboard content */}
         <div className="bg-[#fafafa] p-3 sm:p-5 space-y-3 sm:space-y-4">
           {/* Hero P&L card */}
           <div
@@ -491,102 +490,104 @@ function HeroDashboard() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Weekly Breakdown */}
-          <div
-            className="transition-all duration-700 ease-out"
-            style={{
-              opacity: step >= 3 ? 1 : 0,
-              transform: `translateY(${step >= 3 ? 0 : 20}px)`,
-            }}
-          >
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-3 sm:p-5">
-              <div className="mb-3 sm:mb-5 flex items-baseline justify-between">
-                <div>
-                  <span className="text-xs sm:text-sm font-semibold text-slate-800">{m.label}</span>
-                  <span className="ml-1 sm:ml-1.5 text-[9px] sm:text-xs text-slate-400">· Weekly Breakdown</span>
-                </div>
-                <span className="text-[9px] sm:text-xs text-slate-400">{activeWeeks.length} weeks</span>
+      {/* ── Card 2: Weekly Breakdown ── */}
+      <div
+        className="rounded-xl border border-slate-200/60 bg-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.08)] overflow-hidden transition-all duration-700 ease-out"
+        style={{
+          opacity: step >= 3 ? 1 : 0,
+          transform: `translateY(${step >= 3 ? 0 : 20}px)`,
+        }}
+      >
+        <div className="bg-[#fafafa] p-3 sm:p-5">
+          <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-3 sm:p-5">
+            <div className="mb-3 sm:mb-5 flex items-baseline justify-between">
+              <div>
+                <span className="text-xs sm:text-sm font-semibold text-slate-800">{m.label}</span>
+                <span className="ml-1 sm:ml-1.5 text-[9px] sm:text-xs text-slate-400">· Weekly Breakdown</span>
               </div>
+              <span className="text-[9px] sm:text-xs text-slate-400">{activeWeeks.length} weeks</span>
+            </div>
 
-              <div className="flex flex-col gap-3 sm:gap-4">
-                {m.weeks.map((week, wi) => {
-                  if (week.wins + week.losses === 0) return null;
-                  const revealed = step >= 4 + wi;
-                  const BAR_MAX_H = 28;
-                  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {m.weeks.map((week, wi) => {
+                if (week.wins + week.losses === 0) return null;
+                const revealed = step >= 4 + wi;
+                const BAR_MAX_H = 28;
+                const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
 
-                  return (
-                    <div
-                      key={`hw-${wi}`}
-                      className="transition-all duration-500"
-                      style={{
-                        opacity: revealed ? 1 : 0,
-                        transform: revealed ? "translateY(0)" : "translateY(12px)",
-                      }}
-                    >
-                      <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
-                        <div className="flex items-baseline gap-1 sm:gap-1.5">
-                          <span className="text-[10px] sm:text-xs font-semibold text-slate-800">{week.label}</span>
-                          <span className="text-[8px] sm:text-[10px] text-slate-400">{week.range}</span>
-                        </div>
-                        <div className="flex items-baseline gap-1.5 sm:gap-2">
-                          <span className="text-[8px] sm:text-[10px] text-slate-400">{week.wins}W · {week.losses}L</span>
-                          <span className={`text-[10px] sm:text-xs font-bold ${week.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                            {heroFormatPnl(week.pnl)}
-                          </span>
-                        </div>
+                return (
+                  <div
+                    key={`hw-${wi}`}
+                    className="transition-all duration-500"
+                    style={{
+                      opacity: revealed ? 1 : 0,
+                      transform: revealed ? "translateY(0)" : "translateY(12px)",
+                    }}
+                  >
+                    <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
+                      <div className="flex items-baseline gap-1 sm:gap-1.5">
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-800">{week.label}</span>
+                        <span className="text-[8px] sm:text-[10px] text-slate-400">{week.range}</span>
                       </div>
-
-                      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-                        {week.daily.map((d, di) => {
-                          const hasTrade = d !== null;
-                          const barH = hasTrade ? Math.max(6, Math.round((Math.abs(d) / heroMaxDayAbs) * BAR_MAX_H)) : 0;
-
-                          return (
-                            <div key={`hd-${wi}-${di}`} className="flex flex-col items-center">
-                              <div className="w-full flex items-end justify-center" style={{ height: `${BAR_MAX_H + 2}px` }}>
-                                {hasTrade ? (
-                                  <div
-                                    className="w-full rounded-[3px] sm:rounded-[4px] transition-all duration-700"
-                                    style={{
-                                      height: revealed ? `${barH}px` : "0px",
-                                      transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
-                                      backgroundColor: d >= 0 ? "rgb(16 185 129 / 0.2)" : "rgb(239 68 68 / 0.2)",
-                                      borderWidth: "1px",
-                                      borderColor: d >= 0 ? "rgb(16 185 129 / 0.35)" : "rgb(239 68 68 / 0.35)",
-                                    }}
-                                  />
-                                ) : (
-                                  <div
-                                    className="w-1.5 h-1.5 rounded-full bg-slate-200/60 transition-opacity duration-500"
-                                    style={{ opacity: revealed ? 1 : 0, transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms" }}
-                                  />
-                                )}
-                              </div>
-                              <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] font-medium text-slate-400 leading-none">{dayLabels[di]}</span>
-                            </div>
-                          );
-                        })}
+                      <div className="flex items-baseline gap-1.5 sm:gap-2">
+                        <span className="text-[8px] sm:text-[10px] text-slate-400">{week.wins}W · {week.losses}L</span>
+                        <span className={`text-[10px] sm:text-xs font-bold ${week.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                          {heroFormatPnl(week.pnl)}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
 
-              {/* Avg Weekly */}
-              <div
-                className="mt-4 sm:mt-5 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-center justify-between transition-all duration-700"
-                style={{
-                  opacity: step >= 4 + m.weeks.length ? 1 : 0,
-                  transform: step >= 4 + m.weeks.length ? "translateY(0)" : "translateY(6px)",
-                }}
-              >
-                <span className="text-[9px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Avg. Weekly P&L</span>
-                <span className={`text-xs sm:text-base font-bold ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                  {heroFormatPnl(activeWeeks.length > 0 ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length) : 0)}
-                </span>
-              </div>
+                    <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+                      {week.daily.map((d, di) => {
+                        const hasTrade = d !== null;
+                        const barH = hasTrade ? Math.max(6, Math.round((Math.abs(d) / heroMaxDayAbs) * BAR_MAX_H)) : 0;
+
+                        return (
+                          <div key={`hd-${wi}-${di}`} className="flex flex-col items-center">
+                            <div className="w-full flex items-end justify-center" style={{ height: `${BAR_MAX_H + 2}px` }}>
+                              {hasTrade ? (
+                                <div
+                                  className="w-full rounded-[3px] sm:rounded-[4px] transition-all duration-700"
+                                  style={{
+                                    height: revealed ? `${barH}px` : "0px",
+                                    transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
+                                    backgroundColor: d >= 0 ? "rgb(16 185 129 / 0.2)" : "rgb(239 68 68 / 0.2)",
+                                    borderWidth: "1px",
+                                    borderColor: d >= 0 ? "rgb(16 185 129 / 0.35)" : "rgb(239 68 68 / 0.35)",
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  className="w-1.5 h-1.5 rounded-full bg-slate-200/60 transition-opacity duration-500"
+                                  style={{ opacity: revealed ? 1 : 0, transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms" }}
+                                />
+                              )}
+                            </div>
+                            <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] font-medium text-slate-400 leading-none">{dayLabels[di]}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Avg Weekly */}
+            <div
+              className="mt-4 sm:mt-5 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-center justify-between transition-all duration-700"
+              style={{
+                opacity: step >= 4 + m.weeks.length ? 1 : 0,
+                transform: step >= 4 + m.weeks.length ? "translateY(0)" : "translateY(6px)",
+              }}
+            >
+              <span className="text-[9px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Avg. Weekly P&L</span>
+              <span className={`text-xs sm:text-base font-bold ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                {heroFormatPnl(activeWeeks.length > 0 ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length) : 0)}
+              </span>
             </div>
           </div>
         </div>

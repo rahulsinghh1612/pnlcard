@@ -823,11 +823,6 @@ export function DemoSection() {
     setStep(s);
   }
 
-  const slideOffset = (target: StepId) => {
-    if (step === target) return 0;
-    return target > step ? 30 : -30;
-  };
-
   return (
     <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-20 sm:pb-32 scroll-mt-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -854,20 +849,20 @@ export function DemoSection() {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="inline-flex items-center rounded-full border border-border bg-muted/50 p-1 gap-0.5">
+          <div className="inline-flex items-center rounded-full border border-border bg-muted/50 p-1 gap-1">
             {STEPS.map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => pickStep(s.id)}
-                className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-4 py-2 text-[11px] sm:text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
                   step === s.id
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span
-                  className={`flex h-4.5 w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-bold transition-colors duration-300 shrink-0 ${
+                  className={`flex h-5 w-5 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-[10px] font-bold transition-colors duration-300 shrink-0 ${
                     step === s.id
                       ? "bg-foreground text-background"
                       : "bg-muted-foreground/20 text-muted-foreground"
@@ -875,25 +870,24 @@ export function DemoSection() {
                 >
                   {s.id + 1}
                 </span>
-                <span className="whitespace-nowrap hidden sm:inline">{s.label}</span>
+                <span className="whitespace-nowrap text-xs sm:text-sm">{s.label}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Demo content area */}
+        {/* Demo content area — fixed height to prevent layout shift */}
         <div
-          className={`relative transition-all duration-700 delay-300 ${
+          className={`relative transition-[opacity,transform] duration-700 delay-300 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="relative h-[400px] sm:h-[400px]">
+          <div className="relative h-[420px] sm:h-[400px] overflow-hidden">
             {/* Step 1: Enter P&L */}
             <div
-              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
               style={{
                 opacity: step === 0 ? 1 : 0,
-                transform: `translateX(${slideOffset(0)}px)`,
                 pointerEvents: step === 0 ? "auto" : "none",
               }}
             >
@@ -902,10 +896,9 @@ export function DemoSection() {
 
             {/* Step 2: Rate Discipline */}
             <div
-              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
               style={{
                 opacity: step === 1 ? 1 : 0,
-                transform: `translateX(${slideOffset(1)}px)`,
                 pointerEvents: step === 1 ? "auto" : "none",
               }}
             >
@@ -914,10 +907,9 @@ export function DemoSection() {
 
             {/* Step 3: Tag Mistakes */}
             <div
-              className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
               style={{
                 opacity: step === 2 ? 1 : 0,
-                transform: `translateX(${slideOffset(2)}px)`,
                 pointerEvents: step === 2 ? "auto" : "none",
               }}
             >
