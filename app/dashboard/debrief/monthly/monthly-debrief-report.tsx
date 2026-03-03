@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Flame, TrendingUp, TrendingDown, Target, ChevronLeft, ChevronRight, Lock, BarChart3 } from "lucide-react";
-import { type MonthlyDebrief } from "@/lib/debrief";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Info,
+} from "lucide-react";
+import {
+  type MonthlyDebrief,
+  type MonthlyPnlPoint,
+  type TagPnlCorrelation,
+} from "@/lib/debrief";
 import { format, parseISO, subMonths, addMonths } from "date-fns";
 
 type MonthlyDebriefReportProps = {
@@ -19,7 +29,7 @@ function formatPnl(value: number, currency: string): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
-  const sign = value >= 0 ? "+" : "\u2212";
+  const sign = value >= 0 ? "+" : "-";
   return `${sign}${symbol}${formatted}`;
 }
 
@@ -35,19 +45,24 @@ function formatPnlShort(value: number, currency: string): string {
   return `${sign}${symbol}${formatted}`;
 }
 
-export function MonthlyDebriefReport({ debrief, currency, isPremium }: MonthlyDebriefReportProps) {
+export function MonthlyDebriefReport({
+  debrief,
+  currency,
+  isPremium,
+}: MonthlyDebriefReportProps) {
   const isProfit = debrief.totalPnl >= 0;
 
-  const prevMonthStr = format(subMonths(parseISO(debrief.monthStart), 1), "yyyy-MM-dd");
-  const nextMonthStr = format(addMonths(parseISO(debrief.monthStart), 1), "yyyy-MM-dd");
+  const prevMonthStr = format(
+    subMonths(parseISO(debrief.monthStart), 1),
+    "yyyy-MM-dd"
+  );
+  const nextMonthStr = format(
+    addMonths(parseISO(debrief.monthStart), 1),
+    "yyyy-MM-dd"
+  );
 
   const maxWeekAbsPnl = Math.max(
     ...debrief.weeks.map((w) => Math.abs(w.pnl)),
-    1
-  );
-
-  const maxDowAbsPnl = Math.max(
-    ...debrief.dayOfWeekStats.map((d) => Math.abs(d.avgPnl)),
     1
   );
 
@@ -67,13 +82,18 @@ export function MonthlyDebriefReport({ debrief, currency, isPremium }: MonthlyDe
             <Lock className="h-7 w-7 text-amber-600" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Monthly Debrief</h1>
+            <h1 className="text-xl font-semibold text-foreground">
+              Monthly Debrief
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              Get a comprehensive monthly report with week-by-week analysis, day-of-week patterns, and a theme for next month.
+              Get a comprehensive monthly report with week-by-week analysis,
+              day-of-week patterns, and a theme for next month.
             </p>
           </div>
           <div className="rounded-xl border border-dashed border-border bg-slate-50/50 p-6 space-y-3 max-w-sm mx-auto text-left">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Includes</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Includes
+            </p>
             <ul className="space-y-2 text-sm text-foreground">
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -105,8 +125,8 @@ export function MonthlyDebriefReport({ debrief, currency, isPremium }: MonthlyDe
   }
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
+    <div className="space-y-3 pb-12">
+      {/* ── Nav row ── */}
       <div className="flex items-center justify-between">
         <Link
           href="/dashboard"
@@ -144,294 +164,498 @@ export function MonthlyDebriefReport({ debrief, currency, isPremium }: MonthlyDe
         </div>
       </div>
 
-      {/* Main card */}
-      <div className="rounded-2xl border border-border bg-white">
-        {/* Title section */}
-        <div className="p-6 sm:p-8 pb-0 sm:pb-0">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Monthly Debrief
-          </p>
-          <h1 className="mt-1 text-lg font-semibold text-foreground">
-            {debrief.monthLabel}
-          </h1>
-        </div>
+      {/* ════════════════════════════════════════════════════════════
+          CARD 1 — Hero P&L + metric cards
+         ════════════════════════════════════════════════════════════ */}
+      <div className="rounded-2xl border border-border bg-white px-6 py-6 sm:px-8">
+        <p className="text-xs font-medium text-muted-foreground">
+          Monthly Debrief · {debrief.monthLabel}
+        </p>
 
         {debrief.tradingDays === 0 ? (
-          <div className="p-6 sm:p-8 pt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              No trades logged this month. Log your trades to see your debrief.
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            No trades logged this month. Log your trades to see your debrief.
+          </p>
         ) : (
           <>
-            {/* Scoreboard */}
-            <div className="p-6 sm:p-8 pt-6 sm:pt-6">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Month P&L
-                  </p>
-                  <p className={`mt-1 text-xl font-bold tracking-tight ${isProfit ? "text-emerald-600" : "text-red-600"}`}>
-                    {formatPnl(debrief.totalPnl, currency)}
-                  </p>
-                  {debrief.pnlChange != null && (
-                    <p className={`mt-0.5 text-[10px] font-medium ${debrief.pnlChange >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                      {debrief.pnlChange >= 0 ? "\u2191" : "\u2193"} {formatPnlShort(Math.abs(debrief.pnlChange), currency)} vs last month
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Win Rate
-                  </p>
-                  <p className="mt-1 text-xl font-bold tracking-tight text-foreground">
-                    {debrief.winRate != null ? `${debrief.winRate}%` : "\u2014"}
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">
-                    {debrief.wins}W \u00B7 {debrief.losses}L
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Avg. Daily P&L
-                  </p>
-                  <p className={`mt-1 text-xl font-bold tracking-tight ${debrief.avgDailyPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                    {formatPnl(Math.round(debrief.avgDailyPnl), currency)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Streak
-                  </p>
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <Flame className="h-5 w-5 text-amber-500" />
-                    <p className="text-xl font-bold tracking-tight text-foreground">
-                      {debrief.streak}
-                    </p>
-                  </div>
-                  <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">
-                    {debrief.tradingDays} trading day{debrief.tradingDays !== 1 ? "s" : ""}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p
+              className={`mt-1 text-3xl sm:text-4xl font-bold tracking-tight ${
+                isProfit ? "text-emerald-600" : "text-red-600"
+              }`}
+            >
+              {formatPnl(debrief.totalPnl, currency)}
+            </p>
 
-            <div className="mx-6 sm:mx-8 h-px bg-border" />
-
-            {/* Week-by-week breakdown */}
-            <div className="p-6 sm:p-8">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-                Week by Week
-              </p>
-              <div className="space-y-3">
-                {debrief.weeks.map((week, i) => {
-                  const barWidth = Math.max(8, (Math.abs(week.pnl) / maxWeekAbsPnl) * 100);
-                  return (
-                    <div key={week.mondayStr}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-muted-foreground">
-                          Week {i + 1}
-                          <span className="ml-1.5 text-[10px] text-muted-foreground/60">{week.range}</span>
-                        </span>
-                        <span className="text-[10px] font-medium text-muted-foreground">
-                          {week.wins}W \u00B7 {week.losses}L
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 flex items-center h-6">
-                          <div
-                            className={`h-4 rounded-sm ${week.pnl >= 0 ? "bg-emerald-400/70" : "bg-red-400/70"}`}
-                            style={{ width: `${barWidth}%`, minWidth: "4px" }}
-                          />
-                        </div>
-                        <span className={`text-xs font-semibold tabular-nums min-w-[80px] text-right ${week.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          {formatPnlShort(week.pnl, currency)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-4 flex items-center justify-between text-[10px] font-medium text-muted-foreground border-t border-border pt-3">
-                <span>Avg. Weekly P&L</span>
-                <span className={`font-semibold ${debrief.avgWeeklyPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                  {formatPnlShort(Math.round(debrief.avgWeeklyPnl), currency)}
-                </span>
-              </div>
-            </div>
-
-            <div className="mx-6 sm:mx-8 h-px bg-border" />
-
-            {/* Day-of-week performance */}
-            {debrief.dayOfWeekStats.length > 0 && (
-              <>
-                <div className="p-6 sm:p-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Day of Week Performance
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    {debrief.dayOfWeekStats.map((dow) => {
-                      const barWidth = Math.max(8, (Math.abs(dow.avgPnl) / maxDowAbsPnl) * 100);
-                      return (
-                        <div key={dow.day} className="flex items-center gap-3">
-                          <span className="w-8 text-xs font-semibold text-muted-foreground">
-                            {dow.day}
-                          </span>
-                          <div className="flex-1 flex items-center h-6">
-                            <div
-                              className={`h-4 rounded-sm ${dow.avgPnl >= 0 ? "bg-emerald-400/70" : "bg-red-400/70"}`}
-                              style={{ width: `${barWidth}%`, minWidth: "4px" }}
-                            />
-                          </div>
-                          <span className={`text-xs font-semibold tabular-nums min-w-[80px] text-right ${dow.avgPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                            {formatPnlShort(Math.round(dow.avgPnl), currency)}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground/60 min-w-[30px] text-right">
-                            {dow.count}d
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {debrief.bestDay && debrief.worstDay && (
-                    <div className="mt-4 flex items-center gap-6 text-[10px] font-medium text-muted-foreground">
-                      <span>
-                        Best: <span className="text-emerald-600 font-semibold">{debrief.bestDay.label} {formatPnlShort(debrief.bestDay.pnl, currency)}</span>
-                      </span>
-                      <span>
-                        Worst: <span className="text-red-600 font-semibold">{debrief.worstDay.label} {formatPnlShort(debrief.worstDay.pnl, currency)}</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mx-6 sm:mx-8 h-px bg-border" />
-              </>
-            )}
-
-            {/* What went well / What hurt */}
-            <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingUp className="h-4 w-4 text-emerald-600" />
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    What went well
-                  </p>
-                </div>
-                {debrief.whatWentWell.length > 0 ? (
-                  <ul className="space-y-2">
-                    {debrief.whatWentWell.map((insight, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                        <span className="text-sm text-foreground">{insight.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Not enough tagged data yet. Tag your execution & mood to unlock insights.
-                  </p>
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <MetricCard
+                label="Win Rate"
+                value={
+                  debrief.winRate != null ? `${debrief.winRate}%` : "\u2014"
+                }
+              />
+              <MetricCard
+                label="Avg / Day"
+                value={formatPnlShort(
+                  Math.round(debrief.avgDailyPnl),
+                  currency
                 )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    What hurt
-                  </p>
-                </div>
-                {debrief.whatHurt.length > 0 ? (
-                  <ul className="space-y-2">
-                    {debrief.whatHurt.map((insight, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
-                        <span className="text-sm text-foreground">{insight.text}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Nothing flagged this month. Keep it up.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="mx-6 sm:mx-8 h-px bg-border" />
-
-            {/* Patterns */}
-            {(debrief.topExecutionTag || debrief.topMoodTag || debrief.bestCombo) && (
-              <>
-                <div className="p-6 sm:p-8">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-                    Patterns
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {debrief.topExecutionTag && (
-                      <div className="rounded-xl border border-border bg-slate-50/50 p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Top Execution
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-foreground">
-                          {debrief.topExecutionTag.label}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {debrief.topExecutionTag.count} day{debrief.topExecutionTag.count !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
-                    {debrief.topMoodTag && (
-                      <div className="rounded-xl border border-border bg-slate-50/50 p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Top Mood
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-foreground">
-                          {debrief.topMoodTag.label}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {debrief.topMoodTag.count} day{debrief.topMoodTag.count !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
-                    {debrief.bestCombo && (
-                      <div className="rounded-xl border border-border bg-slate-50/50 p-4">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Best Combo
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-foreground">
-                          {debrief.bestCombo.execution} + {debrief.bestCombo.mood}
-                        </p>
-                        <p className={`text-[10px] font-medium ${debrief.bestCombo.avgPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                          avg {formatPnlShort(Math.round(debrief.bestCombo.avgPnl), currency)}/day
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="mx-6 sm:mx-8 h-px bg-border" />
-              </>
-            )}
-
-            {/* Theme for next month */}
-            <div className="p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-3">
-                <Target className="h-4 w-4 text-amber-600" />
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Your theme for next month
-                </p>
-              </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
-                <p className="text-sm font-medium text-foreground">
-                  {debrief.theme}
-                </p>
-              </div>
+                valueColor={
+                  debrief.avgDailyPnl >= 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                }
+              />
             </div>
           </>
         )}
       </div>
+
+      {debrief.tradingDays > 0 && (
+        <>
+          {/* ════════════════════════════════════════════════════════
+              CARD 2 — Week-by-week diverging bar chart
+             ════════════════════════════════════════════════════════ */}
+          <div className="rounded-2xl border border-border bg-white px-6 py-5 sm:px-8">
+            <p className="text-xs font-medium text-muted-foreground mb-4">
+              Week by Week
+            </p>
+            <div className="space-y-1">
+              {debrief.weeks.map((week) => {
+                const barPct = Math.max(
+                  4,
+                  (Math.abs(week.pnl) / maxWeekAbsPnl) * 50
+                );
+
+                return (
+                  <div
+                    key={week.mondayStr}
+                    className="flex items-center gap-0 h-7"
+                  >
+                    <span className="w-[72px] text-right text-[10px] text-muted-foreground shrink-0 pr-2 tabular-nums">
+                      {week.range.split(" – ")[0]}
+                    </span>
+
+                    {/* Left half (losses) */}
+                    <div className="flex-1 flex justify-end items-center">
+                      {week.pnl < 0 && (
+                        <>
+                          <span className="text-[10px] font-semibold tabular-nums text-red-600 mr-1.5 shrink-0">
+                            {formatPnlShort(week.pnl, currency)}
+                          </span>
+                          <div
+                            className="h-[18px] rounded-l-sm bg-red-400/70"
+                            style={{
+                              width: `${barPct}%`,
+                              minWidth: "4px",
+                            }}
+                          />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Center baseline */}
+                    <div className="w-px h-5 bg-border shrink-0" />
+
+                    {/* Right half (profits) */}
+                    <div className="flex-1 flex justify-start items-center">
+                      {week.pnl >= 0 && (
+                        <>
+                          <div
+                            className="h-[18px] rounded-r-sm bg-emerald-400/70"
+                            style={{
+                              width: `${barPct}%`,
+                              minWidth: "4px",
+                            }}
+                          />
+                          <span className="text-[10px] font-semibold tabular-nums text-emerald-600 ml-1.5 shrink-0">
+                            {formatPnlShort(week.pnl, currency)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ════════════════════════════════════════════════════════
+              CARD 3 — Monthly P&L Trend (animated dot-line chart)
+             ════════════════════════════════════════════════════════ */}
+          {debrief.monthlyPnlTrend.filter((m) => m.pnl !== 0).length >= 2 && (
+            <div className="rounded-2xl border border-border bg-white px-6 py-5 sm:px-8">
+              <p className="text-xs font-medium text-muted-foreground mb-4">
+                Monthly P&L Trend
+              </p>
+              <MonthlyPnlTrendChart
+                data={debrief.monthlyPnlTrend}
+                currency={currency}
+              />
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════
+              CARD 4 — Mood & Execution → P&L correlation
+             ════════════════════════════════════════════════════════ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {debrief.executionCorrelation.length > 0 && (
+              <div className="rounded-2xl border border-border bg-white px-5 py-5 sm:px-6">
+                <div className="mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Execution Impact
+                    </p>
+                    <span className="group relative">
+                      <Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                      <span className="invisible group-hover:visible absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 rounded-lg bg-foreground px-3 py-2 text-[11px] text-background leading-snug z-10">
+                        Avg P&L on days you tagged each execution style this
+                        month.
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <CorrelationBars
+                  data={debrief.executionCorrelation}
+                  currency={currency}
+                />
+              </div>
+            )}
+            {debrief.moodCorrelation.length > 0 && (
+              <div className="rounded-2xl border border-border bg-white px-5 py-5 sm:px-6">
+                <div className="mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Mood Impact
+                    </p>
+                    <span className="group relative">
+                      <Info className="h-3 w-3 text-muted-foreground/50 cursor-help" />
+                      <span className="invisible group-hover:visible absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 rounded-lg bg-foreground px-3 py-2 text-[11px] text-background leading-snug z-10">
+                        Avg P&L on days you tagged each mood this month.
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <CorrelationBars
+                  data={debrief.moodCorrelation}
+                  currency={currency}
+                />
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ─── Metric mini-card ─── */
+
+function MetricCard({
+  label,
+  value,
+  sub,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  valueColor?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-slate-50/60 px-4 py-3.5">
+      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+      <p
+        className={`mt-1.5 text-base font-semibold tabular-nums leading-none ${
+          valueColor ?? "text-foreground"
+        }`}
+      >
+        {value}
+      </p>
+      {sub && (
+        <p className="mt-0.5 text-[10px] text-muted-foreground leading-none">
+          {sub}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ─── Monthly P&L Trend Chart (SVG dot-and-line) ─── */
+
+function catmullRomPath(
+  pts: { x: number; y: number; pnl: number }[]
+): string {
+  if (pts.length < 2) return "";
+  if (pts.length === 2)
+    return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`;
+
+  const tension = 0.35;
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+
+    if (p1.pnl === 0 && p2.pnl === 0) {
+      d += ` L ${p2.x} ${p2.y}`;
+      continue;
+    }
+
+    const p0 = pts[Math.max(i - 1, 0)];
+    const p3 = pts[Math.min(i + 2, pts.length - 1)];
+
+    const cp1x = p1.x + (p2.x - p0.x) * tension;
+    const cp1y = p1.y + (p2.y - p0.y) * tension;
+    const cp2x = p2.x - (p3.x - p1.x) * tension;
+    const cp2y = p2.y - (p3.y - p1.y) * tension;
+
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
+function MonthlyPnlTrendChart({
+  data,
+  currency,
+}: {
+  data: MonthlyPnlPoint[];
+  currency: string;
+}) {
+  const W = 800;
+  const H = 160;
+  const padY = 28;
+  const count = data.length;
+
+  const xPos = (i: number) => ((i + 0.5) / count) * W;
+
+  const maxPnl = Math.max(...data.map((d) => d.pnl), 0);
+  const minPnl = Math.min(...data.map((d) => d.pnl), 0);
+  const range = Math.max(maxPnl - minPnl, 1);
+
+  const pnlToY = (pnl: number) =>
+    padY + ((maxPnl - pnl) / range) * (H - padY * 2);
+
+  const zeroY = pnlToY(0);
+
+  const points = data.map((d, i) => ({
+    x: xPos(i),
+    y: pnlToY(d.pnl),
+    pnl: d.pnl,
+    isCurrent: d.isCurrent,
+  }));
+
+  const curveD = catmullRomPath(points);
+
+  const areaAboveD =
+    curveD +
+    ` L ${points[points.length - 1].x} ${zeroY} L ${points[0].x} ${zeroY} Z`;
+
+  const areaBelowD = areaAboveD;
+
+  const lineLength = points.reduce((sum, p, i) => {
+    if (i === 0) return 0;
+    const prev = points[i - 1];
+    const dx = p.x - prev.x;
+    const dy = p.y - prev.y;
+    return sum + Math.sqrt(dx * dx + dy * dy);
+  }, 0);
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full block">
+        <defs>
+          <linearGradient id="mpnl-grad-green" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#34d399" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#34d399" stopOpacity="0.02" />
+          </linearGradient>
+          <linearGradient id="mpnl-grad-red" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#f87171" stopOpacity="0.02" />
+            <stop offset="100%" stopColor="#f87171" stopOpacity="0.22" />
+          </linearGradient>
+          <clipPath id="mpnl-clip-above">
+            <rect x="0" y="0" width={W} height={zeroY} />
+          </clipPath>
+          <clipPath id="mpnl-clip-below">
+            <rect x="0" y={zeroY} width={W} height={H - zeroY} />
+          </clipPath>
+        </defs>
+
+        {/* Zero baseline */}
+        <line
+          x1={points[0].x}
+          y1={zeroY}
+          x2={points[points.length - 1].x}
+          y2={zeroY}
+          stroke="hsl(var(--border))"
+          strokeWidth="1"
+          strokeDasharray="6 4"
+          opacity="0.6"
+        />
+
+        {/* Green area fill above zero (profit) — only if any month is positive */}
+        {data.some((d) => d.pnl > 0) && (
+          <path
+            d={areaAboveD}
+            fill="url(#mpnl-grad-green)"
+            clipPath="url(#mpnl-clip-above)"
+            opacity="0"
+            className="animate-pnl-area"
+          />
+        )}
+
+        {/* Red area fill below zero (loss) — only if any month is negative */}
+        {data.some((d) => d.pnl < 0) && (
+          <path
+            d={areaBelowD}
+            fill="url(#mpnl-grad-red)"
+            clipPath="url(#mpnl-clip-below)"
+            opacity="0"
+            className="animate-pnl-area"
+          />
+        )}
+
+        {/* Smooth connecting line */}
+        <path
+          d={curveD}
+          fill="none"
+          stroke="hsl(var(--muted-foreground))"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={lineLength * 1.5}
+          strokeDashoffset={lineLength * 1.5}
+          className="animate-pnl-draw"
+          style={
+            { "--line-length": lineLength * 1.5 } as React.CSSProperties
+          }
+          opacity="0.45"
+        />
+
+        {/* Dots */}
+        {points.map((p, i) => {
+          const color =
+            p.pnl > 0
+              ? "#34d399"
+              : p.pnl < 0
+                ? "#f87171"
+                : "hsl(var(--muted-foreground))";
+
+          const dotR = p.pnl === 0 ? 3 : 5;
+
+          return (
+            <g key={i}>
+              {p.isCurrent && p.pnl !== 0 && (
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r="12"
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="1.5"
+                  className="animate-pnl-pulse"
+                />
+              )}
+              {p.pnl !== 0 && (
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={dotR + 3}
+                  fill={color}
+                  opacity="0.12"
+                  className="animate-pnl-dot"
+                  style={{ animationDelay: `${0.2 + i * 0.12}s` }}
+                />
+              )}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={dotR}
+                fill={p.pnl === 0 ? "hsl(var(--border))" : color}
+                stroke="white"
+                strokeWidth={p.pnl === 0 ? 0 : 2}
+                className="animate-pnl-dot"
+                style={{ animationDelay: `${0.2 + i * 0.12}s` }}
+              />
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Labels row */}
+      <div className="flex mt-2">
+        {data.map((point, i) => (
+          <div key={i} className="flex-1 text-center">
+            <p className="text-[10px] tabular-nums text-muted-foreground">
+              {point.monthLabel}
+            </p>
+            <p
+              className={`text-[10px] tabular-nums font-medium ${
+                point.pnl === 0
+                  ? "text-muted-foreground/40"
+                  : point.pnl > 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+              }`}
+            >
+              {point.pnl === 0
+                ? "\u2014"
+                : formatPnlShort(point.pnl, currency)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Correlation Bars (tag → avg P&L) ─── */
+
+function CorrelationBars({
+  data,
+  currency,
+}: {
+  data: TagPnlCorrelation[];
+  currency: string;
+}) {
+  const maxAbs = Math.max(...data.map((d) => Math.abs(d.avgPnl)), 1);
+
+  return (
+    <div className="space-y-2.5">
+      {data.map((item) => {
+        const barPct = Math.max(6, (Math.abs(item.avgPnl) / maxAbs) * 100);
+        const isPositive = item.avgPnl >= 0;
+
+        return (
+          <div key={item.label}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[13px] font-medium text-foreground">
+                {item.label}
+              </span>
+              <span
+                className={`text-[11px] font-semibold tabular-nums ${
+                  isPositive ? "text-emerald-600" : "text-red-600"
+                }`}
+              >
+                {formatPnlShort(Math.round(item.avgPnl), currency)}
+                <span className="text-muted-foreground font-normal ml-0.5">
+                  avg
+                </span>
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-muted/50">
+              <div
+                className={`h-2 rounded-full ${
+                  isPositive ? "bg-emerald-400" : "bg-red-400"
+                }`}
+                style={{ width: `${barPct}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              {item.count} day{item.count !== 1 ? "s" : ""}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

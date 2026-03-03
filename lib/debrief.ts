@@ -18,6 +18,7 @@ import {
   getDay,
   subWeeks,
   subMonths,
+  addMonths,
   addDays,
 } from "date-fns";
 
@@ -81,6 +82,18 @@ export type DebriefDay = {
   isRestDay: boolean;
 };
 
+export type WeeklyPnlPoint = {
+  weekLabel: string;
+  pnl: number;
+  isCurrent: boolean;
+};
+
+export type TagPnlCorrelation = {
+  label: string;
+  avgPnl: number;
+  count: number;
+};
+
 export type WeeklyDebrief = {
   weekRange: string;
   weekStart: string;
@@ -118,6 +131,11 @@ export type WeeklyDebrief = {
 
   // Single constraint for next week
   constraint: string;
+
+  // Analytics
+  weeklyPnlTrend: WeeklyPnlPoint[];
+  moodCorrelation: TagPnlCorrelation[];
+  executionCorrelation: TagPnlCorrelation[];
 
   hasEnoughData: boolean;
 };
@@ -404,6 +422,61 @@ export function buildWeeklyDebrief(
 
   const hasEnoughData = weekTrades.length >= 3;
 
+  // ── Analytics: Weekly P&L trend (last 6 weeks including current) ──
+  const weeklyPnlTrend: WeeklyPnlPoint[] = [];
+  for (let w = 5; w >= 0; w--) {
+    const wMonday = subWeeks(start, w);
+    const wSunday = endOfWeek(wMonday, { weekStartsOn: 1 });
+    const wTrades = allTrades.filter((t) => {
+      const d = parseISO(t.trade_date);
+      return isWithinInterval(d, { start: wMonday, end: wSunday });
+    });
+    const wPnl = wTrades.reduce((s, t) => s + getFinalResult(t), 0);
+    weeklyPnlTrend.push({
+      weekLabel: format(wMonday, "d MMM"),
+      pnl: wPnl,
+      isCurrent: w === 0,
+    });
+  }
+
+  // ── Analytics: Mood → avg P&L (this week only) ──
+  const moodPnlMap = new Map<string, { total: number; count: number }>();
+  for (const t of weekTrades) {
+    if (t.num_trades === 0) continue;
+    for (const tag of parseTags(t.mood_tag)) {
+      const existing = moodPnlMap.get(tag) ?? { total: 0, count: 0 };
+      existing.total += getFinalResult(t);
+      existing.count += 1;
+      moodPnlMap.set(tag, existing);
+    }
+  }
+  const moodCorrelation: TagPnlCorrelation[] = Array.from(moodPnlMap.entries())
+    .map(([tag, v]) => ({
+      label: MOOD_LABELS[tag] ?? tag,
+      avgPnl: v.total / v.count,
+      count: v.count,
+    }))
+    .sort((a, b) => b.avgPnl - a.avgPnl);
+
+  // ── Analytics: Execution → avg P&L (this week only) ──
+  const execPnlMap = new Map<string, { total: number; count: number }>();
+  for (const t of weekTrades) {
+    if (t.num_trades === 0) continue;
+    for (const tag of parseTags(t.execution_tag)) {
+      const existing = execPnlMap.get(tag) ?? { total: 0, count: 0 };
+      existing.total += getFinalResult(t);
+      existing.count += 1;
+      execPnlMap.set(tag, existing);
+    }
+  }
+  const executionCorrelation: TagPnlCorrelation[] = Array.from(execPnlMap.entries())
+    .map(([tag, v]) => ({
+      label: EXECUTION_LABELS[tag] ?? tag,
+      avgPnl: v.total / v.count,
+      count: v.count,
+    }))
+    .sort((a, b) => b.avgPnl - a.avgPnl);
+
   return {
     weekRange,
     weekStart: format(start, "yyyy-MM-dd"),
@@ -429,6 +502,9 @@ export function buildWeeklyDebrief(
     bestCombo,
     worstCombo,
     constraint,
+    weeklyPnlTrend,
+    moodCorrelation,
+    executionCorrelation,
     hasEnoughData,
   };
 }
@@ -450,6 +526,12 @@ export type DayOfWeekStats = {
   day: string;
   avgPnl: number;
   count: number;
+};
+
+export type MonthlyPnlPoint = {
+  monthLabel: string;
+  pnl: number;
+  isCurrent: boolean;
 };
 
 export type MonthlyDebrief = {
@@ -495,6 +577,11 @@ export type MonthlyDebrief = {
 
   // Theme for next month
   theme: string;
+
+  // Analytics
+  monthlyPnlTrend: MonthlyPnlPoint[];
+  moodCorrelation: TagPnlCorrelation[];
+  executionCorrelation: TagPnlCorrelation[];
 
   hasEnoughData: boolean;
 };
@@ -759,6 +846,59 @@ export function buildMonthlyDebrief(
     whatWentWell.push({ type: "positive", text: `${restDays} rest days — good discipline` });
   }
 
+  // ── Analytics: Monthly P&L trend (last 6 months including current) ──
+  const monthlyPnlTrend: MonthlyPnlPoint[] = [];
+  for (let m = 5; m >= 0; m--) {
+    const mStart = startOfMonth(subMonths(start, m));
+    const mEnd = endOfMonth(mStart);
+    const mTrades = allTrades.filter((t) => {
+      const d = parseISO(t.trade_date);
+      return isWithinInterval(d, { start: mStart, end: mEnd });
+    });
+    const mPnl = mTrades.reduce((s, t) => s + getFinalResult(t), 0);
+    monthlyPnlTrend.push({
+      monthLabel: format(mStart, "MMM"),
+      pnl: mPnl,
+      isCurrent: m === 0,
+    });
+  }
+
+  // ── Analytics: Mood → avg P&L (this month only) ──
+  const moodPnlMap = new Map<string, { total: number; count: number }>();
+  for (const t of activeTrades) {
+    for (const tag of parseTags(t.mood_tag)) {
+      const existing = moodPnlMap.get(tag) ?? { total: 0, count: 0 };
+      existing.total += getFinalResult(t);
+      existing.count += 1;
+      moodPnlMap.set(tag, existing);
+    }
+  }
+  const monthlyMoodCorrelation: TagPnlCorrelation[] = Array.from(moodPnlMap.entries())
+    .map(([tag, v]) => ({
+      label: MOOD_LABELS[tag] ?? tag,
+      avgPnl: v.total / v.count,
+      count: v.count,
+    }))
+    .sort((a, b) => b.avgPnl - a.avgPnl);
+
+  // ── Analytics: Execution → avg P&L (this month only) ──
+  const execPnlMap = new Map<string, { total: number; count: number }>();
+  for (const t of activeTrades) {
+    for (const tag of parseTags(t.execution_tag)) {
+      const existing = execPnlMap.get(tag) ?? { total: 0, count: 0 };
+      existing.total += getFinalResult(t);
+      existing.count += 1;
+      execPnlMap.set(tag, existing);
+    }
+  }
+  const monthlyExecCorrelation: TagPnlCorrelation[] = Array.from(execPnlMap.entries())
+    .map(([tag, v]) => ({
+      label: EXECUTION_LABELS[tag] ?? tag,
+      avgPnl: v.total / v.count,
+      count: v.count,
+    }))
+    .sort((a, b) => b.avgPnl - a.avgPnl);
+
   // Theme for next month
   let theme = "Stay consistent — keep logging, keep improving.";
   if (revengeCount >= 2) {
@@ -806,6 +946,9 @@ export function buildMonthlyDebrief(
     bestCombo,
     worstCombo,
     theme,
+    monthlyPnlTrend,
+    moodCorrelation: monthlyMoodCorrelation,
+    executionCorrelation: monthlyExecCorrelation,
     hasEnoughData: monthTrades.length >= 5,
   };
 }

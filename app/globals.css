@@ -244,6 +244,14 @@
   animation: fade-in-up 0.6s ease-out 0.2s both;
 }
 
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-hero-float {
+  animation: hero-float 4s ease-in-out infinite;
+}
+
 .animate-fade-in-up-delay-3 {
   animation: fade-in-up 0.6s ease-out 0.3s both;
 }
@@ -330,4 +338,39 @@
 }
 .animate-shimmer {
   animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes pnl-draw {
+  from { stroke-dashoffset: var(--line-length); }
+  to { stroke-dashoffset: 0; }
+}
+.animate-pnl-draw {
+  animation: pnl-draw 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes pnl-dot-in {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-pnl-dot {
+  opacity: 0;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: pnl-dot-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes pnl-area-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-pnl-area {
+  animation: pnl-area-in 0.8s ease-out 0.6s forwards;
+}
+
+@keyframes pnl-pulse {
+  0%, 100% { opacity: 0.45; r: 12; }
+  50% { opacity: 0; r: 20; }
+}
+.animate-pnl-pulse {
+  animation: pnl-pulse 2.5s ease-in-out infinite;
 }
