@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { format, startOfWeek, endOfWeek, parseISO, isWithinInterval } from "date-fns";
-import { ArrowDownToLine, Upload, Trash2, ChevronDown, Check, Flame } from "lucide-react";
+import { ArrowDownToLine, Upload, Trash2, ChevronDown, ChevronUp, Check, Flame } from "lucide-react";
 
 const tradeSchema = z.object({
   trade_date: z.string().min(1, "Date is required"),
@@ -455,22 +455,27 @@ export function TradeEntryModal({
                         Cannot log future dates.
                       </p>
                     )}
-                    {isDuplicateDate && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Trade already logged.</span>
-                        {onEditExisting && (
-                          <button
-                            type="button"
-                            onClick={() => onEditExisting(form.trade_date)}
-                            className="font-medium text-foreground underline underline-offset-2 hover:text-foreground/80 transition-colors"
-                          >
-                            Edit it
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </div>
 
+                  {isDuplicateDate && (
+                    <div className="flex flex-col items-center justify-center gap-3 py-8">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Trade already logged for this date.
+                      </p>
+                      {onEditExisting && (
+                        <button
+                          type="button"
+                          onClick={() => onEditExisting(form.trade_date)}
+                          className="rounded-full border border-emerald-500 bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
+                        >
+                          Edit it
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {!isDuplicateDate && (
+                  <>
                   {/* === Number of trades + No Trade pill === */}
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
@@ -559,7 +564,7 @@ export function TradeEntryModal({
                     </div>
                     {rawPnl > 0 && (
                       <p className="text-sm">
-                        Net P&L:{" "}
+                        {hasCharges ? "Net P&L:" : "P&L:"}{" "}
                         <span
                           className={
                             signedPnl >= 0 ? "font-medium text-emerald-600" : "font-medium text-red-600"
@@ -587,6 +592,14 @@ export function TradeEntryModal({
 
                   {showDetails && (
                     <>
+                      <button
+                        type="button"
+                        onClick={() => setShowDetails(false)}
+                        className="flex items-center gap-0.5 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors py-0.5 -mt-0.5 ml-auto"
+                      >
+                        <ChevronUp className="h-2.5 w-2.5" />
+                        Hide details
+                      </button>
                       {/* Charges & Capital — hidden on no-trade days */}
                       {!noTrade && (
                         <>
@@ -764,19 +777,23 @@ export function TradeEntryModal({
                       </div>
                     </>
                   )}
+                  </>
+                  )}
                 </div>
 
-                <div className="shrink-0 border-t border-border/30 px-6 py-4">
-                  <button
-                    type="submit"
-                    disabled={isLoading || isFutureDate || isDuplicateDate}
-                    className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
-                  >
-                    <span className="relative z-[1]">
-                      {isLoading ? "Saving…" : isEdit ? "Update" : "Save"}
-                    </span>
-                  </button>
-                </div>
+                {!isDuplicateDate && (
+                  <div className="shrink-0 border-t border-border/30 px-6 py-4">
+                    <button
+                      type="submit"
+                      disabled={isLoading || isFutureDate}
+                      className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
+                    >
+                      <span className="relative z-[1]">
+                        {isLoading ? "Saving…" : isEdit ? "Update" : "Save"}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </form>
             </>
           )}

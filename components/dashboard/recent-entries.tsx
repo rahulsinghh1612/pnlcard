@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { format } from "date-fns";
-import { ImageIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 type Trade = {
   id: string;
@@ -15,7 +15,7 @@ type Trade = {
 type RecentEntriesProps = {
   trades: Trade[];
   currency: string;
-  onGenerateCard?: (tradeId: string) => void;
+  onEntryClick?: (tradeId: string) => void;
 };
 
 function getFinalResult(t: Trade): number {
@@ -49,7 +49,7 @@ function formatPnl(value: number, currency: string): string {
   return `${sign}${symbol}${formatted}`;
 }
 
-export function RecentEntries({ trades, currency, onGenerateCard }: RecentEntriesProps) {
+export function RecentEntries({ trades, currency, onEntryClick }: RecentEntriesProps) {
   if (trades.length === 0) return null;
 
   return (
@@ -64,8 +64,17 @@ export function RecentEntries({ trades, currency, onGenerateCard }: RecentEntrie
           return (
             <li
               key={t.id}
-              className="group relative flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 hover:bg-muted/50 hover:shadow-sm animate-fade-in-up"
+              className="group relative flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-200 hover:bg-muted/50 hover:shadow-sm animate-fade-in-up cursor-pointer"
               style={{ animationDelay: `${i * 60}ms` }}
+              onClick={() => onEntryClick?.(t.id)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onEntryClick?.(t.id);
+                }
+              }}
             >
               {/* Color accent bar */}
               <div
@@ -103,15 +112,7 @@ export function RecentEntries({ trades, currency, onGenerateCard }: RecentEntrie
                 {formatPnl(result, currency)}
               </p>
 
-              <button
-                onClick={() => onGenerateCard?.(t.id)}
-                className="btn-gradient-flow border border-border rounded-lg px-3 py-1.5 text-xs font-medium opacity-70 group-hover:opacity-100 transition-opacity"
-              >
-                <span className="flex items-center gap-1.5">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  View Card
-                </span>
-              </button>
+              <ChevronRight className="h-4 w-4 text-muted-foreground/40 transition-all group-hover:text-muted-foreground group-hover:translate-x-0.5" />
             </li>
           );
         })}

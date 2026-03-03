@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { LogTradeButton } from "@/components/dashboard/log-trade-button";
 import { RecentEntries } from "@/components/dashboard/recent-entries";
 import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, Flame } from "lucide-react";
+import { TradeDetailModal } from "@/components/dashboard/trade-detail-modal";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, Flame, FileText, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import {
   format,
@@ -54,6 +57,7 @@ type DashboardContentProps = {
   /** For landing page demo: CalendarHeatmap shows this month (e.g. "2026-01-01") */
   demoViewDate?: string;
   loggingStreak?: number;
+  debriefReady?: boolean;
 };
 
 function formatPnl(value: number, currency: string): string {
@@ -86,6 +90,7 @@ export function DashboardContent({
   demoMode = false,
   demoViewDate,
   loggingStreak = 0,
+  debriefReady = false,
 }: DashboardContentProps) {
   const effectiveTrades = demoMode && demoTrades ? demoTrades : trades;
 
@@ -103,10 +108,54 @@ export function DashboardContent({
     );
     return dates.size;
   }, [effectiveTrades]);
-  const effectiveMonthPnl =
-    demoMode && demoTrades
-      ? demoTrades.reduce((sum, t) => sum + (t.charges != null ? t.net_pnl - t.charges : t.net_pnl), 0)
-      : monthPnl;
+  const [viewedMonth, setViewedMonth] = useState<Date>(new Date());
+
+  const viewedMonthPnl = useMemo(() => {
+    if (demoMode && demoTrades) {
+      return demoTrades.reduce((sum, t) => sum + (t.charges != null ? t.net_pnl - t.charges : t.net_pnl), 0);
+    }
+    const mStart = startOfMonth(viewedMonth);
+    const mEnd = endOfMonth(viewedMonth);
+    return effectiveTrades.reduce((sum, t) => {
+      const d = parseISO(t.trade_date);
+      if (!isWithinInterval(d, { start: mStart, end: mEnd })) return sum;
+      return sum + (t.charges != null ? t.net_pnl - t.charges : t.net_pnl);
+    }, 0);
+  }, [effectiveTrades, viewedMonth, demoMode, demoTrades]);
+
+  const viewedMonthLabel = useMemo(() => {
+    const now = new Date();
+    const isCurrent =
+      viewedMonth.getFullYear() === now.getFullYear() &&
+      viewedMonth.getMonth() === now.getMonth();
+    return isCurrent ? "This Month\u2019s P&L" : `${format(viewedMonth, "MMMM yyyy")} P&L`;
+  }, [viewedMonth]);
+
+  const viewedMonthHasTrades = useMemo(() => {
+    const mStart = startOfMonth(viewedMonth);
+    const mEnd = endOfMonth(viewedMonth);
+    return effectiveTrades.some((t) => {
+      const d = parseISO(t.trade_date);
+      return isWithinInterval(d, { start: mStart, end: mEnd });
+    });
+  }, [effectiveTrades, viewedMonth]);
+
+  const [debriefDismissed, setDebriefDismissed] = useState(false);
+  useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem("pnlcard_debrief_dismissed");
+      if (dismissed) {
+        const weekKey = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+        setDebriefDismissed(dismissed === weekKey);
+      }
+    } catch {}
+  }, []);
+
+  const router = useRouter();
+
+  const [detailTrade, setDetailTrade] = useState<Trade | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalExistingTrade, setModalExistingTrade] = useState<Trade | null>(
     null
@@ -132,11 +181,9 @@ export function DashboardContent({
       : modalDefaultDate;
 
   const hasTrades = effectiveTrades.length > 0;
-  const pnlPositive = effectiveMonthPnl >= 0;
+  const pnlPositive = viewedMonthPnl >= 0;
 
-  // Dynamic gradient intensity for the hero card (0.0 – 0.18 range).
-  // Uses log scale so it works across ₹1K to ₹50L+ without hard thresholds.
-  const absPnl = Math.abs(effectiveMonthPnl);
+  const absPnl = Math.abs(viewedMonthPnl);
   const intensity = absPnl === 0 ? 0 : Math.min(0.18, Math.log10(absPnl + 1) / 40);
   const heroGradient = pnlPositive
     ? `linear-gradient(135deg, rgba(16,185,129,${intensity}) 0%, rgba(255,255,255,0) 60%)`
@@ -209,32 +256,24 @@ export function DashboardContent({
         {/* Hero section: greeting + month P&L */}
         <div
           className={`rounded-2xl border p-6 sm:p-8 shadow-sm transition-all duration-300 group ${
-            hasTrades
+            viewedMonthHasTrades
               ? "cursor-pointer hover:shadow-lg hover:scale-[1.01] active:scale-[0.995] border-border hover:border-primary/20"
               : "border-border"
           }`}
           style={{ background: `${heroGradient}, linear-gradient(135deg, #fff 0%, #f8fafc 100%)` }}
           onClick={() => {
-            if (!hasTrades) return;
-            const todayStr = format(new Date(), "yyyy-MM-dd");
-            setCardPreviewType("monthly");
-            setCardPreviewTrade(null);
-            setCardPreviewWeekMonday(null);
-            setCardPreviewMonthDate(todayStr);
-            setCardPreviewOpen(true);
+            if (!viewedMonthHasTrades) return;
+            const monthStr = format(viewedMonth, "yyyy-MM-dd");
+            router.push(`/dashboard/debrief/monthly?month=${monthStr}`);
           }}
-          role={hasTrades ? "button" : undefined}
-          tabIndex={hasTrades ? 0 : undefined}
+          role={viewedMonthHasTrades ? "button" : undefined}
+          tabIndex={viewedMonthHasTrades ? 0 : undefined}
           onKeyDown={(e) => {
-            if (!hasTrades) return;
+            if (!viewedMonthHasTrades) return;
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              const todayStr = format(new Date(), "yyyy-MM-dd");
-              setCardPreviewType("monthly");
-              setCardPreviewTrade(null);
-              setCardPreviewWeekMonday(null);
-              setCardPreviewMonthDate(todayStr);
-              setCardPreviewOpen(true);
+              const monthStr = format(viewedMonth, "yyyy-MM-dd");
+              router.push(`/dashboard/debrief/monthly?month=${monthStr}`);
             }
           }}
         >
@@ -252,18 +291,24 @@ export function DashboardContent({
             </div>
             <div className="sm:text-right">
               <p className="text-xs font-medium tracking-wider text-muted-foreground">
-                This Month&apos;s P&L
+                {viewedMonthLabel}
               </p>
-              <p
-                className={`mt-1 text-3xl sm:text-4xl font-bold tracking-tight ${
-                  pnlPositive
-                    ? "text-emerald-600"
-                    : "text-red-600"
-                }`}
-              >
-                {formatPnl(effectiveMonthPnl, currency)}
-              </p>
-              {hasTrades && (
+              {viewedMonthHasTrades ? (
+                <p
+                  className={`mt-1 text-3xl sm:text-4xl font-bold tracking-tight ${
+                    pnlPositive
+                      ? "text-emerald-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {formatPnl(viewedMonthPnl, currency)}
+                </p>
+              ) : (
+                <p className="mt-1 text-3xl sm:text-4xl font-bold tracking-tight text-muted-foreground/40">
+                  {currency === "INR" ? "\u20B9" : "$"}0
+                </p>
+              )}
+              {viewedMonthHasTrades && (
                 <span
                   className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold tracking-widest transition-all duration-300 opacity-60 group-hover:opacity-100 ${
                     pnlPositive
@@ -271,13 +316,50 @@ export function DashboardContent({
                       : "bg-red-100 text-red-700 group-hover:bg-red-200"
                   }`}
                 >
-                  {isPremium ? <Sparkles className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                  {isPremium ? "Generate Monthly Card" : "Monthly Card — Pro"}
+                  <Sparkles className="h-3 w-3" />
+                  View Monthly Debrief
                 </span>
               )}
             </div>
           </div>
         </div>
+
+        {/* Weekly Debrief prompt */}
+        {debriefReady && !debriefDismissed && (
+          <Link
+            href="/dashboard/debrief"
+            onClick={() => {
+              setDebriefDismissed(true);
+              try {
+                const weekKey = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+                localStorage.setItem("pnlcard_debrief_dismissed", weekKey);
+              } catch {}
+            }}
+            className="group flex items-center justify-between rounded-xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:border-primary/20 hover:shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <FileText className="h-4 w-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">Your weekly debrief is ready</p>
+                  {!isPremium && (
+                    <span className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
+                      Pro
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {isPremium
+                    ? "See what went well and what to improve"
+                    : "Unlock insights on your trading patterns"}
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        )}
 
         {/* Log trade CTA */}
         <div className="flex justify-center">
@@ -305,31 +387,21 @@ export function DashboardContent({
             if (existingTrade) {
               const fullTrade = effectiveTrades.find((t) => t.id === existingTrade.id);
               if (fullTrade) {
-                setCardPreviewType("daily");
-                setCardPreviewTrade(fullTrade);
-                setCardPreviewWeekMonday(null);
-                setCardPreviewMonthDate(null);
-                setCardPreviewOpen(true);
+                setDetailTrade(fullTrade);
+                setDetailOpen(true);
                 return;
               }
             }
             openEditModal(date, null);
           }}
           onWeekClick={(mondayStr) => {
-            setCardPreviewType("weekly");
-            setCardPreviewTrade(null);
-            setCardPreviewWeekMonday(mondayStr);
-            setCardPreviewMonthDate(null);
-            setCardPreviewOpen(true);
+            router.push(`/dashboard/debrief?week=${mondayStr}`);
           }}
           onMonthClick={(monthDateStr) => {
-            setCardPreviewType("monthly");
-            setCardPreviewTrade(null);
-            setCardPreviewWeekMonday(null);
-            setCardPreviewMonthDate(monthDateStr);
-            setCardPreviewOpen(true);
+            router.push(`/dashboard/debrief/monthly?month=${monthDateStr}`);
           }}
           initialViewDate={demoViewDate}
+          onMonthChange={setViewedMonth}
         />
 
         {/* Generate Cards section */}
@@ -563,17 +635,36 @@ export function DashboardContent({
             mood_tag: t.mood_tag,
           }))}
           currency={currency}
-          onGenerateCard={(tradeId) => {
+          onEntryClick={(tradeId) => {
             const trade = effectiveTrades.find((t) => t.id === tradeId);
             if (!trade) return;
-            setCardPreviewType("daily");
-            setCardPreviewTrade(trade);
-            setCardPreviewWeekMonday(null);
-            setCardPreviewMonthDate(null);
-            setCardPreviewOpen(true);
+            setDetailTrade(trade);
+            setDetailOpen(true);
           }}
         />
       </div>
+
+      <TradeDetailModal
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        trade={detailTrade}
+        currency={currency}
+        tradingCapital={tradingCapital}
+        onGenerateCard={() => {
+          setDetailOpen(false);
+          setCardPreviewType("daily");
+          setCardPreviewTrade(detailTrade);
+          setCardPreviewWeekMonday(null);
+          setCardPreviewMonthDate(null);
+          setCardPreviewOpen(true);
+        }}
+        onEditTrade={() => {
+          setDetailOpen(false);
+          setModalExistingTrade(detailTrade);
+          setModalDefaultDate(undefined);
+          setModalOpen(true);
+        }}
+      />
 
       <TradeEntryModal
         open={displayModalOpen}

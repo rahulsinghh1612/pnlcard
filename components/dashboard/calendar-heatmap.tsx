@@ -32,6 +32,8 @@ type CalendarHeatmapProps = {
   onMonthClick?: (monthDateStr: string) => void;
   /** For demo: show this month instead of current (e.g. "2026-01-01" for Jan 2026) */
   initialViewDate?: string;
+  /** Called when the user navigates to a different month */
+  onMonthChange?: (monthDate: Date) => void;
 };
 
 function getFinalResult(t: TradeForHeatmap): number {
@@ -55,6 +57,7 @@ export function CalendarHeatmap({
   onWeekClick,
   onMonthClick,
   initialViewDate,
+  onMonthChange,
 }: CalendarHeatmapProps) {
   const [viewDate, setViewDate] = useState(() =>
     initialViewDate ? new Date(initialViewDate + "T12:00:00") : new Date()
@@ -262,7 +265,13 @@ export function CalendarHeatmap({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setViewDate((d) => subMonths(d, 1))}
+            onClick={() => {
+              setViewDate((d) => {
+                const next = subMonths(d, 1);
+                onMonthChange?.(next);
+                return next;
+              });
+            }}
             aria-label="Previous month"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -288,7 +297,13 @@ export function CalendarHeatmap({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setViewDate((d) => addMonths(d, 1))}
+            onClick={() => {
+              setViewDate((d) => {
+                const next = addMonths(d, 1);
+                onMonthChange?.(next);
+                return next;
+              });
+            }}
             aria-label="Next month"
           >
             <ChevronRight className="h-4 w-4" />

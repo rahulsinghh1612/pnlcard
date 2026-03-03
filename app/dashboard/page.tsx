@@ -6,6 +6,8 @@ import {
   getMonthPnl,
   getLoggingStreak,
 } from "@/lib/stats";
+import { getLastCompletedWeekMonday, getDebriefWeekBounds } from "@/lib/debrief";
+import { parseISO, isWithinInterval } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +74,15 @@ export default async function DashboardPage() {
 
   const isPremium = profile.plan === "premium";
 
+  // Check if last completed week has enough trades for a debrief
+  const lastMonday = getLastCompletedWeekMonday();
+  const { start: debriefStart, end: debriefEnd } = getDebriefWeekBounds(lastMonday);
+  const lastWeekTradeCount = tradesForClient.filter((t) => {
+    const d = parseISO(t.trade_date);
+    return isWithinInterval(d, { start: debriefStart, end: debriefEnd });
+  }).length;
+  const debriefReady = lastWeekTradeCount >= 3;
+
   return (
     <DashboardContent
       displayName={profile.display_name}
@@ -89,6 +100,7 @@ export default async function DashboardPage() {
       isPremium={isPremium}
       userEmail={user.email ?? ""}
       loggingStreak={loggingStreak}
+      debriefReady={debriefReady}
     />
   );
 }
