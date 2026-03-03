@@ -248,13 +248,48 @@ function heroFormatPnl(v: number): string {
 }
 
 function HeroDashboard() {
+  const [step, setStep] = useState(0);
   const [monthIdx, setMonthIdx] = useState(1);
   const ref = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
   const autoCycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userInteracted = useRef(false);
 
   useEffect(() => {
-    if (userInteracted.current) return;
+    if (started.current) return;
+    const kick = () => {
+      if (started.current) return;
+      started.current = true;
+      const delays = [0, 300, 700, 1200, 1500, 1800, 2100, 2400, 2700, 3000];
+      delays.forEach((d, i) => {
+        setTimeout(() => setStep(i + 1), d);
+      });
+    };
+
+    const el = ref.current;
+    if (!el) { kick(); return; }
+
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      kick();
+      return;
+    }
+
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          obs.disconnect();
+          kick();
+        }
+      },
+      { threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (step < 10 || userInteracted.current) return;
     const AUTO_CYCLE_MS = 4000;
     autoCycleRef.current = setInterval(() => {
       setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length);
@@ -262,7 +297,7 @@ function HeroDashboard() {
     return () => {
       if (autoCycleRef.current) clearInterval(autoCycleRef.current);
     };
-  }, []);
+  }, [step]);
 
   const m = HERO_MONTHS[monthIdx];
   const days = Array.from({ length: m.daysInMonth }, (_, i) => i + 1);
@@ -274,6 +309,8 @@ function HeroDashboard() {
   );
   const activeWeeks = m.weeks.filter((w) => w.wins + w.losses > 0);
 
+  const done = step >= 10;
+
   const stopAutoCycle = () => {
     userInteracted.current = true;
     if (autoCycleRef.current) { clearInterval(autoCycleRef.current); autoCycleRef.current = null; }
@@ -282,7 +319,7 @@ function HeroDashboard() {
   const goNext = () => { stopAutoCycle(); setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length); };
 
   return (
-    <div ref={ref} className="w-full max-w-[680px] space-y-5 sm:space-y-6">
+    <div ref={ref} className={`w-full max-w-[680px] space-y-5 sm:space-y-6 ${done ? "animate-hero-float" : ""}`}>
       {/* ── Card 1: P&L + Calendar Heatmap ── */}
       <div className="rounded-xl border border-slate-200/60 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden">
         {/* Title bar */}
@@ -302,7 +339,13 @@ function HeroDashboard() {
 
         <div className="bg-[#fafafa] p-3 sm:p-5 space-y-3 sm:space-y-4">
           {/* Hero P&L card */}
-          <div>
+          <div
+            className="transition-all duration-700 ease-out"
+            style={{
+              opacity: step >= 1 ? 1 : 0,
+              transform: `translateY(${step >= 1 ? 0 : 20}px)`,
+            }}
+          >
             <div
               className="rounded-xl border border-slate-200 p-3 sm:p-5"
               style={{
@@ -326,7 +369,13 @@ function HeroDashboard() {
           </div>
 
           {/* Calendar heatmap */}
-          <div>
+          <div
+            className="transition-all duration-700 ease-out"
+            style={{
+              opacity: step >= 2 ? 1 : 0,
+              transform: `translateY(${step >= 2 ? 0 : 20}px)`,
+            }}
+          >
             <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-3 sm:p-5">
               {/* Month nav */}
               <div className="mb-3 sm:mb-4 flex items-center justify-between">
@@ -369,6 +418,7 @@ function HeroDashboard() {
                   return weeks.map((week, ri) => (
                     <div key={`wk-${ri}`} className="grid grid-cols-7 gap-0.5 sm:gap-1">
                       {week.map((day, ci) => {
+                        const cellIdx = ri * 7 + ci;
                         if (day === null) return <div key={`e-${ri}-${ci}`} className="aspect-square rounded-md sm:rounded-lg" />;
 
                         const trade = m.trades[day];
@@ -385,7 +435,13 @@ function HeroDashboard() {
                         return (
                           <div
                             key={`c-${day}`}
-                            className={`relative aspect-square min-w-0 rounded-md sm:rounded-lg flex flex-col items-center justify-center ${bg} ${textColor}`}
+                            className={`relative aspect-square min-w-0 rounded-md sm:rounded-lg flex flex-col items-center justify-center ${bg} ${textColor} transition-all`}
+                            style={{
+                              transitionDuration: "500ms",
+                              transitionDelay: step >= 2 ? `${cellIdx * 25}ms` : "0ms",
+                              opacity: step >= 2 ? 1 : 0,
+                              transform: step >= 2 ? "scale(1)" : "scale(0.6)",
+                            }}
                           >
                             {hasTrade ? (
                               <>
@@ -437,12 +493,25 @@ function HeroDashboard() {
       </div>
 
       {/* Bridge copy between cards */}
-      <p className="text-center text-sm text-slate-500">
+      <p
+        className="text-center text-sm text-slate-500 transition-all duration-700 ease-out"
+        style={{
+          opacity: step >= 3 ? 1 : 0,
+          transform: `translateY(${step >= 3 ? 0 : 8}px)`,
+        }}
+      >
         See how each week shaped up
       </p>
 
       {/* ── Card 2: Weekly Breakdown ── */}
-      <div className="rounded-xl border border-slate-200/60 bg-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.08)] overflow-hidden">
+      <div
+        className="rounded-xl border border-slate-200/60 bg-white shadow-[0_12px_40px_-10px_rgba(0,0,0,0.08)] overflow-hidden"
+        style={{
+          opacity: step >= 3 ? 1 : 0,
+          transform: `translateY(${step >= 3 ? 0 : 20}px)`,
+          transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
+        }}
+      >
         <div className="bg-[#fafafa] p-3 sm:p-5">
           <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-3 sm:p-5">
             <div className="mb-3 sm:mb-5 flex items-baseline justify-between">
@@ -455,12 +524,38 @@ function HeroDashboard() {
 
             <div className="flex flex-col gap-3 sm:gap-4">
               {m.weeks.map((week, wi) => {
-                if (week.wins + week.losses === 0) return null;
+                const isEmpty = week.wins + week.losses === 0;
+                const revealed = step >= 4 + wi;
                 const BAR_MAX_H = 28;
                 const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
 
+                if (isEmpty) {
+                  return (
+                    <div key={`hw-${wi}`} className="invisible" aria-hidden="true">
+                      <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
+                        <span className="text-[10px] sm:text-xs">&nbsp;</span>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+                        {dayLabels.map((l, di) => (
+                          <div key={`hd-${wi}-${di}`} className="flex flex-col items-center">
+                            <div className="w-full" style={{ height: `${BAR_MAX_H + 2}px` }} />
+                            <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] leading-none">&nbsp;</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
-                  <div key={`hw-${wi}`}>
+                  <div
+                    key={`hw-${wi}`}
+                    style={{
+                      opacity: revealed ? 1 : 0,
+                      transform: revealed ? "translateY(0)" : "translateY(12px)",
+                      transition: "opacity 0.5s, transform 0.5s",
+                    }}
+                  >
                     <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
                       <div className="flex items-baseline gap-1 sm:gap-1.5">
                         <span className="text-[10px] sm:text-xs font-semibold text-slate-800">{week.label}</span>
@@ -486,14 +581,23 @@ function HeroDashboard() {
                                 <div
                                   className="w-full rounded-[3px] sm:rounded-[4px]"
                                   style={{
-                                    height: `${barH}px`,
+                                    height: revealed ? `${barH}px` : "0px",
+                                    transition: "height 0.7s",
+                                    transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
                                     backgroundColor: d >= 0 ? "rgb(16 185 129 / 0.2)" : "rgb(239 68 68 / 0.2)",
                                     borderWidth: "1px",
                                     borderColor: d >= 0 ? "rgb(16 185 129 / 0.35)" : "rgb(239 68 68 / 0.35)",
                                   }}
                                 />
                               ) : (
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-200/60" />
+                                <div
+                                  className="w-1.5 h-1.5 rounded-full bg-slate-200/60"
+                                  style={{
+                                    opacity: revealed ? 1 : 0,
+                                    transition: "opacity 0.5s",
+                                    transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
+                                  }}
+                                />
                               )}
                             </div>
                             <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] font-medium text-slate-400 leading-none">{dayLabels[di]}</span>
@@ -507,7 +611,14 @@ function HeroDashboard() {
             </div>
 
             {/* Avg Weekly */}
-            <div className="mt-4 sm:mt-5 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-center justify-between">
+            <div
+              className="mt-4 sm:mt-5 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-center justify-between"
+              style={{
+                opacity: step >= 4 + m.weeks.length ? 1 : 0,
+                transform: step >= 4 + m.weeks.length ? "translateY(0)" : "translateY(6px)",
+                transition: "opacity 0.7s, transform 0.7s",
+              }}
+            >
               <span className="text-[9px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Avg. Weekly P&L</span>
               <span className={`text-xs sm:text-base font-bold ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                 {heroFormatPnl(activeWeeks.length > 0 ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length) : 0)}
@@ -745,7 +856,7 @@ export default function LandingPage() {
       <section className="relative pt-24 pb-12 sm:pt-40 sm:pb-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           {/* Text — centered above the dashboard preview */}
-          <div className="text-center max-w-3xl mx-auto">
+          <div className="animate-fade-in-up text-center max-w-3xl mx-auto">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
               The trading journal that takes{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
@@ -774,7 +885,7 @@ export default function LandingPage() {
           </div>
 
           {/* Dashboard preview */}
-          <div className="mt-14 sm:mt-16 flex justify-center">
+          <div className="mt-14 sm:mt-16 flex justify-center animate-fade-in-up-delay-2">
             <HeroDashboard />
           </div>
         </div>
