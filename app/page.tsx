@@ -252,8 +252,6 @@ function HeroDashboard() {
   const [monthIdx, setMonthIdx] = useState(1);
   const ref = useRef<HTMLDivElement>(null);
   const started = useRef(false);
-  const autoCycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const userInteracted = useRef(false);
 
   useEffect(() => {
     if (started.current) return;
@@ -288,17 +286,6 @@ function HeroDashboard() {
     return () => obs.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (step < 10 || userInteracted.current) return;
-    const AUTO_CYCLE_MS = 4000;
-    autoCycleRef.current = setInterval(() => {
-      setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length);
-    }, AUTO_CYCLE_MS);
-    return () => {
-      if (autoCycleRef.current) clearInterval(autoCycleRef.current);
-    };
-  }, [step]);
-
   const m = HERO_MONTHS[monthIdx];
   const days = Array.from({ length: m.daysInMonth }, (_, i) => i + 1);
   const { profit: maxP, loss: maxL } = heroMaxes(m.trades);
@@ -311,15 +298,11 @@ function HeroDashboard() {
 
   const done = step >= 10;
 
-  const stopAutoCycle = () => {
-    userInteracted.current = true;
-    if (autoCycleRef.current) { clearInterval(autoCycleRef.current); autoCycleRef.current = null; }
-  };
-  const goPrev = () => { stopAutoCycle(); setMonthIdx((prev) => (prev - 1 + HERO_MONTHS.length) % HERO_MONTHS.length); };
-  const goNext = () => { stopAutoCycle(); setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length); };
+  const goPrev = () => setMonthIdx((prev) => (prev - 1 + HERO_MONTHS.length) % HERO_MONTHS.length);
+  const goNext = () => setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length);
 
   return (
-    <div ref={ref} className={`w-full max-w-[680px] space-y-5 sm:space-y-6 ${done ? "animate-hero-float" : ""}`}>
+    <div ref={ref} className="w-full max-w-[680px] space-y-5 sm:space-y-6">
       {/* ── Card 1: P&L + Calendar Heatmap ── */}
       <div className="rounded-xl border border-slate-200/60 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden">
         {/* Title bar */}
