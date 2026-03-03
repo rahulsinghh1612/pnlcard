@@ -28,6 +28,8 @@ type Trade = {
   num_trades: number;
   capital_deployed: number | null;
   note: string | null;
+  execution_tag: string | null;
+  mood_tag: string | null;
 };
 
 type CardPreviewModalProps = {

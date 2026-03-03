@@ -7,7 +7,7 @@ import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
 import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, Flame } from "lucide-react";
 
 import {
   format,
@@ -17,6 +17,7 @@ import {
   startOfMonth,
   endOfMonth,
   addDays,
+  isWithinInterval,
 } from "date-fns";
 
 type Trade = {
@@ -27,6 +28,8 @@ type Trade = {
   num_trades: number;
   capital_deployed: number | null;
   note: string | null;
+  execution_tag: string | null;
+  mood_tag: string | null;
 };
 
 type DashboardContentProps = {
@@ -50,6 +53,7 @@ type DashboardContentProps = {
   demoMode?: boolean;
   /** For landing page demo: CalendarHeatmap shows this month (e.g. "2026-01-01") */
   demoViewDate?: string;
+  loggingStreak?: number;
 };
 
 function formatPnl(value: number, currency: string): string {
@@ -81,8 +85,24 @@ export function DashboardContent({
   forceModalOpen,
   demoMode = false,
   demoViewDate,
+  loggingStreak = 0,
 }: DashboardContentProps) {
   const effectiveTrades = demoMode && demoTrades ? demoTrades : trades;
+
+  const weekLogCount = useMemo(() => {
+    const now = new Date();
+    const wStart = startOfWeek(now, { weekStartsOn: 1 });
+    const wEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const dates = new Set(
+      effectiveTrades
+        .filter((t) => {
+          const d = parseISO(t.trade_date);
+          return isWithinInterval(d, { start: wStart, end: wEnd });
+        })
+        .map((t) => t.trade_date)
+    );
+    return dates.size;
+  }, [effectiveTrades]);
   const effectiveMonthPnl =
     demoMode && demoTrades
       ? demoTrades.reduce((sum, t) => sum + (t.charges != null ? t.net_pnl - t.charges : t.net_pnl), 0)
@@ -223,6 +243,12 @@ export function DashboardContent({
               <h1 className="text-2xl font-semibold text-muted-foreground">
                 Hi, {displayName}
               </h1>
+              {loggingStreak > 0 && (
+                <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/30 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                  <Flame className="h-3.5 w-3.5" />
+                  {loggingStreak}-day streak
+                </div>
+              )}
             </div>
             <div className="sm:text-right">
               <p className="text-xs font-medium tracking-wider text-muted-foreground">
@@ -533,6 +559,8 @@ export function DashboardContent({
             net_pnl: t.net_pnl,
             charges: t.charges,
             num_trades: t.num_trades,
+            execution_tag: t.execution_tag,
+            mood_tag: t.mood_tag,
           }))}
           currency={currency}
           onGenerateCard={(tradeId) => {
@@ -557,6 +585,8 @@ export function DashboardContent({
         defaultDate={effectiveModalDefaultDate}
         existingTradeDates={new Set(effectiveTrades.map((t) => t.trade_date))}
         demoMode={demoMode}
+        loggingStreak={loggingStreak}
+        weekLogCount={weekLogCount}
         onEditExisting={(date) => {
           const trade = effectiveTrades.find((t) => t.trade_date === date);
           if (trade) {

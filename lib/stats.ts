@@ -109,6 +109,36 @@ export function getWeekWinRate(
 }
 
 /**
+ * Logging streak: consecutive weekdays (Mon–Fri) with a logged trade,
+ * counting backwards from the most recent trade. Weekends are skipped
+ * automatically — they don't break the streak.
+ */
+export function getLoggingStreak(tradeDates: string[]): number {
+  if (tradeDates.length === 0) return 0;
+
+  const dateSet = new Set(tradeDates);
+  const sorted = [...tradeDates].sort().reverse();
+  let streak = 1;
+  let current = parseISO(sorted[0]);
+
+  // Walk backwards through weekdays
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    let prev = subDays(current, 1);
+    // Skip weekends (0 = Sunday, 6 = Saturday)
+    while (prev.getDay() === 0 || prev.getDay() === 6) {
+      prev = subDays(prev, 1);
+    }
+    const prevStr = format(prev, "yyyy-MM-dd");
+    if (!dateSet.has(prevStr)) break;
+    streak++;
+    current = prev;
+  }
+
+  return streak;
+}
+
+/**
  * Current streak: consecutive days with logged profit, counting backwards from most recent trade.
  * Per cursorrules: "Consecutive days with logged profit (final result > 0)."
  * Streak requires consecutive calendar days.

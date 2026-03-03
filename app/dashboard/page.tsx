@@ -4,6 +4,7 @@ import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import {
   getMonthBounds,
   getMonthPnl,
+  getLoggingStreak,
 } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
 
   const { data: trades } = await supabase
     .from("trades")
-    .select("id, trade_date, net_pnl, charges, num_trades, capital_deployed, note")
+    .select("id, trade_date, net_pnl, charges, num_trades, capital_deployed, note, execution_tag, mood_tag")
     .eq("user_id", user.id)
     .order("trade_date", { ascending: false });
 
@@ -51,6 +52,7 @@ export default async function DashboardPage() {
   }));
 
   const monthPnl = getMonthPnl(tradesForStats, monthStart, monthEnd);
+  const loggingStreak = getLoggingStreak((trades ?? []).map((t) => t.trade_date));
 
   const tradesForClient = (trades ?? []).map((t) => ({
     id: t.id,
@@ -61,6 +63,8 @@ export default async function DashboardPage() {
     capital_deployed:
       t.capital_deployed != null ? Number(t.capital_deployed) : null,
     note: t.note ?? null,
+    execution_tag: t.execution_tag ?? null,
+    mood_tag: t.mood_tag ?? null,
   }));
 
   const baseUrl =
@@ -84,6 +88,7 @@ export default async function DashboardPage() {
       baseUrl={baseUrl}
       isPremium={isPremium}
       userEmail={user.email ?? ""}
+      loggingStreak={loggingStreak}
     />
   );
 }

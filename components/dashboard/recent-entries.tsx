@@ -8,6 +8,8 @@ type Trade = {
   net_pnl: number;
   charges: number | null;
   num_trades: number;
+  execution_tag: string | null;
+  mood_tag: string | null;
 };
 
 type RecentEntriesProps = {
@@ -19,6 +21,21 @@ type RecentEntriesProps = {
 function getFinalResult(t: Trade): number {
   return t.charges != null ? t.net_pnl - t.charges : t.net_pnl;
 }
+
+const TAG_LABELS: Record<string, string> = {
+  followed_plan: "Followed Plan",
+  overtraded: "Overtraded",
+  revenge_traded: "Revenge Traded",
+  fomo_entry: "FOMO",
+  cut_early: "Cut Early",
+  stayed_out: "Stayed Out",
+  avoided_fomo: "Avoided FOMO",
+  calm: "Calm",
+  confident: "Confident",
+  anxious: "Anxious",
+  frustrated: "Frustrated",
+  tired: "Tired",
+};
 
 function formatPnl(value: number, currency: string): string {
   const symbol = currency === "INR" ? "₹" : "$";
@@ -61,9 +78,21 @@ export function RecentEntries({ trades, currency, onGenerateCard }: RecentEntrie
                 <p className="text-sm font-medium text-foreground">
                   {format(new Date(t.trade_date + "T12:00:00"), "EEE, MMM d")}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {t.num_trades} trade{t.num_trades !== 1 ? "s" : ""}
-                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="text-xs text-muted-foreground">
+                    {t.num_trades} trade{t.num_trades !== 1 ? "s" : ""}
+                  </p>
+                  {t.execution_tag && t.execution_tag.split(",").map((tag) => (
+                    <span key={tag} className="inline-flex rounded-full bg-primary/8 px-1.5 py-0.5 text-[10px] font-medium text-primary/70">
+                      {TAG_LABELS[tag] ?? tag}
+                    </span>
+                  ))}
+                  {t.mood_tag && t.mood_tag.split(",").map((tag) => (
+                    <span key={tag} className="inline-flex rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      {TAG_LABELS[tag] ?? tag}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <p
