@@ -824,13 +824,16 @@ export function DemoSection() {
   }
 
   return (
-    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-20 sm:pb-32 scroll-mt-24 min-h-[720px]">
+    <div id="demo" ref={ref} className="pt-20 sm:pt-24 pb-10 sm:pb-16 scroll-mt-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {/* Heading */}
         <div
-          className={`text-center mb-8 sm:mb-10 transition-[opacity,transform] duration-700 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className="text-center mb-8 sm:mb-10"
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(32px)",
+            transition: "opacity 0.7s, transform 0.7s",
+          }}
         >
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
             Log a trade in{" "}
@@ -845,9 +848,12 @@ export function DemoSection() {
 
         {/* Step switcher pills */}
         <div
-          className={`flex justify-center mb-6 transition-[opacity,transform] duration-700 delay-150 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className="flex justify-center mb-6"
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(32px)",
+            transition: "opacity 0.7s 0.15s, transform 0.7s 0.15s",
+          }}
         >
           <div className="inline-flex items-center rounded-full border border-border bg-muted/50 p-1 gap-1">
             {STEPS.map((s) => (
@@ -855,14 +861,14 @@ export function DemoSection() {
                 key={s.id}
                 type="button"
                 onClick={() => pickStep(s.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors duration-300 ${
                   step === s.id
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <span
-                  className={`flex h-5 w-5 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-[10px] font-bold transition-colors duration-300 shrink-0 ${
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-colors duration-300 shrink-0 ${
                     step === s.id
                       ? "bg-foreground text-background"
                       : "bg-muted-foreground/20 text-muted-foreground"
@@ -876,18 +882,21 @@ export function DemoSection() {
           </div>
         </div>
 
-        {/* Demo content area — fixed height to prevent layout shift */}
+        {/* Demo content area — fixed height, no layout influence */}
         <div
-          className={`relative transition-[opacity,transform] duration-700 delay-300 ${
-            visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(32px)",
+            transition: "opacity 0.7s 0.3s, transform 0.7s 0.3s",
+          }}
         >
-          <div className="relative h-[420px] min-h-[420px] overflow-hidden" style={{ contain: "layout" }}>
+          <div className="relative overflow-hidden" style={{ height: 420, contain: "strict" }}>
             {/* Step 1: Enter P&L */}
             <div
-              className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center"
               style={{
                 opacity: step === 0 ? 1 : 0,
+                transition: "opacity 0.5s ease-out",
                 pointerEvents: step === 0 ? "auto" : "none",
               }}
             >
@@ -896,9 +905,10 @@ export function DemoSection() {
 
             {/* Step 2: Rate Discipline */}
             <div
-              className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center"
               style={{
                 opacity: step === 1 ? 1 : 0,
+                transition: "opacity 0.5s ease-out",
                 pointerEvents: step === 1 ? "auto" : "none",
               }}
             >
@@ -907,9 +917,10 @@ export function DemoSection() {
 
             {/* Step 3: Tag Mistakes */}
             <div
-              className="absolute inset-0 flex items-start justify-center transition-[opacity] duration-500 ease-out"
+              className="absolute inset-0 flex items-start justify-center"
               style={{
                 opacity: step === 2 ? 1 : 0,
+                transition: "opacity 0.5s ease-out",
                 pointerEvents: step === 2 ? "auto" : "none",
               }}
             >
@@ -918,6 +929,6 @@ export function DemoSection() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

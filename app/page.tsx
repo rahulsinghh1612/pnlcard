@@ -14,7 +14,6 @@ import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import dynamic from "next/dynamic";
 const DemoSection = dynamic(() => import("@/components/landing/demo-section").then((m) => m.DemoSection), {
   ssr: false,
-  loading: () => <div className="h-[728px] min-h-[728px]" aria-hidden="true" />,
 });
 const ReviewShowcase = dynamic(() => import("@/components/landing/review-showcase").then((m) => m.ReviewShowcase), {
   ssr: false,
@@ -841,8 +840,7 @@ export default function LandingPage() {
               a day
             </h1>
             <p className="mt-4 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Log your P&amp;L. Score your discipline. Get weekly and monthly
-              insights that actually make you better. No spreadsheets, no complexity.
+              No spreadsheets, no complexity.
             </p>
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link
@@ -899,7 +897,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Interactive Demo ──────────────────────────────── */}
-      <section id="how-it-works" className="scroll-mt-24 pt-20 sm:pt-24 pb-6 min-h-[832px]">
+      <section id="how-it-works" className="scroll-mt-24">
         <DemoSection />
       </section>
 
