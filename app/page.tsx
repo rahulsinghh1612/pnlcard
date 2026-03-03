@@ -323,8 +323,8 @@ function HeroDashboard() {
     <div ref={ref} className={`w-full max-w-[680px] ${done ? "animate-hero-float" : ""}`}>
       {/* Browser-style window frame */}
       <div className="rounded-xl border border-slate-200/60 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden">
-        {/* Title bar — subtle */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-50/80 border-b border-slate-100">
+        {/* Title bar — subtle, hidden on very small screens */}
+        <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-50/80 border-b border-slate-100">
           <div className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-slate-300/80" />
             <div className="w-2.5 h-2.5 rounded-full bg-slate-300/80" />
@@ -339,7 +339,7 @@ function HeroDashboard() {
         </div>
 
         {/* Dashboard content */}
-        <div className="bg-[#fafafa] p-4 sm:p-5 space-y-4">
+        <div className="bg-[#fafafa] p-3 sm:p-5 space-y-3 sm:space-y-4">
           {/* Hero P&L card */}
           <div
             className="transition-all duration-700 ease-out"
@@ -349,7 +349,7 @@ function HeroDashboard() {
             }}
           >
             <div
-              className="rounded-xl border border-slate-200 p-4 sm:p-5"
+              className="rounded-xl border border-slate-200 p-3 sm:p-5"
               style={{
                 background: monthPnl >= 0
                   ? "linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(255,255,255,0) 60%), linear-gradient(135deg, #fff 0%, #f8fafc 100%)"
@@ -378,9 +378,9 @@ function HeroDashboard() {
               transform: `translateY(${step >= 2 ? 0 : 20}px)`,
             }}
           >
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5">
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-3 sm:p-5">
               {/* Month nav */}
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-3 sm:mb-4 flex items-center justify-between">
                 <button
                   onClick={goPrev}
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-400 transition-colors hover:bg-slate-200"
@@ -388,8 +388,8 @@ function HeroDashboard() {
                   <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-sm font-semibold text-slate-800">{m.label}</span>
-                  <span className={`text-xs font-bold transition-colors duration-300 ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>{heroFormatPnl(monthPnl)}</span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-800">{m.label}</span>
+                  <span className={`text-[11px] sm:text-xs font-bold transition-colors duration-300 ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>{heroFormatPnl(monthPnl)}</span>
                 </div>
                 <button
                   onClick={goNext}
@@ -400,14 +400,14 @@ function HeroDashboard() {
               </div>
 
               {/* Day headers */}
-              <div className="mb-1.5 grid grid-cols-7 gap-1 text-center">
+              <div className="mb-1 sm:mb-1.5 grid grid-cols-7 gap-0.5 sm:gap-1 text-center">
                 {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-                  <span key={`hdr-${i}`} className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{d}</span>
+                  <span key={`hdr-${i}`} className="text-[9px] sm:text-[10px] font-medium uppercase tracking-wider text-slate-400">{d}</span>
                 ))}
               </div>
 
               {/* Calendar grid */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-0.5 sm:gap-1">
                 {(() => {
                   const flat: (number | null)[] = [
                     ...Array<null>(m.startPad).fill(null),
@@ -418,10 +418,10 @@ function HeroDashboard() {
                   for (let i = 0; i < flat.length; i += 7) weeks.push(flat.slice(i, i + 7));
 
                   return weeks.map((week, ri) => (
-                    <div key={`wk-${ri}`} className="grid grid-cols-7 gap-1">
+                    <div key={`wk-${ri}`} className="grid grid-cols-7 gap-0.5 sm:gap-1">
                       {week.map((day, ci) => {
                         const cellIdx = ri * 7 + ci;
-                        if (day === null) return <div key={`e-${ri}-${ci}`} className="aspect-square rounded-lg" />;
+                        if (day === null) return <div key={`e-${ri}-${ci}`} className="aspect-square rounded-md sm:rounded-lg" />;
 
                         const trade = m.trades[day];
                         const hasTrade = !!trade;
@@ -437,7 +437,7 @@ function HeroDashboard() {
                         return (
                           <div
                             key={`c-${day}`}
-                            className={`relative aspect-square min-w-0 rounded-lg flex flex-col items-center justify-center ${bg} ${textColor} transition-all`}
+                            className={`relative aspect-square min-w-0 rounded-md sm:rounded-lg flex flex-col items-center justify-center ${bg} ${textColor} transition-all`}
                             style={{
                               transitionDuration: "500ms",
                               transitionDelay: step >= 2 ? `${cellIdx * 25}ms` : "0ms",
@@ -447,16 +447,16 @@ function HeroDashboard() {
                           >
                             {hasTrade ? (
                               <>
-                                <span className="absolute top-0.5 left-1 text-[7px] sm:text-[8px] font-medium leading-none opacity-70">{day}</span>
-                                <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
+                                <span className="absolute top-px left-0.5 sm:top-0.5 sm:left-1 text-[6px] sm:text-[8px] font-medium leading-none opacity-70">{day}</span>
+                                <span className="text-[8px] sm:text-[11px] font-bold leading-tight truncate max-w-full px-px">
                                   {heroFormatPnl(trade.pnl)}
                                 </span>
-                                <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-75 mt-0.5">
+                                <span className="text-[5px] sm:text-[7px] font-medium leading-none opacity-75 mt-px sm:mt-0.5">
                                   {trade.trades === 1 ? "1 Trade" : `${trade.trades} Trades`}
                                 </span>
                               </>
                             ) : (
-                              <span className="text-[10px] sm:text-xs font-medium">{day}</span>
+                              <span className="text-[9px] sm:text-xs font-medium">{day}</span>
                             )}
                           </div>
                         );
@@ -467,25 +467,25 @@ function HeroDashboard() {
               </div>
 
               {/* Legend */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400">
-                <span className="flex items-center gap-1.5">
+              <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-slate-400">
+                <span className="flex items-center gap-1">
                   <span className="flex gap-0.5">
-                    <span className="h-3 w-3 rounded bg-emerald-50 border border-emerald-200/60" />
-                    <span className="h-3 w-3 rounded bg-emerald-100 border border-emerald-200/60" />
-                    <span className="h-3 w-3 rounded bg-emerald-200 border border-emerald-300/60" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-emerald-50 border border-emerald-200/60" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-emerald-100 border border-emerald-200/60" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-emerald-200 border border-emerald-300/60" />
                   </span>
                   Profit
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1">
                   <span className="flex gap-0.5">
-                    <span className="h-3 w-3 rounded bg-red-50 border border-red-200/60" />
-                    <span className="h-3 w-3 rounded bg-red-100 border border-red-200/60" />
-                    <span className="h-3 w-3 rounded bg-red-200 border border-red-300/60" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-red-50 border border-red-200/60" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-red-100 border border-red-200/60" />
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-red-200 border border-red-300/60" />
                   </span>
                   Loss
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded bg-slate-100/40 border border-slate-200" />
+                <span className="flex items-center gap-1">
+                  <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded bg-slate-100/40 border border-slate-200" />
                   No trade
                 </span>
               </div>
@@ -500,16 +500,16 @@ function HeroDashboard() {
               transform: `translateY(${step >= 3 ? 0 : 20}px)`,
             }}
           >
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-4 sm:p-5">
-              <div className="mb-5 flex items-baseline justify-between">
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white via-white to-slate-50/40 p-3 sm:p-5">
+              <div className="mb-3 sm:mb-5 flex items-baseline justify-between">
                 <div>
-                  <span className="text-sm font-semibold text-slate-800">{m.label}</span>
-                  <span className="ml-1.5 text-[10px] sm:text-xs text-slate-400">· Weekly Breakdown</span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-800">{m.label}</span>
+                  <span className="ml-1 sm:ml-1.5 text-[9px] sm:text-xs text-slate-400">· Weekly Breakdown</span>
                 </div>
-                <span className="text-[10px] sm:text-xs text-slate-400">{activeWeeks.length} weeks</span>
+                <span className="text-[9px] sm:text-xs text-slate-400">{activeWeeks.length} weeks</span>
               </div>
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 {m.weeks.map((week, wi) => {
                   if (week.wins + week.losses === 0) return null;
                   const revealed = step >= 4 + wi;
@@ -525,20 +525,20 @@ function HeroDashboard() {
                         transform: revealed ? "translateY(0)" : "translateY(12px)",
                       }}
                     >
-                      <div className="flex items-baseline justify-between mb-2">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-[11px] sm:text-xs font-semibold text-slate-800">{week.label}</span>
-                          <span className="text-[9px] sm:text-[10px] text-slate-400">{week.range}</span>
+                      <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
+                        <div className="flex items-baseline gap-1 sm:gap-1.5">
+                          <span className="text-[10px] sm:text-xs font-semibold text-slate-800">{week.label}</span>
+                          <span className="text-[8px] sm:text-[10px] text-slate-400">{week.range}</span>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-[9px] sm:text-[10px] text-slate-400">{week.wins}W · {week.losses}L</span>
-                          <span className={`text-[11px] sm:text-xs font-bold ${week.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                        <div className="flex items-baseline gap-1.5 sm:gap-2">
+                          <span className="text-[8px] sm:text-[10px] text-slate-400">{week.wins}W · {week.losses}L</span>
+                          <span className={`text-[10px] sm:text-xs font-bold ${week.pnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                             {heroFormatPnl(week.pnl)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-7 gap-1.5">
+                      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                         {week.daily.map((d, di) => {
                           const hasTrade = d !== null;
                           const barH = hasTrade ? Math.max(6, Math.round((Math.abs(d) / heroMaxDayAbs) * BAR_MAX_H)) : 0;
@@ -548,7 +548,7 @@ function HeroDashboard() {
                               <div className="w-full flex items-end justify-center" style={{ height: `${BAR_MAX_H + 2}px` }}>
                                 {hasTrade ? (
                                   <div
-                                    className="w-full rounded-[4px] transition-all duration-700"
+                                    className="w-full rounded-[3px] sm:rounded-[4px] transition-all duration-700"
                                     style={{
                                       height: revealed ? `${barH}px` : "0px",
                                       transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
@@ -564,7 +564,7 @@ function HeroDashboard() {
                                   />
                                 )}
                               </div>
-                              <span className="mt-1 text-[8px] sm:text-[9px] font-medium text-slate-400 leading-none">{dayLabels[di]}</span>
+                              <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] font-medium text-slate-400 leading-none">{dayLabels[di]}</span>
                             </div>
                           );
                         })}
@@ -576,14 +576,14 @@ function HeroDashboard() {
 
               {/* Avg Weekly */}
               <div
-                className="mt-5 pt-3 border-t border-slate-200/60 flex items-center justify-between transition-all duration-700"
+                className="mt-4 sm:mt-5 pt-2.5 sm:pt-3 border-t border-slate-200/60 flex items-center justify-between transition-all duration-700"
                 style={{
                   opacity: step >= 4 + m.weeks.length ? 1 : 0,
                   transform: step >= 4 + m.weeks.length ? "translateY(0)" : "translateY(6px)",
                 }}
               >
-                <span className="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Avg. Weekly P&L</span>
-                <span className={`text-sm sm:text-base font-bold ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                <span className="text-[9px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Avg. Weekly P&L</span>
+                <span className={`text-xs sm:text-base font-bold ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                   {heroFormatPnl(activeWeeks.length > 0 ? Math.round(activeWeeks.reduce((s, w) => s + w.pnl, 0) / activeWeeks.length) : 0)}
                 </span>
               </div>
@@ -624,16 +624,16 @@ function CardShowcase() {
   const otherTypes = (["daily", "weekly", "monthly"] as const).filter((t) => t !== cardType);
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-4 sm:gap-6">
       {/* Toggle bar */}
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
         {/* Card type */}
-        <div className="flex rounded-full border border-border bg-muted/40 p-1">
+        <div className="flex rounded-full border border-border bg-muted/40 p-0.5 sm:p-1">
           {(["daily", "weekly", "monthly"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setCardType(t)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium capitalize transition-all ${
+              className={`rounded-full px-3 py-1 sm:px-4 sm:py-1.5 text-xs sm:text-sm font-medium capitalize transition-all ${
                 cardType === t
                   ? "bg-white text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -645,45 +645,45 @@ function CardShowcase() {
         </div>
 
         {/* Theme */}
-        <div className="flex rounded-full border border-border bg-muted/40 p-1">
+        <div className="flex rounded-full border border-border bg-muted/40 p-0.5 sm:p-1">
           <button
             onClick={() => setTheme("light")}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-all ${
               theme === "light" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Sun className="h-3.5 w-3.5" />
+            <Sun className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             Light
           </button>
           <button
             onClick={() => setTheme("dark")}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-all ${
               theme === "dark" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Moon className="h-3.5 w-3.5" />
+            <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             Dark
           </button>
         </div>
 
         {/* Profit / Loss */}
-        <div className="flex rounded-full border border-border bg-muted/40 p-1">
+        <div className="flex rounded-full border border-border bg-muted/40 p-0.5 sm:p-1">
           <button
             onClick={() => setSide("profit")}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-all ${
               side === "profit" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+            <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
             Profit
           </button>
           <button
             onClick={() => setSide("loss")}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-all ${
               side === "loss" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+            <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-red-500" />
             Loss
           </button>
         </div>
@@ -765,16 +765,16 @@ export default function LandingPage() {
             : "bg-transparent"
         }`}
       >
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/">
-            <div className="logo-capsule px-3 py-1.5 text-sm">
-              <PnLCardLogo size={18} />
+            <div className="logo-capsule px-2.5 py-1 sm:px-3 sm:py-1.5 text-sm">
+              <PnLCardLogo size={16} />
             </div>
           </Link>
 
           <div className="flex items-center">
-            {/* Page links */}
-            <div className="hidden sm:flex items-center gap-5">
+            {/* Page links — hidden on mobile */}
+            <div className="hidden md:flex items-center gap-5">
               <a
                 href="#how-it-works"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -795,19 +795,19 @@ export default function LandingPage() {
               </a>
             </div>
 
-            <div className="hidden sm:block w-px h-5 bg-border mx-5" />
+            <div className="hidden md:block w-px h-5 bg-border mx-5" />
 
             {/* Auth actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Link
                 href="/login"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
+                className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-lg sm:rounded-xl px-3.5 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
               >
                 <span className="relative z-[1]">Start for Free</span>
               </Link>
@@ -817,31 +817,31 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ───────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-16 sm:pt-40 sm:pb-24">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="relative pt-24 pb-12 sm:pt-40 sm:pb-24">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           {/* Text — centered above the dashboard preview */}
           <div className="animate-fade-in-up text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
               The trading journal that takes{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 60 seconds
               </span>{" "}
               a day
             </h1>
-            <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            <p className="mt-4 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
               Log your P&amp;L. Score your discipline. Get weekly and monthly
               insights that actually make you better. No spreadsheets, no complexity.
             </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link
                 href="/signup"
-                className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-7 py-3 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
+                className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
               >
                 <span className="relative z-[1]">Start for Free</span>
               </Link>
               <a
                 href="#how-it-works"
-                className="group/link inline-flex items-center gap-2 rounded-full border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700"
+                className="group/link inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-border bg-transparent px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700"
               >
                 See how it works
                 <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover/link:translate-y-0.5" />
@@ -921,17 +921,17 @@ export default function LandingPage() {
       <section
         id="features"
         ref={debriefFeature.ref}
-        className="scroll-mt-24 py-24 sm:py-32 bg-white"
+        className="scroll-mt-24 py-16 sm:py-32 bg-white"
       >
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div
-            className={`text-center mb-12 transition-all duration-700 ${
+            className={`text-center mb-8 sm:mb-12 transition-all duration-700 ${
               debriefFeature.visible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
             }`}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
               Weekly &amp; monthly reviews &mdash; the{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 payoff
@@ -958,17 +958,17 @@ export default function LandingPage() {
       {/* ── Share Your Wins (Cards — interactive) ─────────── */}
       <section
         ref={cardsFeature.ref}
-        className="scroll-mt-24 py-24 sm:py-32"
+        className="scroll-mt-24 py-16 sm:py-32"
       >
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div
-            className={`text-center mb-12 transition-all duration-700 ${
+            className={`text-center mb-8 sm:mb-12 transition-all duration-700 ${
               cardsFeature.visible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
             }`}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
               When you&apos;re ready to share,{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 we&apos;ve got you.
@@ -995,17 +995,17 @@ export default function LandingPage() {
       <section
         id="pricing"
         ref={pricing.ref}
-        className="scroll-mt-24 py-24 sm:py-32"
+        className="scroll-mt-24 py-16 sm:py-32"
       >
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
           <div
-            className={`text-center mb-10 transition-all duration-700 ${
+            className={`text-center mb-8 sm:mb-10 transition-all duration-700 ${
               pricing.visible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
             }`}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
               Simple pricing.{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 No surprises.
@@ -1049,7 +1049,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Free tier */}
             <div
-              className={`rounded-2xl border border-border bg-white p-8 transition-all duration-700 hover:shadow-lg ${
+              className={`rounded-2xl border border-border bg-white p-5 sm:p-8 transition-all duration-700 hover:shadow-lg ${
                 pricing.visible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-8"
@@ -1095,7 +1095,7 @@ export default function LandingPage() {
 
             {/* Premium tier */}
             <div
-              className={`relative rounded-2xl border-2 border-emerald-200 bg-white p-8 shadow-xl transition-all duration-700 hover:shadow-2xl ${
+              className={`relative rounded-2xl border-2 border-emerald-200 bg-white p-5 sm:p-8 shadow-xl transition-all duration-700 hover:shadow-2xl ${
                 pricing.visible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-8"
@@ -1172,9 +1172,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Final CTA ──────────────────────────────────────── */}
-      <section className="relative py-24 sm:py-32 bg-page overflow-hidden">
-        <div className="mx-auto max-w-3xl px-6 text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+      <section className="relative py-16 sm:py-32 bg-page overflow-hidden">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
             Start your trading journal{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               today.
@@ -1210,8 +1210,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────── */}
-      <footer className="border-t border-border bg-page py-12">
-        <div className="mx-auto max-w-5xl px-6">
+      <footer className="border-t border-border bg-page py-8 sm:py-12">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <a

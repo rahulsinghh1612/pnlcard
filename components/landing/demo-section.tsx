@@ -829,21 +829,21 @@ export function DemoSection() {
   };
 
   return (
-    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-32 scroll-mt-24">
-      <div className="mx-auto max-w-5xl px-6">
+    <section id="demo" ref={ref} className="pt-8 sm:pt-10 pb-20 sm:pb-32 scroll-mt-24">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {/* Heading */}
         <div
-          className={`text-center mb-10 transition-all duration-700 ${
+          className={`text-center mb-8 sm:mb-10 transition-all duration-700 ${
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
             Log a trade in{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               60 seconds
             </span>
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-muted-foreground">
             Enter your P&amp;L, rate your discipline, tag any mistakes &mdash; done.
           </p>
         </div>
@@ -887,7 +887,7 @@ export function DemoSection() {
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="relative h-[440px] sm:h-[400px]">
+          <div className="relative h-[400px] sm:h-[400px]">
             {/* Step 1: Enter P&L */}
             <div
               className="absolute inset-0 flex items-start justify-center transition-all duration-500 ease-out"
