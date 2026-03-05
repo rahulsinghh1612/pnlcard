@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Sun, Moon } from "lucide-react";
+import { formatTradingCapital, parseTradingCapital } from "@/lib/utils";
 
 interface ProfileFormProps {
   userId: string;
@@ -46,6 +47,14 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
   const [tradingCapital, setTradingCapital] = useState(initialData.tradingCapital);
   const [cardTheme, setCardTheme] = useState(initialData.cardTheme);
 
+  // Format trading capital on mount and when currency changes
+  useEffect(() => {
+    if (tradingCapital) {
+      const raw = tradingCapital.replace(/\D/g, "");
+      setTradingCapital(formatTradingCapital(raw, currency));
+    }
+  }, [currency]); // eslint-disable-line react-hooks/exhaustive-deps -- format when currency changes
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -61,10 +70,8 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
       return;
     }
 
-    const capital = tradingCapital.trim()
-      ? parseFloat(tradingCapital.replace(/,/g, ""))
-      : null;
-    if (tradingCapital.trim() && (capital === null || isNaN(capital) || capital <= 0)) {
+    const capital = parseTradingCapital(tradingCapital);
+    if (tradingCapital.trim() && (capital === null || capital <= 0)) {
       toast.error("Trading capital must be a positive number.");
       return;
     }
@@ -172,13 +179,22 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="tradingCapital">Trading capital</Label>
-            <Input
-              id="tradingCapital"
-              value={tradingCapital}
-              onChange={(e) => setTradingCapital(e.target.value)}
-              placeholder="e.g. 100000"
-              inputMode="numeric"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                {currency === "INR" ? "₹" : "$"}
+              </span>
+              <Input
+                id="tradingCapital"
+                value={tradingCapital}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "");
+                  setTradingCapital(raw === "" ? "" : formatTradingCapital(raw, currency));
+                }}
+                placeholder={currency === "INR" ? "e.g. 1,00,000" : "e.g. 100,000"}
+                inputMode="numeric"
+                className="pl-8"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               Used for ROI calculations on your cards.
             </p>
@@ -220,9 +236,9 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
       <button
         type="submit"
         disabled={saving}
-        className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
+        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
       >
-        <span className="relative z-[1]">{saving ? "Saving…" : "Save changes"}</span>
+        {saving ? "Saving…" : "Save changes"}
       </button>
     </form>
   );

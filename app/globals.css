@@ -415,3 +415,49 @@
   stroke-dashoffset: 20;
   animation: check-draw 0.5s ease-out 0.2s forwards;
 }
+
+/* Onboarding slide visuals */
+@keyframes onboarding-cell-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+.onboarding-cell-in {
+  opacity: 0;
+  transform-origin: center;
+  animation: onboarding-cell-in 0.3s ease-out forwards;
+}
+
+@keyframes onboarding-bar-grow {
+  from { width: 0; }
+  to { width: var(--bar-width); }
+}
+.onboarding-bar-grow {
+  animation: onboarding-bar-grow 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes onboarding-bar-scale {
+  from { opacity: 0.6; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+.onboarding-bar-scale {
+  transform-origin: left center;
+  transform-box: fill-box;
+  opacity: 0.6;
+  animation: onboarding-bar-scale 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+@keyframes onboarding-label-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.onboarding-label-in {
+  opacity: 0;
+  animation: onboarding-label-fade 0.4s ease-out forwards;
+}
+
+@keyframes onboarding-check-scale {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+.onboarding-check-in {
+  animation: onboarding-check-scale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}

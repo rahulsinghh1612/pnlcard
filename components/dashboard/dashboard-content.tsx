@@ -8,9 +8,11 @@ import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
 import { TradeDetailModal } from "@/components/dashboard/trade-detail-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, FileText } from "lucide-react";
+import { UpgradeToProModal } from "@/components/dashboard/upgrade-to-pro-modal";
+import { MilestoneUpgradeModal } from "@/components/dashboard/milestone-upgrade-modal";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, FileText, Plus } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import {
   format,
@@ -168,6 +170,10 @@ export function DashboardContent({
   const [cardPreviewWeekMonday, setCardPreviewWeekMonday] = useState<string | null>(null);
   const [cardPreviewMonthDate, setCardPreviewMonthDate] = useState<string | null>(null);
 
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
+  const [milestoneShown, setMilestoneShown] = useState<number | null>(null);
+
   const [dailyIdx, setDailyIdx] = useState(0);
   const [weeklyIdx, setWeeklyIdx] = useState(0);
   const [monthlyIdx, setMonthlyIdx] = useState(0);
@@ -250,6 +256,28 @@ export function DashboardContent({
     setModalOpen(true);
   };
 
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("log") === "1" && !demoMode) {
+      openCreateModal();
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Show upgrade prompt when user has 3+ trades and is not premium (once per user)
+  useEffect(() => {
+    if (demoMode || isPremium || effectiveTrades.length < 3) return;
+    try {
+      if (localStorage.getItem("pnlcard_upgrade_prompt_shown") === "true") return;
+      const t = setTimeout(() => {
+        setUpgradeModalOpen(true);
+        localStorage.setItem("pnlcard_upgrade_prompt_shown", "true");
+      }, 1500);
+      return () => clearTimeout(t);
+    } catch {}
+  }, [demoMode, isPremium, effectiveTrades.length]);
+
   return (
     <>
       <div className="space-y-6">
@@ -298,9 +326,16 @@ export function DashboardContent({
                   {formatPnl(viewedMonthPnl, currency)}
                 </p>
               ) : (
-                <p className="mt-1 text-3xl sm:text-4xl font-bold tracking-tight text-muted-foreground/40">
-                  {currency === "INR" ? "\u20B9" : "$"}0
-                </p>
+                <>
+                  <p className="mt-1 text-3xl sm:text-4xl font-bold tracking-tight text-muted-foreground/40">
+                    {currency === "INR" ? "\u20B9" : "$"}0
+                  </p>
+                  {!hasTrades && !demoMode && (
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Log your first trade to start tracking
+                    </p>
+                  )}
+                </>
               )}
               {viewedMonthHasTrades && (
                 <span
@@ -360,8 +395,31 @@ export function DashboardContent({
           </Link>
         )}
 
-        {/* Log trade CTA */}
-        <div className="flex justify-center">
+        {/* Log trade CTA with first-time callout */}
+        <div className="flex flex-col items-center">
+          {!hasTrades && !demoMode && (
+            <div className="mb-3 flex flex-col items-center animate-fade-in-up">
+              <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 px-4 py-3 text-center shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100/80 hover:shadow-md">
+                <p className="text-sm font-semibold text-amber-700">
+                  Start by logging today&apos;s result
+                </p>
+                <p className="mt-0.5 text-xs text-amber-700/80">
+                  It takes less than 60 seconds.
+                </p>
+              </div>
+              <svg
+                className="mt-2 h-5 w-5 text-amber-400/70"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 5v14M7 12l5 5 5-5" />
+              </svg>
+            </div>
+          )}
           <LogTradeButton
             userId={userId}
             currency={currency}
@@ -371,43 +429,95 @@ export function DashboardContent({
           />
         </div>
 
-        <CalendarHeatmap
-          trades={effectiveTrades.map((t) => ({
-            id: t.id,
-            trade_date: t.trade_date,
-            net_pnl: t.net_pnl,
-            charges: t.charges,
-            num_trades: t.num_trades,
-            capital_deployed: t.capital_deployed,
-            note: t.note,
-          }))}
-          currency={currency}
-          onDayClick={(date, existingTrade) => {
-            if (existingTrade) {
-              const fullTrade = effectiveTrades.find((t) => t.id === existingTrade.id);
-              if (fullTrade) {
-                setDetailTrade(fullTrade);
-                setDetailOpen(true);
-                return;
+        {!hasTrades && !demoMode ? (
+          <div className="relative">
+            <div className="opacity-30 pointer-events-none select-none">
+              <CalendarHeatmap
+                trades={[]}
+                currency={currency}
+                onDayClick={() => {}}
+                initialViewDate={demoViewDate}
+                onMonthChange={setViewedMonth}
+              />
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+              <CalendarDays className="h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-sm font-semibold text-foreground">
+                Your trading calendar will appear here
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground max-w-xs">
+                Log your daily result to start tracking your performance and
+                patterns.
+              </p>
+              <button
+                type="button"
+                onClick={() => openCreateModal()}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+              >
+                <Plus className="h-3 w-3" />
+                Log trade
+              </button>
+            </div>
+          </div>
+        ) : (
+          <CalendarHeatmap
+            trades={effectiveTrades.map((t) => ({
+              id: t.id,
+              trade_date: t.trade_date,
+              net_pnl: t.net_pnl,
+              charges: t.charges,
+              num_trades: t.num_trades,
+              capital_deployed: t.capital_deployed,
+              note: t.note,
+            }))}
+            currency={currency}
+            onDayClick={(date, existingTrade) => {
+              if (existingTrade) {
+                const fullTrade = effectiveTrades.find((t) => t.id === existingTrade.id);
+                if (fullTrade) {
+                  setDetailTrade(fullTrade);
+                  setDetailOpen(true);
+                  return;
+                }
               }
-            }
-            openEditModal(date, null);
-          }}
-          onWeekClick={(mondayStr) => {
-            router.push(`/dashboard/debrief?week=${mondayStr}`);
-          }}
-          onMonthClick={(monthDateStr) => {
-            router.push(`/dashboard/debrief/monthly?month=${monthDateStr}`);
-          }}
-          initialViewDate={demoViewDate}
-          onMonthChange={setViewedMonth}
-        />
+              openEditModal(date, null);
+            }}
+            onWeekClick={(mondayStr) => {
+              router.push(`/dashboard/debrief?week=${mondayStr}`);
+            }}
+            onMonthClick={(monthDateStr) => {
+              router.push(`/dashboard/debrief/monthly?month=${monthDateStr}`);
+            }}
+            initialViewDate={demoViewDate}
+            onMonthChange={setViewedMonth}
+          />
+        )}
 
         {/* Generate Cards section */}
         <div>
           <h2 className="text-sm font-medium text-foreground mb-3">
             Generate cards
           </h2>
+          {!hasTrades && !demoMode ? (
+            <div className="rounded-xl border border-border bg-gradient-to-br from-white via-white to-slate-50/40 p-6 text-center">
+              <FileText className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2" />
+              <p className="text-sm font-semibold text-foreground">
+                Create shareable trading recap cards
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground max-w-xs mx-auto">
+                Once you log trades, you&apos;ll be able to generate clean recap
+                cards for your week or month.
+              </p>
+              <button
+                type="button"
+                onClick={() => openCreateModal()}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+              >
+                <Plus className="h-3 w-3" />
+                Log trade
+              </button>
+            </div>
+          ) : (
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {/* Daily card */}
                 {(() => {
@@ -610,6 +720,7 @@ export function DashboardContent({
                   );
                 })()}
               </div>
+          )}
             </div>
 
             <PnlTicker
@@ -693,6 +804,16 @@ export function DashboardContent({
             setCardPreviewOpen(true);
           }
         }}
+        onTradeSaved={(newTotalCount) => {
+          const milestones = [1, 5, 10];
+          if (demoMode || isPremium || !milestones.includes(newTotalCount)) return;
+          try {
+            const key = `pnlcard_milestone_${newTotalCount}_shown`;
+            if (localStorage.getItem(key) === "true") return;
+            setMilestoneShown(newTotalCount);
+            setMilestoneModalOpen(true);
+          } catch {}
+        }}
       />
 
       <CardPreviewModal
@@ -720,6 +841,31 @@ export function DashboardContent({
           setModalOpen(true);
         }}
       />
+
+      <UpgradeToProModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        userEmail={userEmail}
+        userName={displayName}
+        redirectOnClose={false}
+      />
+
+      {milestoneShown != null && (
+        <MilestoneUpgradeModal
+          open={milestoneModalOpen}
+          onOpenChange={(open) => {
+            setMilestoneModalOpen(open);
+            if (!open && milestoneShown != null) {
+              try {
+                localStorage.setItem(`pnlcard_milestone_${milestoneShown}_shown`, "true");
+              } catch {}
+            }
+          }}
+          userEmail={userEmail}
+          userName={displayName}
+          milestone={milestoneShown}
+        />
+      )}
     </>
   );
 }

@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatTradingCapital, parseTradingCapital } from "@/lib/utils";
 
 interface OnboardingFormProps {
   userId: string;
+  onComplete?: () => void;
 }
 
-export function OnboardingForm({ userId }: OnboardingFormProps) {
+export function OnboardingForm({ userId, onComplete }: OnboardingFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +21,14 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
   const [tradingCapital, setTradingCapital] = useState("");
   const [xHandle, setXHandle] = useState("");
   const [currency, setCurrency] = useState<"INR" | "USD">("INR");
+
+  // Reformat trading capital when currency changes
+  useEffect(() => {
+    if (tradingCapital) {
+      const raw = tradingCapital.replace(/\D/g, "");
+      setTradingCapital(formatTradingCapital(raw, currency));
+    }
+  }, [currency]); // eslint-disable-line react-hooks/exhaustive-deps -- only when currency changes
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,10 +45,8 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
     try {
       const supabase = createClient();
 
-      const capital = tradingCapital.trim()
-        ? parseFloat(tradingCapital.replace(/,/g, ""))
-        : null;
-      if (tradingCapital.trim() && (isNaN(capital!) || capital! <= 0)) {
+      const capital = parseTradingCapital(tradingCapital);
+      if (tradingCapital.trim() && (capital === null || capital <= 0)) {
         setError("Trading capital must be a positive number.");
         setIsLoading(false);
         return;
@@ -65,8 +73,12 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
         return;
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      if (onComplete) {
+        onComplete();
+      } else {
+        router.push("/dashboard");
+        router.refresh();
+      }
     } catch {
       setError("Something went wrong. Please try again.");
       setIsLoading(false);
@@ -137,8 +149,11 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
             id="tradingCapital"
             type="text"
             value={tradingCapital}
-            onChange={(e) => setTradingCapital(e.target.value)}
-            placeholder="e.g. 1,00,000"
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, "");
+              setTradingCapital(raw === "" ? "" : formatTradingCapital(raw, currency));
+            }}
+            placeholder={currency === "INR" ? "e.g. 1,00,000" : "e.g. 100,000"}
             inputMode="numeric"
             className="rounded-xl border-border bg-white pl-8 pr-4 py-2.5 text-sm transition-colors focus-visible:ring-emerald-300"
           />
@@ -171,11 +186,9 @@ export function OnboardingForm({ userId }: OnboardingFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="btn-gradient-flow group relative w-full rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        className="w-full rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
       >
-        <span className="relative z-[1]">
-          {isLoading ? "Setting up…" : "Let's go →"}
-        </span>
+        {isLoading ? "Setting up…" : "Let's go"}
       </button>
     </form>
   );

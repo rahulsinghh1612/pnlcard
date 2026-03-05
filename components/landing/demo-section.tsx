@@ -232,65 +232,87 @@ const DEMO_MISTAKE_TAGS = [
 const DEMO_SELECTED_MISTAKE = "fomo_entry";
 
 function DemoMistakes({ active }: { active: boolean }) {
-  const [phase, setPhase] = useState(0); // 0=hidden, 1=pills visible, 2=one selected, 3=save visible
+  const [phase, setPhase] = useState(0); // 0=hidden, 1=pills visible, 2=one selected, 3=save visible, 4=save pressed, 5=trade logged
 
   useEffect(() => {
     if (!active) { setPhase(0); return; }
     const t1 = setTimeout(() => setPhase(1), 200);
     const t2 = setTimeout(() => setPhase(2), 1400);
     const t3 = setTimeout(() => setPhase(3), 2200);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const t4 = setTimeout(() => setPhase(4), 3200);
+    const t5 = setTimeout(() => setPhase(5), 3600);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
   }, [active]);
 
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="rounded-xl border border-border bg-background p-6 shadow-xl">
-        <h3 className="text-base font-semibold text-foreground text-center mb-2">Log trade</h3>
-        <p className="text-xs text-muted-foreground text-center mb-8">Step 3 of 3</p>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-foreground text-center">Any mistakes?</label>
-          <div className="flex flex-wrap justify-center gap-2">
-            {DEMO_MISTAKE_TAGS.map((tag, i) => {
-              const selected = phase >= 2 && tag.value === DEMO_SELECTED_MISTAKE;
-              return (
-                <span
-                  key={tag.value}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-[opacity,transform] duration-300 ${
-                    selected
-                      ? "border-red-500 bg-red-50 text-red-700"
-                      : "border-border bg-muted/30 text-muted-foreground"
-                  }`}
-                  style={{
-                    opacity: phase >= 1 ? 1 : 0,
-                    transform: phase >= 1 ? "translateY(0) scale(1)" : "translateY(12px) scale(0.9)",
-                    transitionDelay: phase === 1 ? `${i * 100}ms` : phase === 2 ? `${i * 50}ms` : "0ms",
-                  }}
-                >
-                  {tag.label}
-                </span>
-              );
-            })}
+        {phase >= 5 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-10 animate-fade-in-up">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+              <svg className="h-7 w-7 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <p className="text-lg font-semibold text-foreground">Trade logged!</p>
+            <p className="text-sm text-muted-foreground">Day 1/7 this week</p>
           </div>
-          <p
-            className="text-[11px] text-muted-foreground text-center transition-opacity duration-400"
-            style={{ opacity: phase >= 1 ? 0.6 : 0 }}
-          >
-            {phase >= 2 ? "1 mistake tagged" : "Tap any that apply"}
-          </p>
-        </div>
+        ) : (
+          <>
+            <h3 className="text-base font-semibold text-foreground text-center mb-2">Log trade</h3>
+            <p className="text-xs text-muted-foreground text-center mb-8">Step 3 of 3</p>
 
-        <div
-          className="mt-6 transition-[opacity,transform] duration-500 ease-out"
-          style={{
-            opacity: phase >= 3 ? 1 : 0,
-            transform: `translateY(${phase >= 3 ? 0 : 12}px)`,
-          }}
-        >
-          <div className="btn-gradient-flow btn-gradient-flow-active flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm cursor-default">
-            <span className="relative z-[1]">Save</span>
-          </div>
-        </div>
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-foreground text-center">Any mistakes?</label>
+              <div className="flex flex-wrap justify-center gap-2">
+                {DEMO_MISTAKE_TAGS.map((tag, i) => {
+                  const selected = phase >= 2 && tag.value === DEMO_SELECTED_MISTAKE;
+                  return (
+                    <span
+                      key={tag.value}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-[opacity,transform] duration-300 ${
+                        selected
+                          ? "border-red-500 bg-red-50 text-red-700"
+                          : "border-border bg-muted/30 text-muted-foreground"
+                      }`}
+                      style={{
+                        opacity: phase >= 1 ? 1 : 0,
+                        transform: phase >= 1 ? "translateY(0) scale(1)" : "translateY(12px) scale(0.9)",
+                        transitionDelay: phase === 1 ? `${i * 100}ms` : phase === 2 ? `${i * 50}ms` : "0ms",
+                      }}
+                    >
+                      {tag.label}
+                    </span>
+                  );
+                })}
+              </div>
+              <p
+                className="text-[11px] text-muted-foreground text-center transition-opacity duration-400"
+                style={{ opacity: phase >= 1 ? 0.6 : 0 }}
+              >
+                {phase >= 2 ? "1 mistake tagged" : "Tap any that apply"}
+              </p>
+            </div>
+
+            <div
+              className="mt-6 transition-[opacity,transform] duration-500 ease-out"
+              style={{
+                opacity: phase >= 3 ? 1 : 0,
+                transform: `translateY(${phase >= 3 ? 0 : 12}px)`,
+              }}
+            >
+              <div
+                className={`flex w-full items-center justify-center rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 cursor-default ${
+                  phase >= 4
+                    ? "bg-muted shadow-md scale-[0.97]"
+                    : "bg-white hover:-translate-y-0.5 hover:bg-muted hover:shadow-md"
+                }`}
+              >
+                Save
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

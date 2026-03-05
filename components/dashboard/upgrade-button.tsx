@@ -71,7 +71,7 @@ function loadRazorpayScript(): Promise<void> {
 export function UpgradeButton({
   userEmail,
   userName,
-  defaultCycle = "monthly",
+  defaultCycle = "yearly",
   className,
   children,
   dropdownAlign = "left",
@@ -171,7 +171,7 @@ export function UpgradeButton({
         onClick={() => setShowPicker((prev) => !prev)}
         className={
           className ??
-          "btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          "w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         }
       >
         <span className="relative z-[1] inline-flex items-center gap-1.5">
@@ -179,7 +179,7 @@ export function UpgradeButton({
             "Processing…"
           ) : variant === "header" ? (
             <>
-              <Crown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:rotate-12" />
+              <Crown className="h-3.5 w-3.5 shrink-0" />
               Go Pro
             </>
           ) : (
@@ -205,9 +205,9 @@ export function UpgradeButton({
               setCycle("monthly");
               handleUpgrade("monthly");
             }}
-            className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors mb-1.5 ${
+            className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-200 mb-1.5 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] ${
               cycle === "monthly"
-                ? "bg-emerald-50 text-emerald-800 font-medium"
+                ? "bg-emerald-50 text-emerald-800 font-medium shadow-sm"
                 : "hover:bg-muted text-foreground"
             }`}
           >
@@ -220,9 +220,9 @@ export function UpgradeButton({
               setCycle("yearly");
               handleUpgrade("yearly");
             }}
-            className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+            className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.98] ${
               cycle === "yearly"
-                ? "bg-emerald-50 text-emerald-800 font-medium"
+                ? "bg-emerald-50 text-emerald-800 font-medium shadow-sm"
                 : "hover:bg-muted text-foreground"
             }`}
           >

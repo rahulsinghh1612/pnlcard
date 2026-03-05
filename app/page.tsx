@@ -8,7 +8,6 @@ import {
   Check,
   Sun,
   Moon,
-  ChevronDown,
 } from "lucide-react";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import dynamic from "next/dynamic";
@@ -817,7 +816,7 @@ export default function LandingPage() {
                 href="#how-it-works"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                How it works
+                See how it works
               </a>
               <a
                 href="#features"
@@ -845,9 +844,9 @@ export default function LandingPage() {
               </Link>
               <Link
                 href="/signup"
-                className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-lg sm:rounded-xl px-3.5 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
+                className="inline-flex items-center justify-center rounded-lg sm:rounded-xl px-3.5 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
               >
-                <span className="relative z-[1]">Start for Free</span>
+                Start for Free
               </Link>
             </div>
           </div>
@@ -872,17 +871,10 @@ export default function LandingPage() {
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link
                 href="/signup"
-                className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-transform"
+                className="inline-flex items-center justify-center rounded-xl px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
               >
-                <span className="relative z-[1]">Start for Free</span>
+                Start for Free
               </Link>
-              <a
-                href="#how-it-works"
-                className="group/link inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-border bg-transparent px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700"
-              >
-                See how it works
-                <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover/link:translate-y-0.5" />
-              </a>
             </div>
           </div>
 
@@ -1217,9 +1209,9 @@ export default function LandingPage() {
           <div className="mt-8 flex justify-center">
             <Link
               href="/signup"
-              className="btn-gradient-flow group relative inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
+              className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
             >
-              <span className="relative z-[1]">Start for Free</span>
+              Start for Free
             </Link>
           </div>
         </div>

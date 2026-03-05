@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles, Square, LayoutGrid, Lock } from "lucide-react";
+import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles, Square, LayoutGrid, Lock, BarChart3, CalendarDays } from "lucide-react";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import { toast } from "sonner";
 import {
@@ -351,18 +351,48 @@ export function CardPreviewModal({
         </DialogHeader>
 
         {isLocked ? (
-          <div className="px-5 pb-5 space-y-4">
-            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/30" style={{ minHeight: 340 }}>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-50 to-slate-100/80">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100/80 shadow-inner">
-                  <Lock className="h-7 w-7 text-amber-700" />
+          <div className="px-6 pb-6 sm:px-8 sm:pb-8">
+            <div className="rounded-2xl bg-gradient-to-b from-white to-slate-50/80 p-0">
+              <div className="space-y-4 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-emerald-50 ring-2 ring-amber-100/80 ring-offset-2">
+                  <Sparkles className="h-7 w-7 text-amber-600" />
                 </div>
-                <p className="text-sm font-semibold text-foreground">Pro Feature</p>
-                <p className="text-xs text-muted-foreground text-center max-w-[220px]">
-                  Upgrade to Pro to unlock {cardType} recap cards, story downloads, and more.
-                </p>
-                <div className="mt-1">
-                  <UpgradeButton userEmail={userEmail} userName={userName} />
+                <div>
+                  <p className="text-xl font-bold tracking-tight text-foreground">
+                    Unlock weekly & monthly cards
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    Upgrade to Pro to access weekly recap cards, monthly reviews, story downloads, and more.
+                  </p>
+                </div>
+                <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left">
+                  {[
+                    { icon: BarChart3, text: "Weekly & monthly performance reports" },
+                    { icon: CalendarDays, text: "Discipline & mistake tracking" },
+                    { icon: Sparkles, text: "All card types, no watermark" },
+                  ].map(({ icon: Icon, text }) => (
+                    <li key={text} className="flex items-center gap-3">
+                      <Icon className="h-4 w-4 shrink-0 text-emerald-600" />
+                      <span className="text-sm text-muted-foreground">{text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-5 space-y-2">
+                  <UpgradeButton
+                    userEmail={userEmail}
+                    userName={userName}
+                    dropdownPosition="top"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Upgrade to Pro
+                  </UpgradeButton>
+                  <button
+                    type="button"
+                    onClick={() => onOpenChange(false)}
+                    className="w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Maybe later
+                  </button>
                 </div>
               </div>
             </div>
@@ -527,36 +557,30 @@ export function CardPreviewModal({
             <div className="flex items-center gap-2 px-5 pb-5">
               <button
                 onClick={handleDownload}
-                className="btn-gradient-flow flex-1 border border-border rounded-lg px-4 py-2 text-sm font-medium"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
               >
-                <span className="flex items-center justify-center gap-1.5">
-                  <Download className="h-3.5 w-3.5" />
-                  Download
-                </span>
+                <Download className="h-3.5 w-3.5" />
+                Download
               </button>
 
               <button
                 onClick={handleShareX}
-                className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
                 title="Share to X"
               >
-                <span className="flex items-center justify-center gap-1.5">
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                  Share
-                </span>
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                Share
               </button>
 
               {cardType === "daily" && trade && (
                 <button
                   onClick={handleEdit}
-                  className="btn-gradient-flow border border-border rounded-lg px-3 py-2 text-sm font-medium"
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
                 >
-                  <span className="flex items-center justify-center gap-1.5">
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit
-                  </span>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
                 </button>
               )}
             </div>

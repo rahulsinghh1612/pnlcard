@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { OnboardingForm } from "./onboarding-form";
+import { OnboardingFlow } from "./onboarding-flow";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata = {
@@ -44,16 +44,7 @@ export default async function OnboardingPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
-          <div className="mb-6">
-            <h1 className="text-xl font-semibold text-foreground">
-              Set up your profile
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Just a few details and you&apos;re good to go
-            </p>
-          </div>
-
-          <OnboardingForm userId={user.id} />
+          <OnboardingFlow userId={user.id} />
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

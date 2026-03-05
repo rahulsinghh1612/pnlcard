@@ -118,6 +118,8 @@ type TradeEntryModalProps = {
   existingTradeDates?: Set<string>;
   onEditExisting?: (date: string) => void;
   onGenerateCard?: () => void;
+  /** Called after a new trade is saved with the new total trade count. Used for milestone upgrade prompts. */
+  onTradeSaved?: (newTotalCount: number) => void;
   /** When true, submit shows toast and closes without saving to DB (for landing demo) */
   demoMode?: boolean;
   loggingStreak?: number;
@@ -135,6 +137,7 @@ export function TradeEntryModal({
   existingTradeDates,
   onEditExisting,
   onGenerateCard,
+  onTradeSaved,
   demoMode = false,
   loggingStreak = 0,
   weekLogCount = 0,
@@ -288,9 +291,15 @@ export function TradeEntryModal({
       }
 
       setShowReward(true);
+      const newTotalCount = isEdit
+        ? 0
+        : (existingTradeDates?.size ?? 0) + 1;
       rewardTimer.current = setTimeout(() => {
         setShowReward(false);
         onOpenChange(false);
+        if (!isEdit && onTradeSaved && newTotalCount >= 1) {
+          onTradeSaved(newTotalCount);
+        }
         router.refresh();
       }, 2000);
     } catch (err) {
@@ -782,11 +791,9 @@ export function TradeEntryModal({
                     <button
                       type="submit"
                       disabled={isLoading || isFutureDate}
-                      className="btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none disabled:transform-none"
                     >
-                      <span className="relative z-[1]">
-                        {isLoading ? "Saving…" : isEdit ? "Update" : "Save"}
-                      </span>
+                      {isLoading ? "Saving…" : isEdit ? "Update" : "Save"}
                     </button>
                   </div>
                 )}

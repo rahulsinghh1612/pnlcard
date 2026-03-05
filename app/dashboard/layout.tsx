@@ -62,7 +62,7 @@ export default async function DashboardLayout({
                 userName={profile?.display_name ?? "User"}
                 dropdownAlign="right"
                 variant="header"
-                className="btn-gradient-flow group inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               />
             )}
             <DashboardNav displayName={profile?.display_name ?? "User"} plan={hasPremium ? "premium" : "free"} />
