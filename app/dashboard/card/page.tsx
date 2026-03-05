@@ -17,7 +17,7 @@ import {
 import { isPremiumUser } from "@/lib/utils";
 
 export const metadata = {
-  title: "Generate Card — PNLCard",
+  title: "Generate Card — PnLCard",
   description: "Generate your trading recap card.",
 };
 

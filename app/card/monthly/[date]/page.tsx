@@ -38,7 +38,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
   const { date } = await params;
   const { t: tradeId } = await searchParams;
 
-  if (!tradeId) return { title: "Monthly Card — PNLCard" };
+  if (!tradeId) return { title: "Monthly Card — PnLCard" };
 
   const monthDateStr = `${date}-01`;
 
@@ -47,14 +47,14 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
 
   try {
     const supabase = createAdminClient();
-    if (!supabase) return { title: "Monthly Card — PNLCard" };
+    if (!supabase) return { title: "Monthly Card — PnLCard" };
     const { data: t } = await supabase
       .from("trades")
       .select("user_id")
       .eq("id", tradeId)
       .single();
 
-    if (!t) return { title: "Monthly Card — PNLCard" };
+    if (!t) return { title: "Monthly Card — PnLCard" };
 
     const { data: p } = await supabase
       .from("profiles")
@@ -62,7 +62,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       .eq("id", t.user_id)
       .single();
 
-    if (!p) return { title: "Monthly Card — PNLCard" };
+    if (!p) return { title: "Monthly Card — PnLCard" };
 
     profile = {
       x_handle: p.x_handle,
@@ -87,19 +87,19 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       capital_deployed: tr.capital_deployed != null ? Number(tr.capital_deployed) : null,
     }));
   } catch {
-    return { title: "Monthly Card — PNLCard" };
+    return { title: "Monthly Card — PnLCard" };
   }
 
-  if (!profile) return { title: "Monthly Card — PNLCard" };
+  if (!profile) return { title: "Monthly Card — PnLCard" };
 
   const monthlyParams = buildMonthlyCardParams(tradesForCard, monthDateStr, profile);
-  if (!monthlyParams) return { title: "Monthly Card — PNLCard" };
+  if (!monthlyParams) return { title: "Monthly Card — PnLCard" };
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://pnlcard.com";
   const ogUrl = buildMonthlyOgUrl(monthlyParams, baseUrl);
 
   return {
-    title: `${monthlyParams.month} — Monthly Recap | PNLCard`,
+    title: `${monthlyParams.month} — Monthly Recap | PnLCard`,
     description: `Trading recap: ${monthlyParams.pnl}`,
     openGraph: {
       title: `${monthlyParams.month} — Monthly Recap`,
@@ -193,7 +193,7 @@ export default async function MonthlyCardPage({ params, searchParams }: PageProp
         href="/"
         className="mt-3 text-sm font-medium text-primary hover:underline"
       >
-        Start for Free — PNLCard
+        Start for Free — PnLCard
       </Link>
     </div>
   );

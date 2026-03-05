@@ -126,7 +126,7 @@ export function UpgradeButton({
       const options: Record<string, unknown> = {
         key: keyId,
         subscription_id: subscriptionId,
-        name: "PNLCard",
+        name: "PnLCard",
         description: `Pro — ${selectedCycle === "monthly" ? "₹249/month" : "₹1,999/year"}`,
         prefill: {
           email: userEmail,

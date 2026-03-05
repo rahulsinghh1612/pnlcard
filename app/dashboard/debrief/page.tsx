@@ -12,7 +12,7 @@ import { isPremiumUser } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Weekly Review — PNLCard",
+  title: "Weekly Review — PnLCard",
   description: "Your weekly trading performance report.",
 };
 

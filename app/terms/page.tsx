@@ -3,8 +3,8 @@ import Link from "next/link";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — PNLCard",
-  description: "Terms and conditions for using PNLCard.",
+  title: "Terms of Service — PnLCard",
+  description: "Terms and conditions for using PnLCard.",
 };
 
 export default function TermsPage() {
@@ -32,7 +32,7 @@ export default function TermsPage() {
               1. Acceptance of terms
             </h2>
             <p>
-              By using PNLCard (&quot;the Service&quot;), operated by Next
+              By using PnLCard (&quot;the Service&quot;), operated by Next
               Alphabet, you agree to these Terms of Service. If you do not
               agree, please do not use the Service.
             </p>
@@ -43,7 +43,7 @@ export default function TermsPage() {
               2. Description of service
             </h2>
             <p>
-              PNLCard is a web application that allows traders to log their daily
+              PnLCard is a web application that allows traders to log their daily
               profit and loss (P&amp;L) and generate shareable recap cards for
               social media. The Service is available in Free and Pro tiers.
             </p>
@@ -71,11 +71,11 @@ export default function TermsPage() {
             <p className="mt-2">
               <strong>Free plan:</strong> Includes unlimited trade logging, daily
               recap cards, PNG download, and dark/light themes. Cards include
-              PNLCard branding.
+              PnLCard branding.
             </p>
             <p className="mt-2">
               <strong>Pro plan:</strong> Everything in Free, plus weekly and
-              monthly recap cards, your X handle on cards, and no PNLCard
+              monthly recap cards, your X handle on cards, and no PnLCard
               watermark. Pricing is ₹249/month or ₹1,999/year.
             </p>
           </div>
@@ -145,16 +145,16 @@ export default function TermsPage() {
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>
                 You retain ownership of all trade data and content you enter into
-                PNLCard.
+                PnLCard.
               </li>
               <li>
-                By generating and sharing cards, you grant PNLCard a
-                non-exclusive license to display the PNLCard branding on free-tier
+                By generating and sharing cards, you grant PnLCard a
+                non-exclusive license to display the PnLCard branding on free-tier
                 cards.
               </li>
               <li>
                 You are solely responsible for the accuracy of the trade data you
-                enter. PNLCard does not verify or validate trading P&amp;L
+                enter. PnLCard does not verify or validate trading P&amp;L
                 figures.
               </li>
             </ul>
@@ -164,7 +164,7 @@ export default function TermsPage() {
             <h2 className="text-lg font-semibold text-foreground">
               8. Prohibited use
             </h2>
-            <p>You may not use PNLCard to:</p>
+            <p>You may not use PnLCard to:</p>
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>Post misleading or fraudulent trading performance.</li>
               <li>Violate any applicable laws or regulations.</li>
@@ -178,7 +178,7 @@ export default function TermsPage() {
               9. Disclaimer
             </h2>
             <p>
-              PNLCard is a content creation tool, not financial advice. We do not
+              PnLCard is a content creation tool, not financial advice. We do not
               provide investment recommendations, portfolio management, or
               trading signals. The Service is provided &quot;as is&quot; without
               warranties of any kind.
@@ -192,7 +192,7 @@ export default function TermsPage() {
             <p>
               To the maximum extent permitted by law, Next Alphabet shall not be
               liable for any indirect, incidental, or consequential damages
-              arising from your use of PNLCard. Our total liability is limited to
+              arising from your use of PnLCard. Our total liability is limited to
               the amount you paid us in the 12 months preceding the claim.
             </p>
           </div>

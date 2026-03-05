@@ -5,8 +5,8 @@ import { OnboardingFlow } from "./onboarding-flow";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata = {
-  title: "Get started — PNLCard",
-  description: "Set up your PNLCard profile.",
+  title: "Get started — PnLCard",
+  description: "Set up your PnLCard profile.",
 };
 
 export default async function OnboardingPage() {

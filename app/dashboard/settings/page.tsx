@@ -9,7 +9,7 @@ import { isPremiumUser } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Settings — PNLCard",
+  title: "Settings — PnLCard",
   description: "Manage your account settings.",
 };
 

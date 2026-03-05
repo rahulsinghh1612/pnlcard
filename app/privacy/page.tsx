@@ -3,8 +3,8 @@ import Link from "next/link";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — PNLCard",
-  description: "How PNLCard collects, uses, and protects your data.",
+  title: "Privacy Policy — PnLCard",
+  description: "How PnLCard collects, uses, and protects your data.",
 };
 
 export default function PrivacyPage() {
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               1. Who we are
             </h2>
             <p>
-              PNLCard (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a
+              PnLCard (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a
               product of Next Alphabet. This policy explains how we collect, use,
               and protect your information when you use pnlcard.com.
             </p>
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold text-foreground">
               2. Information we collect
             </h2>
-            <p>We collect the following data when you use PNLCard:</p>
+            <p>We collect the following data when you use PnLCard:</p>
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>
                 <strong>Account information:</strong> Name, email address, and
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
               3. How we use your information
             </h2>
             <ul className="list-disc pl-6 space-y-1 mt-2">
-              <li>To provide and operate the PNLCard service.</li>
+              <li>To provide and operate the PnLCard service.</li>
               <li>
                 To generate trading recap cards with your data (P&amp;L, handle,
                 stats).
@@ -138,7 +138,7 @@ export default function PrivacyPage() {
               7. Cookies
             </h2>
             <p>
-              PNLCard uses essential cookies only — for authentication session
+              PnLCard uses essential cookies only — for authentication session
               management. We do not use advertising or tracking cookies.
             </p>
           </div>

@@ -37,21 +37,21 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
   const { date } = await params;
   const { t: tradeId } = await searchParams;
 
-  if (!tradeId) return { title: "Weekly Card — PNLCard" };
+  if (!tradeId) return { title: "Weekly Card — PnLCard" };
 
   let profile: { x_handle: string | null; trading_capital: number | null; card_theme: string; currency: string; timezone: string } | null = null;
   let tradesForCard: Array<{ id: string; trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null }> = [];
 
   try {
     const supabase = createAdminClient();
-    if (!supabase) return { title: "Weekly Card — PNLCard" };
+    if (!supabase) return { title: "Weekly Card — PnLCard" };
     const { data: t } = await supabase
       .from("trades")
       .select("user_id")
       .eq("id", tradeId)
       .single();
 
-    if (!t) return { title: "Weekly Card — PNLCard" };
+    if (!t) return { title: "Weekly Card — PnLCard" };
 
     const { data: p } = await supabase
       .from("profiles")
@@ -59,7 +59,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       .eq("id", t.user_id)
       .single();
 
-    if (!p) return { title: "Weekly Card — PNLCard" };
+    if (!p) return { title: "Weekly Card — PnLCard" };
 
     profile = {
       x_handle: p.x_handle,
@@ -84,19 +84,19 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       capital_deployed: tr.capital_deployed != null ? Number(tr.capital_deployed) : null,
     }));
   } catch {
-    return { title: "Weekly Card — PNLCard" };
+    return { title: "Weekly Card — PnLCard" };
   }
 
-  if (!profile) return { title: "Weekly Card — PNLCard" };
+  if (!profile) return { title: "Weekly Card — PnLCard" };
 
   const weeklyParams = buildWeeklyCardParams(tradesForCard, date, profile);
-  if (!weeklyParams) return { title: "Weekly Card — PNLCard" };
+  if (!weeklyParams) return { title: "Weekly Card — PnLCard" };
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://pnlcard.com";
   const ogUrl = buildWeeklyOgUrl(weeklyParams, baseUrl);
 
   return {
-    title: `${weeklyParams.range} — Weekly Recap | PNLCard`,
+    title: `${weeklyParams.range} — Weekly Recap | PnLCard`,
     description: `Trading recap: ${weeklyParams.pnl}`,
     openGraph: {
       title: `${weeklyParams.range} — Weekly Recap`,
@@ -188,7 +188,7 @@ export default async function WeeklyCardPage({ params, searchParams }: PageProps
         href="/"
         className="mt-3 text-sm font-medium text-primary hover:underline"
       >
-        Start for Free — PNLCard
+        Start for Free — PnLCard
       </Link>
     </div>
   );

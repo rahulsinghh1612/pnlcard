@@ -5,8 +5,8 @@ import { LoginForm } from "./login-form";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata = {
-  title: "Sign in — PNLCard",
-  description: "Sign in to PNLCard to log your trades and generate shareable recap cards.",
+  title: "Sign in — PnLCard",
+  description: "Sign in to PnLCard to log your trades and generate shareable recap cards.",
 };
 
 export default function LoginPage() {

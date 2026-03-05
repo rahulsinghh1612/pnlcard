@@ -26,14 +26,14 @@ export async function generateMetadata({ params }: PageProps) {
 
   try {
     const supabase = createAdminClient();
-    if (!supabase) return { title: "Card — PNLCard" };
+    if (!supabase) return { title: "Card — PnLCard" };
     const { data: t } = await supabase
       .from("trades")
       .select("id, user_id, trade_date, net_pnl, charges, num_trades, capital_deployed")
       .eq("id", id)
       .single();
 
-    if (!t) return { title: "Card — PNLCard" };
+    if (!t) return { title: "Card — PnLCard" };
 
     trade = {
       trade_date: t.trade_date,
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: PageProps) {
       .eq("id", t.user_id)
       .single();
 
-    if (!p) return { title: "Card — PNLCard" };
+    if (!p) return { title: "Card — PnLCard" };
 
     profile = {
       x_handle: p.x_handle,
@@ -74,10 +74,10 @@ export async function generateMetadata({ params }: PageProps) {
       capital_deployed: tr.capital_deployed != null ? Number(tr.capital_deployed) : null,
     }));
   } catch {
-    return { title: "Card — PNLCard" };
+    return { title: "Card — PnLCard" };
   }
 
-  if (!trade || !profile) return { title: "Card — PNLCard" };
+  if (!trade || !profile) return { title: "Card — PnLCard" };
 
   const tradeForCard = {
     id,
@@ -94,7 +94,7 @@ export async function generateMetadata({ params }: PageProps) {
   const ogUrl = buildOgImageUrl(dailyParams, baseUrl);
 
   return {
-    title: `${dailyParams.date} — Daily Recap | PNLCard`,
+    title: `${dailyParams.date} — Daily Recap | PnLCard`,
     description: `Trading recap: ${dailyParams.netPnl}`,
     openGraph: {
       title: `${dailyParams.date} — Daily Recap`,
@@ -221,7 +221,7 @@ export default async function CardPage({ params }: PageProps) {
         href="/"
         className="mt-3 text-sm font-medium text-primary hover:underline"
       >
-        Start for Free — PNLCard
+        Start for Free — PnLCard
       </Link>
     </div>
   );

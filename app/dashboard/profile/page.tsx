@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ProfileForm } from "./profile-form";
 
 export const metadata = {
-  title: "Profile — PNLCard",
+  title: "Profile — PnLCard",
   description: "Edit your profile and trading preferences.",
 };
 

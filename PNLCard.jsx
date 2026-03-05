@@ -40,7 +40,7 @@ function Watermark({ text3, type, handle, isFree = true }) {
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <div style={{ width: 15, height: 15, borderRadius: 4, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 800, color: "#fff" }}>P</div>
-          <span style={{ fontSize: 10, color: text3, fontWeight: 500 }}>PNLCard</span>
+          <span style={{ fontSize: 10, color: text3, fontWeight: 500 }}>PnLCard</span>
         </div>
       )}
       <span style={{ fontSize: 10, color: text3 }}>{type}</span>
@@ -291,7 +291,7 @@ function MonthlyCard({ isDark, isProfit = true }) {
 }
 
 /* ============ MAIN ============ */
-export default function PNLCardFinal() {
+export default function PnLCardFinal() {
   const [theme, setTheme] = useState("light");
   const [cardType, setCardType] = useState("daily");
   const [pnl, setPnl] = useState("profit");
@@ -303,7 +303,7 @@ export default function PNLCardFinal() {
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 4 }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff" }}>P</div>
-          <h1 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>PNLCard</h1>
+          <h1 style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>PnLCard</h1>
         </div>
         <p style={{ fontSize: 13, color: "#71717a" }}>Final card designs — all types</p>
       </div>
