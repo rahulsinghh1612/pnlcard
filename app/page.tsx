@@ -1246,7 +1246,7 @@ export default function LandingPage() {
               >
                 <PnLCardLogo size={14} />
               </a>
-              <span className="text-sm text-muted-foreground">
+              <span className="hidden md:inline text-sm text-muted-foreground">
                 Log daily results
               </span>
             </div>

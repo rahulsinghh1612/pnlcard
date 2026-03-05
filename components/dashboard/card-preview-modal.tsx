@@ -343,7 +343,7 @@ export function CardPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden" style={{ minHeight: 420 }}>
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden rounded-3xl sm:rounded-2xl" style={{ minHeight: 420 }}>
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-base font-semibold">
             {title}

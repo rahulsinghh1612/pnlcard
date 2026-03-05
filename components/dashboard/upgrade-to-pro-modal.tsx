@@ -64,7 +64,7 @@ export function UpgradeToProModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-lg border-0 bg-gradient-to-b from-white to-slate-50/80 p-0 shadow-2xl sm:rounded-2xl overflow-visible"
+        className="max-w-lg border-0 bg-gradient-to-b from-white to-slate-50/80 p-0 shadow-2xl rounded-3xl sm:rounded-2xl overflow-visible"
         hideCloseButton={false}
       >
         <div className="relative overflow-visible rounded-2xl">
