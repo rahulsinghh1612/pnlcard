@@ -128,10 +128,10 @@ export default function TermsPage() {
                 For billing errors or refund requests, contact us within 7 days
                 at{" "}
                 <a
-                  href="mailto:rahulsin1612@gmail.com"
+                  href="mailto:contact@nextalphabet.com"
                   className="text-emerald-600 hover:underline"
                 >
-                  rahulsin1612@gmail.com
+                  contact@nextalphabet.com
                 </a>
                 . We will respond within 5 business days.
               </li>
@@ -225,10 +225,10 @@ export default function TermsPage() {
             <p>
               For questions about these terms, contact us at{" "}
               <a
-                href="mailto:rahulsin1612@gmail.com"
+                href="mailto:contact@nextalphabet.com"
                 className="text-emerald-600 hover:underline"
               >
-                rahulsin1612@gmail.com
+                contact@nextalphabet.com
               </a>
               .
             </p>

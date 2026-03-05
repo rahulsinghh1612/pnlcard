@@ -173,10 +173,10 @@ export default function PrivacyPage() {
             <p>
               For privacy-related questions, contact us at{" "}
               <a
-                href="mailto:rahulsin1612@gmail.com"
+                href="mailto:contact@nextalphabet.com"
                 className="text-emerald-600 hover:underline"
               >
-                rahulsin1612@gmail.com
+                contact@nextalphabet.com
               </a>
               .
             </p>
