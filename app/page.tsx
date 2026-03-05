@@ -200,10 +200,11 @@ const HERO_MONTHS: HeroMonth[] = [
     ],
   },
   {
-    // February 2026 — profit month, total ≈ +₹49,000
-    // Mix: W1 empty · W2 +18,400 · W3 −8,600 · W4 +24,800 · W5 +14,400
+    // February 2026 — profit month, total ≈ +₹54,200
+    // Mix: W1 +5,200 · W2 +18,400 · W3 −8,600 · W4 +24,800 · W5 +14,400
     label: "February 2026", shortLabel: "February", daysInMonth: 28, startPad: 6,
     trades: {
+      1: { pnl: 5200, trades: 1 },
       2: { pnl: 8400, trades: 2 }, 3: { pnl: -3200, trades: 1 }, 4: { pnl: 6800, trades: 2 },
       5: { pnl: 9200, trades: 3 }, 6: { pnl: -2800, trades: 1 },
       9: { pnl: -4600, trades: 2 }, 10: { pnl: 3200, trades: 1 }, 12: { pnl: -7800, trades: 2 },
@@ -214,7 +215,7 @@ const HERO_MONTHS: HeroMonth[] = [
       26: { pnl: -1800, trades: 1 }, 27: { pnl: 5800, trades: 2 },
     },
     weeks: [
-      { label: "Week 1", range: "1 – 1 Feb", pnl: 0, wins: 0, losses: 0, daily: [null, null, null, null, null, null, null] },
+      { label: "Week 1", range: "1 – 1 Feb", pnl: 5200, wins: 1, losses: 0, daily: [null, null, null, null, null, null, 5200] },
       { label: "Week 2", range: "2 – 8 Feb", pnl: 18400, wins: 3, losses: 2, daily: [8400, -3200, 6800, 9200, -2800, null, null] },
       { label: "Week 3", range: "9 – 15 Feb", pnl: -8600, wins: 2, losses: 3, daily: [-4600, 3200, null, -7800, -2400, 3000, null] },
       { label: "Week 4", range: "16 – 22 Feb", pnl: 24800, wins: 4, losses: 1, daily: [11400, null, -3200, 7200, 6800, 2600, null] },
@@ -323,7 +324,7 @@ function HeroDashboard() {
         <div className="bg-[#fafafa] p-3 sm:p-5 space-y-3 sm:space-y-4">
           {/* Hero P&L card */}
           <div
-            className="transition-all duration-700 ease-out"
+            className="transition-[opacity,transform] duration-700 ease-out"
             style={{
               opacity: step >= 1 ? 1 : 0,
               transform: `translateY(${step >= 1 ? 0 : 20}px)`,
@@ -343,7 +344,7 @@ function HeroDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-medium tracking-wider text-slate-400 uppercase">{m.shortLabel} P&L</p>
-                  <p className={`mt-0.5 text-2xl sm:text-3xl font-bold tracking-tight transition-colors duration-300 ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  <p className={`mt-0.5 text-2xl sm:text-3xl font-bold tracking-tight ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                     {heroFormatPnl(monthPnl)}
                   </p>
                 </div>
@@ -353,7 +354,7 @@ function HeroDashboard() {
 
           {/* Calendar heatmap */}
           <div
-            className="transition-all duration-700 ease-out"
+            className="transition-[opacity,transform] duration-700 ease-out"
             style={{
               opacity: step >= 2 ? 1 : 0,
               transform: `translateY(${step >= 2 ? 0 : 20}px)`,
@@ -370,7 +371,7 @@ function HeroDashboard() {
                 </button>
                 <div className="flex flex-col items-center gap-0.5">
                   <span className="text-xs sm:text-sm font-semibold text-slate-800">{m.label}</span>
-                  <span className={`text-[11px] sm:text-xs font-bold transition-colors duration-300 ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>{heroFormatPnl(monthPnl)}</span>
+                  <span className={`text-[11px] sm:text-xs font-bold ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>{heroFormatPnl(monthPnl)}</span>
                 </div>
                 <button
                   onClick={goNext}
@@ -418,10 +419,10 @@ function HeroDashboard() {
                         return (
                           <div
                             key={`c-${day}`}
-                            className={`relative aspect-square min-w-0 rounded-md sm:rounded-lg flex flex-col items-center justify-center ${bg} ${textColor} transition-all`}
+                            className={`relative aspect-square min-w-0 rounded-md sm:rounded-lg flex flex-col items-center justify-center ${bg} ${textColor}`}
                             style={{
-                              transitionDuration: "500ms",
-                              transitionDelay: step >= 2 ? `${cellIdx * 25}ms` : "0ms",
+                              transition: done ? "none" : "opacity 500ms, transform 500ms",
+                              transitionDelay: step >= 2 && !done ? `${cellIdx * 25}ms` : "0ms",
                               opacity: step >= 2 ? 1 : 0,
                               transform: step >= 2 ? "scale(1)" : "scale(0.6)",
                             }}
@@ -477,7 +478,7 @@ function HeroDashboard() {
 
       {/* Bridge copy between cards */}
       <p
-        className="text-center text-sm text-slate-500 transition-all duration-700 ease-out"
+        className="text-center text-sm text-slate-500 transition-[opacity,transform] duration-700 ease-out"
         style={{
           opacity: step >= 3 ? 1 : 0,
           transform: `translateY(${step >= 3 ? 0 : 8}px)`,
@@ -502,7 +503,7 @@ function HeroDashboard() {
                 <span className="text-xs sm:text-sm font-semibold text-slate-800">{m.label}</span>
                 <span className="ml-1 sm:ml-1.5 text-[9px] sm:text-xs text-slate-400">· Weekly Breakdown</span>
               </div>
-              <span className="text-[9px] sm:text-xs text-slate-400">{activeWeeks.length} weeks</span>
+              <span className="text-[9px] sm:text-xs text-slate-400">{m.weeks.length} weeks</span>
             </div>
 
             <div className="flex flex-col gap-3 sm:gap-4">
@@ -514,15 +515,28 @@ function HeroDashboard() {
 
                 if (isEmpty) {
                   return (
-                    <div key={`hw-${wi}`} className="invisible" aria-hidden="true">
+                    <div
+                      key={`hw-${wi}`}
+                      style={{
+                        opacity: revealed ? 1 : 0,
+                        transform: revealed ? "translateY(0)" : "translateY(12px)",
+                        transition: done ? "none" : "opacity 0.5s, transform 0.5s",
+                      }}
+                    >
                       <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
-                        <span className="text-[10px] sm:text-xs">&nbsp;</span>
+                        <div className="flex items-baseline gap-1 sm:gap-1.5">
+                          <span className="text-[10px] sm:text-xs font-semibold text-slate-800">{week.label}</span>
+                          <span className="text-[8px] sm:text-[10px] text-slate-400">{week.range}</span>
+                        </div>
+                        <span className="text-[8px] sm:text-[10px] text-slate-400">No trades</span>
                       </div>
                       <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                         {dayLabels.map((l, di) => (
                           <div key={`hd-${wi}-${di}`} className="flex flex-col items-center">
-                            <div className="w-full" style={{ height: `${BAR_MAX_H + 2}px` }} />
-                            <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] leading-none">&nbsp;</span>
+                            <div className="w-full flex items-end justify-center" style={{ height: `${BAR_MAX_H + 2}px` }}>
+                              <div className="w-1.5 h-1.5 rounded-full bg-slate-200/60" />
+                            </div>
+                            <span className="mt-0.5 sm:mt-1 text-[7px] sm:text-[9px] font-medium text-slate-400 leading-none">{l}</span>
                           </div>
                         ))}
                       </div>
@@ -536,7 +550,7 @@ function HeroDashboard() {
                     style={{
                       opacity: revealed ? 1 : 0,
                       transform: revealed ? "translateY(0)" : "translateY(12px)",
-                      transition: "opacity 0.5s, transform 0.5s",
+                      transition: done ? "none" : "opacity 0.5s, transform 0.5s",
                     }}
                   >
                     <div className="flex items-baseline justify-between mb-1.5 sm:mb-2">
@@ -565,8 +579,8 @@ function HeroDashboard() {
                                   className="w-full rounded-[3px] sm:rounded-[4px]"
                                   style={{
                                     height: revealed ? `${barH}px` : "0px",
-                                    transition: "height 0.7s",
-                                    transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
+                                    transition: done ? "none" : "height 0.7s",
+                                    transitionDelay: revealed && !done ? `${di * 50 + 100}ms` : "0ms",
                                     backgroundColor: d >= 0 ? "rgb(16 185 129 / 0.2)" : "rgb(239 68 68 / 0.2)",
                                     borderWidth: "1px",
                                     borderColor: d >= 0 ? "rgb(16 185 129 / 0.35)" : "rgb(239 68 68 / 0.35)",
@@ -577,8 +591,8 @@ function HeroDashboard() {
                                   className="w-1.5 h-1.5 rounded-full bg-slate-200/60"
                                   style={{
                                     opacity: revealed ? 1 : 0,
-                                    transition: "opacity 0.5s",
-                                    transitionDelay: revealed ? `${di * 50 + 100}ms` : "0ms",
+                                    transition: done ? "none" : "opacity 0.5s",
+                                    transitionDelay: revealed && !done ? `${di * 50 + 100}ms` : "0ms",
                                   }}
                                 />
                               )}
@@ -785,11 +799,16 @@ export default function LandingPage() {
         }`}
       >
         <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/">
-            <div className="logo-capsule px-2.5 py-1 sm:px-3 sm:py-1.5 text-sm">
-              <PnLCardLogo size={16} />
-            </div>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/">
+              <div className="logo-capsule px-2.5 py-1 sm:px-3 sm:py-1.5 text-sm">
+                <PnLCardLogo size={16} />
+              </div>
+            </Link>
+            <span className="hidden md:inline text-sm text-muted-foreground font-medium">
+              Log daily results
+            </span>
+          </div>
 
           <div className="flex items-center">
             {/* Page links — hidden on mobile */}
@@ -848,7 +867,7 @@ export default function LandingPage() {
               a day
             </h1>
             <p className="mt-4 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              No spreadsheets, no complexity.
+              Log daily results (not every trade). Built for simplicity and consistency.
             </p>
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link
@@ -950,14 +969,13 @@ export default function LandingPage() {
             }`}
           >
             <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Weekly &amp; monthly reviews &mdash; the{" "}
+              Weekly and monthly trading{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-                payoff
-              </span>{" "}
-              for journaling
+                reviews
+              </span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Get a private report with P&amp;L trends, discipline analytics, and mistake tracking &mdash; every week and every month.
+              Your results broken down into P&amp;L trends, discipline insights, and the mistakes that keep repeating.
             </p>
           </div>
 

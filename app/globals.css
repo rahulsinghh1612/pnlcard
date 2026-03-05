@@ -244,14 +244,6 @@
   animation: fade-in-up 0.6s ease-out 0.2s both;
 }
 
-@keyframes hero-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-.animate-hero-float {
-  animation: hero-float 4s ease-in-out infinite;
-}
-
 .animate-fade-in-up-delay-3 {
   animation: fade-in-up 0.6s ease-out 0.3s both;
 }
