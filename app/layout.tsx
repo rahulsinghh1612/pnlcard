@@ -9,12 +9,12 @@ const font = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "PNLCard — Log Daily Results",
+  title: "PNLCard — Log daily results",
   description:
     "Log your daily P&L in 60 seconds and generate stunning shareable cards for X and Instagram.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://pnlcard.com"),
   openGraph: {
-    title: "PNLCard — Log Daily Results",
+    title: "PNLCard — Log daily results",
     description: "Generate beautiful trading recap cards for social media.",
     url: "/",
     siteName: "PNLCard",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PNLCard — Log Daily Results",
+    title: "PNLCard — Log daily results",
     description: "Generate beautiful trading recap cards for social media.",
     site: "@pnlcard",
   },

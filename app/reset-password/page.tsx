@@ -144,7 +144,7 @@ function ResetContent() {
             </div>
           </Link>
           <span className="text-sm font-medium text-foreground/80">
-            Your Trading Journal
+            Log daily results
           </span>
         </div>
 
