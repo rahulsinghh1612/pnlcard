@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
 import { CancelSubscriptionButton } from "./cancel-subscription-button";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
+import { isPremiumUser } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,19 @@ export default async function SettingsPage() {
     .eq("id", user.id)
     .single();
 
-  const plan = (profile?.plan as "free" | "premium") ?? "free";
+  const hasPremium = isPremiumUser(profile ?? { plan: null, plan_expires_at: null });
+  const planLabel = hasPremium ? "premium" : "free";
   const expiresAt = profile?.plan_expires_at;
+
+  // Check subscription state: only show "Renews on" + Cancel when we have an active subscription
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const hasActiveSubscription = subscription?.status === "active";
 
   return (
     <div className="space-y-8">
@@ -56,25 +68,25 @@ export default async function SettingsPage() {
             <div>
               <h2 className="text-sm font-medium text-foreground">Plan</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {plan === "premium"
+                {hasPremium
                   ? "You have access to all features."
                   : "Upgrade to unlock weekly & monthly cards."}
               </p>
             </div>
             <span
               className={`rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${
-                plan === "premium"
+                hasPremium
                   ? "bg-amber-100 text-amber-700"
                   : "bg-muted text-muted-foreground"
               }`}
             >
-              {plan === "premium" ? "Premium" : "Free"}
+              {hasPremium ? "Pro" : "Free"}
             </span>
           </div>
 
-          {plan === "premium" && expiresAt && (
+          {hasPremium && expiresAt && (
             <p className="text-xs text-muted-foreground">
-              Renews on{" "}
+              {hasActiveSubscription ? "Renews on " : "Access until "}
               {new Date(expiresAt).toLocaleDateString("en-IN", {
                 day: "numeric",
                 month: "long",
@@ -83,15 +95,35 @@ export default async function SettingsPage() {
             </p>
           )}
 
-          {plan === "free" && (
+          {!hasPremium && (
             <UpgradeButton
               userEmail={user.email ?? ""}
               userName={profile?.display_name ?? ""}
             />
           )}
 
-          {plan === "premium" && (
+          {hasPremium && hasActiveSubscription && (
             <CancelSubscriptionButton />
+          )}
+
+          {hasPremium && !hasActiveSubscription && expiresAt && (
+            <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800/50 dark:bg-amber-950/30">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                Your access continues until{" "}
+                {new Date(expiresAt).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+                . Resubscribing now will start a new billing period from today.
+              </p>
+              <UpgradeButton
+                userEmail={user.email ?? ""}
+                userName={profile?.display_name ?? ""}
+              >
+                Renew subscription
+              </UpgradeButton>
+            </div>
           )}
         </CardContent>
       </Card>

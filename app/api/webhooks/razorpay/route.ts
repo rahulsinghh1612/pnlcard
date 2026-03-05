@@ -151,7 +151,12 @@ async function handleSubscriptionActivated(
 
 /**
  * Handles subscription.cancelled events.
- * Downgrades the user back to the free plan.
+ *
+ * When a user cancels with "cancel at cycle end", Razorpay sends this webhook
+ * but the user has already paid until current_period_end. We only mark the
+ * subscription as cancelled — we do NOT downgrade the profile. The user
+ * keeps premium access until plan_expires_at (current_period_end). Access
+ * is revoked by isPremiumUser() when that date passes.
  */
 async function handleSubscriptionCancelled(
   supabase: ReturnType<typeof createAdminClient> & object,
@@ -175,7 +180,7 @@ async function handleSubscriptionCancelled(
     return;
   }
 
-  // Mark subscription as cancelled
+  // Mark subscription as cancelled — no more renewals
   const { error: subError } = await supabase
     .from("subscriptions")
     .update({ status: "cancelled" })
@@ -186,16 +191,5 @@ async function handleSubscriptionCancelled(
     console.error("Error updating subscription status:", subError);
   }
 
-  // Downgrade the user to free
-  const { error: profileError } = await supabase
-    .from("profiles")
-    .update({
-      plan: "free",
-      plan_expires_at: null,
-    })
-    .eq("id", userId);
-
-  if (profileError) {
-    console.error("Error downgrading profile:", profileError);
-  }
+  // Do NOT downgrade the profile. User retains premium until plan_expires_at.
 }

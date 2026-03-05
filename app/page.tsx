@@ -1108,7 +1108,6 @@ export default function LandingPage() {
                 {[
                   "Daily trade logging",
                   "Calendar heatmap",
-                  "Discipline & mistake tracking",
                   "Basic stats (P&L, win rate)",
                   "Daily recap cards",
                 ].map((f) => (
@@ -1129,7 +1128,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Premium tier */}
+            {/* Pro tier */}
             <div
               className={`relative rounded-2xl border-2 border-emerald-200 bg-white p-5 sm:p-8 shadow-xl transition-all duration-700 hover:shadow-2xl ${
                 pricing.visible
@@ -1143,7 +1142,7 @@ export default function LandingPage() {
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
                 POPULAR
               </div>
-              <h3 className="text-xl font-bold text-foreground">Premium</h3>
+              <h3 className="text-xl font-bold text-foreground">Pro</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 For traders who want to improve
               </p>
@@ -1173,7 +1172,6 @@ export default function LandingPage() {
                   "Weekly & Monthly Reviews",
                   "Discipline analytics & trends",
                   "All card types (no watermark)",
-                  "Export CSV",
                 ].map((f) => (
                   <li
                     key={f}
@@ -1188,7 +1186,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="btn-gradient-flow group relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
               >
-                <span className="relative z-[1]">Upgrade to Premium</span>
+                <span className="relative z-[1]">Upgrade to Pro</span>
               </Link>
               {billingCycle === "monthly" && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -1257,7 +1255,7 @@ export default function LandingPage() {
                 <PnLCardLogo size={14} />
               </a>
               <span className="text-sm text-muted-foreground">
-                Your Trading Journal
+                Log daily results
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">

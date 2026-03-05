@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { DashboardNav } from "./dashboard-nav";
+import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Sparkles } from "lucide-react";
+import { isPremiumUser } from "@/lib/utils";
 
 export default async function DashboardLayout({
   children,
@@ -21,13 +23,15 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, plan")
+    .select("display_name, plan, plan_expires_at")
     .eq("id", user.id)
     .single();
 
   if (!profile) {
     redirect("/onboarding");
   }
+
+  const hasPremium = isPremiumUser(profile);
 
   return (
     <div className="min-h-screen bg-page">
@@ -40,7 +44,7 @@ export default async function DashboardLayout({
               </div>
             </Link>
             <span className="hidden sm:inline text-sm text-muted-foreground">
-              Your Trading Journal
+              Log daily results
             </span>
           </div>
 
@@ -52,7 +56,16 @@ export default async function DashboardLayout({
               <Sparkles className="h-3.5 w-3.5 transition-transform group-hover:rotate-12" />
               Review
             </Link>
-            <DashboardNav displayName={profile?.display_name ?? "User"} plan={(profile?.plan as "free" | "premium") ?? "free"} />
+            {!hasPremium && (
+              <UpgradeButton
+                userEmail={user.email ?? ""}
+                userName={profile?.display_name ?? "User"}
+                dropdownAlign="right"
+                variant="header"
+                className="btn-gradient-flow group inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            )}
+            <DashboardNav displayName={profile?.display_name ?? "User"} plan={hasPremium ? "premium" : "free"} />
           </div>
         </div>
       </header>

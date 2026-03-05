@@ -35,7 +35,7 @@ export function CancelSubscriptionButton() {
         return;
       }
 
-      toast.success("Subscription cancelled. You've been downgraded to the free plan.");
+      toast.success("Subscription cancelled. You'll keep Pro access until the end of your billing period.");
       router.refresh();
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -58,8 +58,9 @@ export function CancelSubscriptionButton() {
         <AlertDialogHeader>
           <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
           <AlertDialogDescription>
-            You&apos;ll lose access to premium features like weekly &amp; monthly
-            recap cards and story downloads. You can always re-subscribe later.
+            You&apos;ll keep Pro access until the end of your current billing
+            period. After that, you&apos;ll lose weekly &amp; monthly recap cards
+            and story downloads. You can re-subscribe anytime.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

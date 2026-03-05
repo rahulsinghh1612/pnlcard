@@ -8,7 +8,7 @@ import { PnlTicker } from "@/components/dashboard/pnl-ticker";
 import { TradeEntryModal } from "@/components/dashboard/trade-entry-modal";
 import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
 import { TradeDetailModal } from "@/components/dashboard/trade-detail-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, FileText, ArrowRight } from "lucide-react";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, FileText } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -354,9 +354,8 @@ export function DashboardContent({
                 </p>
               </div>
             </div>
-            <div className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1 text-[11px] font-semibold text-background transition-colors group-hover:bg-foreground/90">
-              View
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors group-hover:text-foreground group-hover:bg-muted" title="View">
+              <ChevronRight className="h-5 w-5" />
             </div>
           </Link>
         )}
@@ -493,7 +492,7 @@ export function DashboardContent({
                       }}
                     >
                       {!isPremium && (
-                        <span className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
+                        <span className="absolute top-2 left-1/2 -translate-x-1/2 sm:top-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
                           <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                           Pro
                         </span>
@@ -562,7 +561,7 @@ export function DashboardContent({
                       }}
                     >
                       {!isPremium && (
-                        <span className="absolute top-2 right-2 sm:top-3 sm:right-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
+                        <span className="absolute top-2 left-1/2 -translate-x-1/2 sm:top-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
                           <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                           Pro
                         </span>

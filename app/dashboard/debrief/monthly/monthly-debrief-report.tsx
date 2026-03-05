@@ -5,9 +5,9 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  Lock,
   Info,
 } from "lucide-react";
+import { UpgradeToProModal } from "@/components/dashboard/upgrade-to-pro-modal";
 import {
   type MonthlyDebrief,
   type MonthlyPnlPoint,
@@ -20,6 +20,8 @@ type MonthlyDebriefReportProps = {
   debrief: MonthlyDebrief;
   currency: string;
   isPremium: boolean;
+  userEmail: string;
+  userName: string;
 };
 
 function formatPnl(value: number, currency: string): string {
@@ -50,6 +52,8 @@ export function MonthlyDebriefReport({
   debrief,
   currency,
   isPremium,
+  userEmail,
+  userName,
 }: MonthlyDebriefReportProps) {
   const isProfit = debrief.totalPnl >= 0;
 
@@ -69,59 +73,12 @@ export function MonthlyDebriefReport({
 
   if (!isPremium) {
     return (
-      <div className="space-y-6">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to dashboard
-        </Link>
-
-        <div className="rounded-2xl border border-border bg-white p-8 sm:p-12 text-center space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
-            <Lock className="h-7 w-7 text-amber-600" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">
-              Monthly Review
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-              Get a comprehensive monthly report with week-by-week analysis,
-              day-of-week patterns, and a theme for next month.
-            </p>
-          </div>
-          <div className="rounded-xl border border-dashed border-border bg-slate-50/50 p-6 space-y-3 max-w-sm mx-auto text-left">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Includes
-            </p>
-            <ul className="space-y-2 text-sm text-foreground">
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Week-by-week P&L breakdown
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                Day-of-week performance patterns
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                What helped and what hurt
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                Your theme for next month
-              </li>
-            </ul>
-          </div>
-          <Link
-            href="/dashboard/settings"
-            className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-          >
-            Upgrade to Pro
-          </Link>
-        </div>
-      </div>
+      <UpgradeToProModal
+        open={true}
+        onOpenChange={() => {}}
+        userEmail={userEmail}
+        userName={userName}
+      />
     );
   }
 

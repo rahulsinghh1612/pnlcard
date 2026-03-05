@@ -204,7 +204,7 @@ export function CardGenerator({
         <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <Lock className="h-4 w-4 text-amber-600 shrink-0" />
           <p className="text-sm text-amber-800 flex-1">
-            Weekly &amp; monthly cards are a Premium feature.
+            Weekly &amp; monthly cards are a Pro feature.
           </p>
           <UpgradeButton
             userEmail={userEmail ?? ""}

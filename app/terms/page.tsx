@@ -45,7 +45,7 @@ export default function TermsPage() {
             <p>
               PNLCard is a web application that allows traders to log their daily
               profit and loss (P&amp;L) and generate shareable recap cards for
-              social media. The Service is available in Free and Premium tiers.
+              social media. The Service is available in Free and Pro tiers.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export default function TermsPage() {
 
           <div>
             <h2 className="text-lg font-semibold text-foreground">
-              4. Free and Premium plans
+              4. Free and Pro plans
             </h2>
             <p className="mt-2">
               <strong>Free plan:</strong> Includes unlimited trade logging, daily
@@ -74,7 +74,7 @@ export default function TermsPage() {
               PNLCard branding.
             </p>
             <p className="mt-2">
-              <strong>Premium plan:</strong> Everything in Free, plus weekly and
+              <strong>Pro plan:</strong> Everything in Free, plus weekly and
               monthly recap cards, your X handle on cards, and no PNLCard
               watermark. Pricing is ₹249/month or ₹1,999/year.
             </p>
@@ -86,7 +86,7 @@ export default function TermsPage() {
             </h2>
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>
-                Premium subscriptions are billed through Razorpay in Indian
+                Pro subscriptions are billed through Razorpay in Indian
                 Rupees (INR).
               </li>
               <li>
@@ -112,8 +112,8 @@ export default function TermsPage() {
             </h2>
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>
-                You can cancel your Premium subscription at any time from the
-                Settings page. Your premium features remain active until the end
+                You can cancel your Pro subscription at any time from the
+                Settings page. Your Pro features remain active until the end
                 of your current billing period.
               </li>
               <li>

@@ -357,7 +357,7 @@ export function CardPreviewModal({
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100/80 shadow-inner">
                   <Lock className="h-7 w-7 text-amber-700" />
                 </div>
-                <p className="text-sm font-semibold text-foreground">Premium Feature</p>
+                <p className="text-sm font-semibold text-foreground">Pro Feature</p>
                 <p className="text-xs text-muted-foreground text-center max-w-[220px]">
                   Upgrade to Pro to unlock {cardType} recap cards, story downloads, and more.
                 </p>

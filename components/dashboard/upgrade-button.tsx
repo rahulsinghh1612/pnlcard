@@ -15,7 +15,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Crown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { isPremiumUser } from "@/lib/utils";
 
 async function checkPremiumStatus(): Promise<boolean> {
   const supabase = createClient();
@@ -23,10 +25,10 @@ async function checkPremiumStatus(): Promise<boolean> {
   if (!user) return false;
   const { data } = await supabase
     .from("profiles")
-    .select("plan")
+    .select("plan, plan_expires_at")
     .eq("id", user.id)
     .single();
-  return data?.plan === "premium";
+  return isPremiumUser(data ?? { plan: null, plan_expires_at: null });
 }
 
 declare global {
@@ -44,6 +46,12 @@ type UpgradeButtonProps = {
   defaultCycle?: "monthly" | "yearly";
   className?: string;
   children?: React.ReactNode;
+  /** Align dropdown to right edge (for header use). Default: left */
+  dropdownAlign?: "left" | "right";
+  /** Position dropdown above button (for modal use when space below is limited). Default: bottom */
+  dropdownPosition?: "top" | "bottom";
+  /** Header variant: Crown icon + "Go Pro" text. Ignores children when set. */
+  variant?: "default" | "header";
 };
 
 function loadRazorpayScript(): Promise<void> {
@@ -66,6 +74,9 @@ export function UpgradeButton({
   defaultCycle = "monthly",
   className,
   children,
+  dropdownAlign = "left",
+  dropdownPosition = "bottom",
+  variant = "default",
 }: UpgradeButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -79,7 +90,7 @@ export function UpgradeButton({
       attempts++;
       const isPremium = await checkPremiumStatus();
       if (isPremium) {
-        toast.success("Premium activated!");
+        toast.success("Pro activated!");
         router.refresh();
         return;
       }
@@ -116,7 +127,7 @@ export function UpgradeButton({
         key: keyId,
         subscription_id: subscriptionId,
         name: "PNLCard",
-        description: `Premium — ${selectedCycle === "monthly" ? "₹249/month" : "₹1,999/year"}`,
+        description: `Pro — ${selectedCycle === "monthly" ? "₹249/month" : "₹1,999/year"}`,
         prefill: {
           email: userEmail,
           name: userName,
@@ -126,7 +137,7 @@ export function UpgradeButton({
         },
         handler: () => {
           toast.success(
-            "Payment successful! Activating premium features..."
+            "Payment successful! Activating Pro features..."
           );
           pollForPremium();
         },
@@ -163,13 +174,28 @@ export function UpgradeButton({
           "btn-gradient-flow w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         }
       >
-        <span className="relative z-[1]">
-          {loading ? "Processing…" : children ?? "Upgrade to Premium"}
+        <span className="relative z-[1] inline-flex items-center gap-1.5">
+          {loading ? (
+            "Processing…"
+          ) : variant === "header" ? (
+            <>
+              <Crown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:rotate-12" />
+              Go Pro
+            </>
+          ) : (
+            children ?? "Upgrade to Pro"
+          )}
         </span>
       </button>
 
       {showPicker && !loading && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-xl border border-border bg-white p-3 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          className={`absolute z-50 min-w-[200px] rounded-xl border border-border bg-white p-3 shadow-xl animate-in fade-in duration-200 ${
+            dropdownPosition === "top"
+              ? "bottom-full mb-2 left-0 right-0 slide-in-from-bottom-2"
+              : "top-full mt-2 slide-in-from-top-2"
+          } ${dropdownAlign === "right" ? "right-0 left-auto" : "left-0 right-0"}`}
+        >
           <p className="text-xs font-medium text-muted-foreground mb-2">
             Choose your plan:
           </p>

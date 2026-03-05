@@ -14,6 +14,7 @@ import {
   buildMonthlyCardParams,
   getWeekBoundsForDate,
 } from "@/lib/card-data";
+import { isPremiumUser } from "@/lib/utils";
 
 export const metadata = {
   title: "Generate Card — PNLCard",
@@ -45,7 +46,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, x_handle, currency, timezone, trading_capital, plan, card_theme"
+      "id, display_name, x_handle, currency, timezone, trading_capital, plan, plan_expires_at, card_theme"
     )
     .eq("id", user.id)
     .single();
@@ -120,7 +121,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
     profileForCard
   );
 
-  const isPremium = profile.plan === "premium";
+  const isPremium = isPremiumUser(profile);
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

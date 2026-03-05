@@ -8,6 +8,7 @@ import {
 } from "@/lib/stats";
 import { getLastCompletedWeekMonday, getDebriefWeekBounds } from "@/lib/debrief";
 import { parseISO, isWithinInterval } from "date-fns";
+import { isPremiumUser } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, currency, timezone, trading_capital, x_handle, card_theme, plan")
+    .select("id, display_name, currency, timezone, trading_capital, x_handle, card_theme, plan, plan_expires_at")
     .eq("id", user.id)
     .single();
 
@@ -72,7 +73,7 @@ export default async function DashboardPage() {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://pnlcard.com";
 
-  const isPremium = profile.plan === "premium";
+  const isPremium = isPremiumUser(profile);
 
   // Check if last completed week has enough trades for a debrief
   const lastMonday = getLastCompletedWeekMonday();
