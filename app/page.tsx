@@ -858,8 +858,8 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           {/* Text — centered above the dashboard preview */}
           <div className="animate-fade-in-up text-center max-w-3xl mx-auto">
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-              The trading journal that takes{" "}
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+              The trading journal that only takes{" "}
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 60 seconds
               </span>{" "}
