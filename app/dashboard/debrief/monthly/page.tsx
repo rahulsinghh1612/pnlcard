@@ -7,7 +7,7 @@ import {
   type TradeForDebrief,
 } from "@/lib/debrief";
 import { MonthlyDebriefReport } from "./monthly-debrief-report";
-import { isPremiumUser } from "@/lib/utils";
+import { getUserAccessStatus } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -30,13 +30,13 @@ export default async function MonthlyDebriefPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, currency, timezone, plan, plan_expires_at")
+    .select("id, display_name, currency, timezone, plan, plan_expires_at, trial_ends_at")
     .eq("id", user.id)
     .single();
 
   if (!profile) redirect("/onboarding");
 
-  const isPremium = isPremiumUser(profile);
+  const accessStatus = getUserAccessStatus(profile);
   const currency = profile.currency ?? "INR";
 
   const { data: trades } = await supabase
@@ -69,7 +69,7 @@ export default async function MonthlyDebriefPage({
     <MonthlyDebriefReport
       debrief={debrief}
       currency={currency}
-      isPremium={isPremium}
+      accessStatus={accessStatus}
       userEmail={user.email ?? ""}
       userName={profile.display_name}
     />

@@ -10,13 +10,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import type { AccessStatus } from "@/lib/types";
 
 interface DashboardNavProps {
   displayName?: string;
-  plan?: "free" | "premium";
+  accessStatus?: AccessStatus;
 }
 
-export function DashboardNav({ displayName, plan = "free" }: DashboardNavProps) {
+const BADGE_CONFIG: Record<AccessStatus, { label: string; classes: string }> = {
+  subscribed: { label: "Pro", classes: "bg-amber-100 text-amber-700" },
+  trial: { label: "Trial", classes: "bg-blue-100 text-blue-700" },
+  expired: { label: "Expired", classes: "bg-red-100 text-red-700" },
+};
+
+export function DashboardNav({ displayName, accessStatus = "expired" }: DashboardNavProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const handleSignOut = async () => {
@@ -26,6 +33,8 @@ export function DashboardNav({ displayName, plan = "free" }: DashboardNavProps) 
     router.push("/");
     router.refresh();
   };
+
+  const badge = BADGE_CONFIG[accessStatus];
 
   return (
     <nav className="flex items-center">
@@ -49,12 +58,8 @@ export function DashboardNav({ displayName, plan = "free" }: DashboardNavProps) 
               <User className="h-4 w-4 text-foreground" />
               <span className="text-sm font-medium text-foreground">{displayName ?? "Profile"}</span>
             </div>
-            <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-              plan === "premium"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-muted text-muted-foreground"
-            }`}>
-              {plan === "premium" ? "Pro" : "Free"}
+            <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badge.classes}`}>
+              {badge.label}
             </span>
           </Link>
           <div className="my-0.5 h-px bg-border" />

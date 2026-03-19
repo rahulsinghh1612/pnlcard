@@ -13,15 +13,15 @@ import { Sparkles, BarChart3, CalendarDays } from "lucide-react";
 const MILESTONE_MESSAGES: Record<number, { title: string; subtitle: string }> = {
   1: {
     title: "Great start!",
-    subtitle: "You're building your trading journal. Upgrade to Pro to unlock weekly & monthly reviews, discipline insights, and more.",
+    subtitle: "Subscribe anytime to keep access after your trial ends.",
   },
   5: {
     title: "You're building a habit!",
-    subtitle: "Go Pro to see patterns across your trades and level up your discipline.",
+    subtitle: "Make it permanent with a subscription. Don't lose your streak.",
   },
   10: {
     title: "10 trades logged!",
-    subtitle: "Unlock Pro to enjoy weekly & monthly reviews, all card types without watermark, and discipline analytics.",
+    subtitle: "Don't lose your momentum \u2014 subscribe now to keep full access.",
   },
 };
 
@@ -65,8 +65,8 @@ export function MilestoneUpgradeModal({
 
             <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left">
               {[
-                { icon: BarChart3, text: "Weekly & monthly performance reports" },
-                { icon: CalendarDays, text: "Discipline & mistake tracking" },
+                { icon: BarChart3, text: "Keep logging trades after trial" },
+                { icon: CalendarDays, text: "Weekly & monthly reviews" },
                 { icon: Sparkles, text: "All card types, no watermark" },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-center gap-3">
@@ -83,7 +83,7 @@ export function MilestoneUpgradeModal({
                 dropdownPosition="top"
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Upgrade to Pro
+                Subscribe
               </UpgradeButton>
               <button
                 type="button"

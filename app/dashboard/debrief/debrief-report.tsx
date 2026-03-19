@@ -8,6 +8,7 @@ import {
   Info,
 } from "lucide-react";
 import { UpgradeToProModal } from "@/components/dashboard/upgrade-to-pro-modal";
+import type { AccessStatus } from "@/lib/types";
 import {
   type WeeklyDebrief,
   type WeeklyPnlPoint,
@@ -19,7 +20,7 @@ import { format, parseISO, subWeeks, addWeeks } from "date-fns";
 type DebriefReportProps = {
   debrief: WeeklyDebrief;
   currency: string;
-  isPremium: boolean;
+  accessStatus: AccessStatus;
   displayName: string;
   userEmail: string;
   userName: string;
@@ -52,7 +53,7 @@ function formatPnlShort(value: number, currency: string): string {
 export function DebriefReport({
   debrief,
   currency,
-  isPremium,
+  accessStatus,
   userEmail,
   userName,
 }: DebriefReportProps) {
@@ -72,8 +73,8 @@ export function DebriefReport({
     1
   );
 
-  // ── Premium gate: show modal instead of full page ──
-  if (!isPremium) {
+  // ── Expired gate: show modal instead of full page ──
+  if (accessStatus === "expired") {
     return (
       <UpgradeToProModal
         open={true}

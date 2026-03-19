@@ -8,10 +8,14 @@ export interface Profile {
   trading_capital: number | null;
   plan: "free" | "premium";
   plan_expires_at: string | null;
+  trial_ends_at: string | null;
   card_theme: "light" | "dark";
   created_at: string;
   updated_at: string;
 }
+
+/** Tri-state access model: subscribed > trial > expired */
+export type AccessStatus = "trial" | "subscribed" | "expired";
 
 /** Subscription row from Supabase subscriptions table */
 export interface Subscription {

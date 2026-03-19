@@ -14,7 +14,7 @@ import {
   buildMonthlyCardParams,
   getWeekBoundsForDate,
 } from "@/lib/card-data";
-import { isPremiumUser } from "@/lib/utils";
+import { getUserAccessStatus } from "@/lib/utils";
 
 export const metadata = {
   title: "Generate Card — PnLCard",
@@ -46,7 +46,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, x_handle, currency, timezone, trading_capital, plan, plan_expires_at, card_theme"
+      "id, display_name, x_handle, currency, timezone, trading_capital, plan, plan_expires_at, trial_ends_at, card_theme"
     )
     .eq("id", user.id)
     .single();
@@ -121,7 +121,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
     profileForCard
   );
 
-  const isPremium = isPremiumUser(profile);
+  const accessStatus = getUserAccessStatus(profile);
 
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -138,7 +138,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
         dailyParams={dailyParams}
         weeklyParams={weeklyParams}
         monthlyParams={monthlyParams}
-        isPremium={isPremium}
+        accessStatus={accessStatus}
         baseUrl={baseUrl}
         defaultCardType={cardTypeParam}
         userEmail={user.email ?? ""}

@@ -3,9 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { DashboardNav } from "./dashboard-nav";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
+import { TrialBanner } from "@/components/dashboard/trial-banner";
+import { TrialToastNudge } from "@/components/dashboard/trial-toast-nudge";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Sparkles } from "lucide-react";
-import { isPremiumUser } from "@/lib/utils";
+import { getUserAccessStatus, getTrialDaysRemaining } from "@/lib/utils";
 
 export default async function DashboardLayout({
   children,
@@ -23,7 +25,7 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, plan, plan_expires_at")
+    .select("display_name, plan, plan_expires_at, trial_ends_at")
     .eq("id", user.id)
     .single();
 
@@ -31,7 +33,8 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
-  const hasPremium = isPremiumUser(profile);
+  const accessStatus = getUserAccessStatus(profile);
+  const trialDaysRemaining = getTrialDaysRemaining(profile);
 
   return (
     <div className="min-h-screen bg-page">
@@ -56,7 +59,7 @@ export default async function DashboardLayout({
               <Sparkles className="h-3.5 w-3.5 transition-transform group-hover:rotate-12" />
               Review
             </Link>
-            {!hasPremium && (
+            {accessStatus === "expired" && (
               <UpgradeButton
                 userEmail={user.email ?? ""}
                 userName={profile?.display_name ?? "User"}
@@ -65,12 +68,29 @@ export default async function DashboardLayout({
                 className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               />
             )}
-            <DashboardNav displayName={profile?.display_name ?? "User"} plan={hasPremium ? "premium" : "free"} />
+            <DashboardNav displayName={profile?.display_name ?? "User"} accessStatus={accessStatus} />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        {accessStatus === "trial" && (
+          <div className="mb-6">
+            <TrialBanner
+              trialDaysRemaining={trialDaysRemaining}
+              accessStatus={accessStatus}
+              userEmail={user.email ?? ""}
+              userName={profile?.display_name ?? "User"}
+            />
+          </div>
+        )}
+        {children}
+      </main>
+
+      <TrialToastNudge
+        trialDaysRemaining={trialDaysRemaining}
+        accessStatus={accessStatus}
+      />
     </div>
   );
 }

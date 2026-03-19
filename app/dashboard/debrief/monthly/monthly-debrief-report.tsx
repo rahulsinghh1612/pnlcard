@@ -8,6 +8,7 @@ import {
   Info,
 } from "lucide-react";
 import { UpgradeToProModal } from "@/components/dashboard/upgrade-to-pro-modal";
+import type { AccessStatus } from "@/lib/types";
 import {
   type MonthlyDebrief,
   type MonthlyPnlPoint,
@@ -19,7 +20,7 @@ import { format, parseISO, subMonths, addMonths } from "date-fns";
 type MonthlyDebriefReportProps = {
   debrief: MonthlyDebrief;
   currency: string;
-  isPremium: boolean;
+  accessStatus: AccessStatus;
   userEmail: string;
   userName: string;
 };
@@ -51,7 +52,7 @@ function formatPnlShort(value: number, currency: string): string {
 export function MonthlyDebriefReport({
   debrief,
   currency,
-  isPremium,
+  accessStatus,
   userEmail,
   userName,
 }: MonthlyDebriefReportProps) {
@@ -71,7 +72,7 @@ export function MonthlyDebriefReport({
     1
   );
 
-  if (!isPremium) {
+  if (accessStatus === "expired") {
     return (
       <UpgradeToProModal
         open={true}

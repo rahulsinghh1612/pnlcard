@@ -59,12 +59,17 @@ export function OnboardingForm({ userId, onComplete }: OnboardingFormProps) {
         return;
       }
 
+      const trialEndsAt = new Date(
+        Date.now() + 14 * 24 * 60 * 60 * 1000,
+      ).toISOString();
+
       const { error } = await supabase.from("profiles").insert({
         id: userId,
         display_name: trimmedName,
         trading_capital: capital,
         x_handle: handle,
         currency,
+        trial_ends_at: trialEndsAt,
       });
 
       if (error) {

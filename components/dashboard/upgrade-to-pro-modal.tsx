@@ -10,30 +10,29 @@ import {
 import { UpgradeButton } from "./upgrade-button";
 import { Crown, BarChart3, CalendarDays, TrendingUp, AlertCircle } from "lucide-react";
 
-/** Single consolidated paywall for Weekly & Monthly Reviews. */
 const PAYWALL_CONTENT = {
-  title: "Unlock your weekly & monthly trading report",
+  title: "Subscribe to PnLCard",
   features: [
     {
       icon: BarChart3,
-      title: "Weekly performance breakdown",
+      title: "Keep logging trades daily",
     },
     {
       icon: CalendarDays,
-      title: "Daily performance analysis",
+      title: "All card types — daily, weekly, monthly",
     },
     {
       icon: TrendingUp,
-      title: "Discipline vs profitability insights",
+      title: "Weekly & monthly reviews",
     },
     {
       icon: AlertCircle,
-      title: "Mistake tracking (FOMO, overtrading, etc.)",
+      title: "Uninterrupted access to your data",
     },
   ],
-  ctaPrimary: "Unlock Weekly & Monthly Reviews",
-  ctaSecondary: "Continue with free plan",
-  trustLine: "Built for traders serious about improving discipline.",
+  ctaPrimary: "Subscribe to PnLCard",
+  ctaSecondary: "Maybe later",
+  trustLine: "No credit card required to start. Cancel anytime.",
 };
 
 type UpgradeToProModalProps = {
@@ -77,7 +76,7 @@ export function UpgradeToProModal({
                 {PAYWALL_CONTENT.title}
               </DialogTitle>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Turn your data into clear insights.
+                Keep your trading journal going. Don&apos;t lose your streak.
               </p>
             </DialogHeader>
 

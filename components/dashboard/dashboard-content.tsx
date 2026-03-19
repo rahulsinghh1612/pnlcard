@@ -10,7 +10,8 @@ import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
 import { TradeDetailModal } from "@/components/dashboard/trade-detail-modal";
 import { UpgradeToProModal } from "@/components/dashboard/upgrade-to-pro-modal";
 import { MilestoneUpgradeModal } from "@/components/dashboard/milestone-upgrade-modal";
-import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, Lock, FileText, Plus } from "lucide-react";
+import type { AccessStatus } from "@/lib/types";
+import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, FileText, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -48,7 +49,7 @@ type DashboardContentProps = {
   cardTheme: string;
   trades: Trade[];
   baseUrl?: string;
-  isPremium?: boolean;
+  accessStatus?: AccessStatus;
   userEmail?: string;
   /** For landing page demo: use these trades instead of props.trades */
   demoTrades?: Trade[];
@@ -85,7 +86,7 @@ export function DashboardContent({
   cardTheme,
   trades,
   baseUrl = typeof window !== "undefined" ? window.location.origin : "https://pnlcard.com",
-  isPremium = false,
+  accessStatus = "expired",
   userEmail = "",
   demoTrades,
   forceModalOpen,
@@ -265,18 +266,7 @@ export function DashboardContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Show upgrade prompt when user has 3+ trades and is not premium (once per user)
-  useEffect(() => {
-    if (demoMode || isPremium || effectiveTrades.length < 3) return;
-    try {
-      if (localStorage.getItem("pnlcard_upgrade_prompt_shown") === "true") return;
-      const t = setTimeout(() => {
-        setUpgradeModalOpen(true);
-        localStorage.setItem("pnlcard_upgrade_prompt_shown", "true");
-      }, 1500);
-      return () => clearTimeout(t);
-    } catch {}
-  }, [demoMode, isPremium, effectiveTrades.length]);
+  const isExpired = accessStatus === "expired";
 
   return (
     <>
@@ -376,16 +366,9 @@ export function DashboardContent({
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                     New
                   </span>
-                  {!isPremium && (
-                    <span className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
-                      Pro
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {isPremium
-                    ? "Tap to see what worked, what hurt, and your next action"
-                    : "Unlock your weekly insights and trading patterns"}
+                  Tap to see what worked, what hurt, and your next action
                 </p>
               </div>
             </div>
@@ -425,7 +408,13 @@ export function DashboardContent({
             currency={currency}
             tradingCapital={tradingCapital}
             className="w-full sm:w-auto"
-            onOpenCreate={openCreateModal}
+            onOpenCreate={() => {
+              if (isExpired) {
+                setUpgradeModalOpen(true);
+              } else {
+                openCreateModal();
+              }
+            }}
           />
         </div>
 
@@ -601,12 +590,6 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
-                      {!isPremium && (
-                        <span className="absolute top-2 left-1/2 -translate-x-1/2 sm:top-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
-                          <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-                          Pro
-                        </span>
-                      )}
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                           <CalendarRange className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -670,12 +653,6 @@ export function DashboardContent({
                         setCardPreviewOpen(true);
                       }}
                     >
-                      {!isPremium && (
-                        <span className="absolute top-2 left-1/2 -translate-x-1/2 sm:top-3 flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-700">
-                          <Lock className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
-                          Pro
-                        </span>
-                      )}
                       <div className="flex items-start justify-between mb-2 sm:mb-3">
                         <div className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                           <CalendarCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -806,7 +783,7 @@ export function DashboardContent({
         }}
         onTradeSaved={(newTotalCount) => {
           const milestones = [1, 5, 10];
-          if (demoMode || isPremium || !milestones.includes(newTotalCount)) return;
+          if (demoMode || accessStatus === "subscribed" || !milestones.includes(newTotalCount)) return;
           try {
             const key = `pnlcard_milestone_${newTotalCount}_shown`;
             if (localStorage.getItem(key) === "true") return;
@@ -832,7 +809,7 @@ export function DashboardContent({
           currency,
           timezone,
         }}
-        isPremium={isPremium}
+        accessStatus={accessStatus}
         userEmail={userEmail}
         userName={displayName}
         onEditTrade={(trade) => {

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
 import { CancelSubscriptionButton } from "./cancel-subscription-button";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
-import { isPremiumUser } from "@/lib/utils";
+import { getUserAccessStatus, getTrialDaysRemaining } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +23,16 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, plan, plan_expires_at")
+    .select("display_name, plan, plan_expires_at, trial_ends_at")
     .eq("id", user.id)
     .single();
 
-  const hasPremium = isPremiumUser(profile ?? { plan: null, plan_expires_at: null });
-  const planLabel = hasPremium ? "premium" : "free";
+  const accessStatus = getUserAccessStatus(
+    profile ?? { plan: null, plan_expires_at: null, trial_ends_at: null }
+  );
+  const trialDaysRemaining = getTrialDaysRemaining(
+    profile ?? { trial_ends_at: null }
+  );
   const expiresAt = profile?.plan_expires_at;
 
   // Check subscription state: only show "Renews on" + Cancel when we have an active subscription
@@ -68,23 +72,31 @@ export default async function SettingsPage() {
             <div>
               <h2 className="text-sm font-medium text-foreground">Plan</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {hasPremium
+                {accessStatus === "subscribed"
                   ? "You have access to all features."
-                  : "Upgrade to unlock weekly & monthly cards."}
+                  : accessStatus === "trial"
+                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} remaining in your free trial.`
+                    : "Your trial has ended. Subscribe to regain access."}
               </p>
             </div>
             <span
               className={`rounded-md px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${
-                hasPremium
+                accessStatus === "subscribed"
                   ? "bg-amber-100 text-amber-700"
-                  : "bg-muted text-muted-foreground"
+                  : accessStatus === "trial"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-red-100 text-red-700"
               }`}
             >
-              {hasPremium ? "Pro" : "Free"}
+              {accessStatus === "subscribed"
+                ? "Pro"
+                : accessStatus === "trial"
+                  ? "Trial"
+                  : "Trial Ended"}
             </span>
           </div>
 
-          {hasPremium && expiresAt && (
+          {accessStatus === "subscribed" && expiresAt && (
             <p className="text-xs text-muted-foreground">
               {hasActiveSubscription ? "Renews on " : "Access until "}
               {new Date(expiresAt).toLocaleDateString("en-IN", {
@@ -95,18 +107,18 @@ export default async function SettingsPage() {
             </p>
           )}
 
-          {!hasPremium && (
+          {accessStatus !== "subscribed" && (
             <UpgradeButton
               userEmail={user.email ?? ""}
               userName={profile?.display_name ?? ""}
             />
           )}
 
-          {hasPremium && hasActiveSubscription && (
+          {accessStatus === "subscribed" && hasActiveSubscription && (
             <CancelSubscriptionButton />
           )}
 
-          {hasPremium && !hasActiveSubscription && expiresAt && (
+          {accessStatus === "subscribed" && !hasActiveSubscription && expiresAt && (
             <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800/50 dark:bg-amber-950/30">
               <p className="text-xs text-amber-800 dark:text-amber-200">
                 Your access continues until{" "}
