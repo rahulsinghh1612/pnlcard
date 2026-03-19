@@ -6,8 +6,6 @@ import {
   TrendingUp,
   TrendingDown,
   Check,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import dynamic from "next/dynamic";
@@ -630,28 +628,25 @@ function HeroDashboard() {
 // ─── Card showcase ───────────────────────────────────────────────
 
 type CardType = "daily" | "weekly" | "monthly";
-type CardTheme = "light" | "dark";
 type CardSide = "profit" | "loss";
 
 const CARD_META: Record<CardType, { label: string; pnl: string; pnlLoss: string; date: string }> = {
-  daily:   { label: "DAILY CARD",   pnl: "+₹8,400", pnlLoss: "-₹4,200", date: "2nd Jan, 2026" },
-  weekly:  { label: "WEEKLY CARD",  pnl: "+₹11,400", pnlLoss: "-₹6,800", date: "5 Jan – 11 Jan, 2026" },
-  monthly: { label: "MONTHLY CARD", pnl: "+₹65,000", pnlLoss: "-₹12,000", date: "Jan 2026" },
+  daily:   { label: "DAILY CARD",   pnl: "+₹8,400", pnlLoss: "-₹7,200", date: "2nd Jan, 2026" },
+  weekly:  { label: "WEEKLY CARD",  pnl: "+₹11,400", pnlLoss: "-₹10,000", date: "5 Jan – 11 Jan, 2026" },
+  monthly: { label: "MONTHLY CARD", pnl: "+₹65,000", pnlLoss: "-₹35,000", date: "Jan 2026" },
 };
 
-function getPromoSrc(type: CardType, theme: CardTheme, side: CardSide): string {
+function getPromoSrc(type: CardType, side: CardSide): string {
   const loss = side === "loss" ? "-loss" : "";
-  const dark = theme === "dark" ? "-dark" : "";
-  return `/promo/${type}${loss}${dark}.png`;
+  return `/promo/${type}${loss}.png`;
 }
 
 function CardShowcase() {
   const [cardType, setCardType] = useState<CardType>("daily");
-  const [theme, setTheme] = useState<CardTheme>("light");
   const [side, setSide] = useState<CardSide>("profit");
 
   const meta = CARD_META[cardType];
-  const mainSrc = getPromoSrc(cardType, theme, side);
+  const mainSrc = getPromoSrc(cardType, side);
 
   const otherTypes = (["daily", "weekly", "monthly"] as const).filter((t) => t !== cardType);
 
@@ -674,28 +669,6 @@ function CardShowcase() {
               {t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
-        </div>
-
-        {/* Theme */}
-        <div className="flex rounded-full border border-border bg-muted/40 p-0.5 sm:p-1">
-          <button
-            onClick={() => setTheme("light")}
-            className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-all ${
-              theme === "light" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Sun className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            Light
-          </button>
-          <button
-            onClick={() => setTheme("dark")}
-            className={`flex items-center gap-1 sm:gap-1.5 rounded-full px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium transition-all ${
-              theme === "dark" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            Dark
-          </button>
         </div>
 
         {/* Profit / Loss */}
@@ -732,7 +705,7 @@ function CardShowcase() {
             alt={`${meta.label} preview`}
             width={540}
             height={540}
-            className="w-full rounded-2xl shadow-lg ring-1 ring-black/5 transition-all duration-300"
+            className="w-full bg-white transition-all duration-300"
             draggable={false}
           />
           <div className="mt-4 text-center">
@@ -747,13 +720,13 @@ function CardShowcase() {
         {/* Side thumbnails */}
         <div className="hidden sm:flex flex-col gap-4 flex-shrink-0 pt-2">
           {otherTypes.map((t) => {
-            const src = getPromoSrc(t, theme, side);
+            const src = getPromoSrc(t, side);
             const m = CARD_META[t];
             return (
               <button
                 key={t}
                 onClick={() => setCardType(t)}
-                className="group relative w-48 rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-md transition-all duration-200"
+                className="group relative w-48 transition-all duration-200"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -761,7 +734,7 @@ function CardShowcase() {
                   alt={m.label}
                   width={200}
                   height={200}
-                  className="w-full rounded-xl transition-transform duration-200 group-hover:scale-[1.02]"
+                  className="w-full bg-white transition-transform duration-200 group-hover:scale-[1.02]"
                   draggable={false}
                 />
               </button>
@@ -1040,7 +1013,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Start free. Upgrade when you&apos;re ready to level up.
+              All features. 14 days. No card required.
             </p>
           </div>
 
@@ -1074,10 +1047,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Free tier */}
+          <div className="max-w-md mx-auto">
             <div
-              className={`rounded-2xl border border-border bg-white p-5 sm:p-8 transition-all duration-700 hover:shadow-lg ${
+              className={`relative rounded-2xl border-2 border-emerald-200 bg-white p-5 sm:p-8 shadow-xl transition-all duration-700 hover:shadow-2xl ${
                 pricing.visible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-8"
@@ -1086,57 +1058,12 @@ export default function LandingPage() {
                 transitionDelay: pricing.visible ? "150ms" : "0ms",
               }}
             >
-              <h3 className="text-xl font-bold text-foreground">Free</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Build the journaling habit
-              </p>
-              <div className="mt-6 mb-8">
-                <span className="text-4xl font-extrabold tracking-tight text-foreground">
-                  ₹0
-                </span>
-                <span className="text-muted-foreground">/forever</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "Daily trade logging",
-                  "Calendar heatmap",
-                  "Basic stats (P&L, win rate)",
-                  "Daily recap cards",
-                ].map((f) => (
-                  <li
-                    key={f}
-                    className="flex items-start gap-3 text-sm text-foreground"
-                  >
-                    <Check className="h-4 w-4 mt-0.5 shrink-0 text-emerald-500" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/signup"
-                className="btn-gradient-flow group relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
-              >
-                <span className="relative z-[1]">Get Started</span>
-              </Link>
-            </div>
-
-            {/* Pro tier */}
-            <div
-              className={`relative rounded-2xl border-2 border-emerald-200 bg-white p-5 sm:p-8 shadow-xl transition-all duration-700 hover:shadow-2xl ${
-                pricing.visible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
-              }`}
-              style={{
-                transitionDelay: pricing.visible ? "300ms" : "0ms",
-              }}
-            >
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
-                POPULAR
+                14-DAY FREE TRIAL
               </div>
-              <h3 className="text-xl font-bold text-foreground">Pro</h3>
+              <h3 className="text-xl font-bold text-foreground">PnLCard</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                For traders who want to improve
+                Everything you need to journal your trades
               </p>
               <div className="mt-6 mb-8">
                 {billingCycle === "monthly" ? (
@@ -1160,10 +1087,10 @@ export default function LandingPage() {
               </div>
               <ul className="space-y-3 mb-8">
                 {[
-                  "Everything in Free",
-                  "Weekly & Monthly Reviews",
-                  "Discipline analytics & trends",
-                  "All card types (no watermark)",
+                  "Daily trade logging & calendar heatmap",
+                  "Daily, weekly & monthly recap cards",
+                  "Weekly & monthly performance reviews",
+                  "Discipline analytics & mistake tracking",
                 ].map((f) => (
                   <li
                     key={f}
@@ -1176,9 +1103,9 @@ export default function LandingPage() {
               </ul>
               <Link
                 href="/signup"
-                className="btn-gradient-flow group relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 transition-transform"
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
               >
-                <span className="relative z-[1]">Upgrade to Pro</span>
+                Start your 14-day Free Trial
               </Link>
               {billingCycle === "monthly" && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -1192,6 +1119,9 @@ export default function LandingPage() {
                   </button>
                 </p>
               )}
+              <p className="mt-4 text-center text-xs text-muted-foreground">
+                No card required to start
+              </p>
             </div>
           </div>
         </div>
@@ -1201,7 +1131,7 @@ export default function LandingPage() {
       <section className="relative py-16 sm:py-32 bg-page overflow-hidden">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Start your trading journal{" "}
+            Start your 14-day Free Trial{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               today.
             </span>

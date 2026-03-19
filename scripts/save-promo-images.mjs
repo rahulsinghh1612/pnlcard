@@ -1,10 +1,7 @@
 /**
  * Fetches promo OG card images from the running dev server
  * and saves them as static PNGs in public/promo/.
- * Generates profit + loss variants for both light and dark themes.
- *
- * Data derived from lib/demo-trades.ts — same trades power the
- * calendar heatmap demo and these promo card images.
+ * Generates profit + loss variants (light theme only — new card design).
  *
  * Usage: node scripts/save-promo-images.mjs
  * Requires: dev server running on localhost:3000
@@ -26,6 +23,8 @@ const profitParams = {
     netRoi: "+0.84%",
     trades: "2",
     streak: "2",
+    disciplineScore: "4",
+    executionTag: "fomo_entry",
   },
   weekly: {
     handle: "@iamrahulx0",
@@ -33,9 +32,8 @@ const profitParams = {
     range: "5 Jan – 11 Jan, 2026",
     pnl: "+11,400",
     roi: "+1.14%",
-    winRate: "60%",
-    wl: "3W · 2L",
-    totalTrades: "8",
+    roiLabel: "Net ROI",
+    avgPerDay: "+2,280",
     days: JSON.stringify([
       { day: "M", pnl: 5800, win: true },
       { day: "T", pnl: -3400, win: false },
@@ -45,7 +43,6 @@ const profitParams = {
       { day: "S", pnl: 1800, win: true },
       { day: "S", pnl: 0, win: false },
     ]),
-    bestDay: "Wed +10,000",
   },
   monthly: {
     handle: "@iamrahulx0",
@@ -53,10 +50,8 @@ const profitParams = {
     month: "January 2026",
     pnl: "+65,000",
     roi: "+6.50%",
-    winRate: "71%",
-    wl: "15W · 6L",
-    best: "7th · +10,000",
-    worst: "16th · -3,600",
+    roiLabel: "Net ROI",
+    avgPerDay: "+3,095",
     calendar: JSON.stringify({
       2: 8400, 3: 2200, 5: 5800, 6: -3400, 7: 10000,
       9: -2800, 10: 1800, 12: 6400, 14: 5200, 15: 7200,
@@ -85,6 +80,8 @@ const lossParams = {
     netRoi: "-0.72%",
     trades: "3",
     streak: "0",
+    disciplineScore: "1",
+    executionTag: "fomo_entry,no_stop_loss",
   },
   weekly: {
     handle: "@iamrahulx0",
@@ -92,9 +89,8 @@ const lossParams = {
     range: "8 Dec – 14 Dec, 2025",
     pnl: "-10,000",
     roi: "-1.00%",
-    winRate: "40%",
-    wl: "2W · 3L",
-    totalTrades: "10",
+    roiLabel: "Net ROI",
+    avgPerDay: "-2,000",
     days: JSON.stringify([
       { day: "M", pnl: -3200, win: false },
       { day: "T", pnl: 0, win: false },
@@ -104,7 +100,6 @@ const lossParams = {
       { day: "S", pnl: 1200, win: true },
       { day: "S", pnl: 0, win: false },
     ]),
-    bestDay: "Thu +4,800",
   },
   monthly: {
     handle: "@iamrahulx0",
@@ -112,10 +107,8 @@ const lossParams = {
     month: "December 2025",
     pnl: "-35,000",
     roi: "-3.50%",
-    winRate: "42%",
-    wl: "8W · 11L",
-    best: "11th · +4,800",
-    worst: "10th · -7,400",
+    roiLabel: "Net ROI",
+    avgPerDay: "-1,842",
     calendar: JSON.stringify({
       1: -5200, 2: 3600, 4: -5800, 5: 2400, 6: -2600,
       8: -3200, 10: -7400, 11: 4800, 12: -5400, 13: 1200,
@@ -142,17 +135,16 @@ for (const variant of ["profit", "loss"]) {
   const variantSuffix = variant === "loss" ? "-loss" : "";
 
   for (const type of ["daily", "weekly", "monthly"]) {
-    for (const theme of ["light", "dark"]) {
-      const params = { ...baseParams[type], theme };
-      const url = new URL(`/api/og/${type}`, BASE);
-      for (const [k, v] of Object.entries(params)) {
-        url.searchParams.set(k, v);
-      }
+    const params = { ...baseParams[type] };
+    const url = new URL(`/api/og/${type}`, BASE);
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, v);
+    }
 
-      const themeSuffix = theme === "dark" ? "-dark" : "";
-      const filename = `${type}${variantSuffix}${themeSuffix}.png`;
+    const filename = `${type}${variantSuffix}.png`;
 
-      console.log(`Fetching ${type} (${variant}, ${theme})...`);
+    console.log(`Fetching ${type} (${variant})...`);
+    try {
       const res = await fetch(url.toString());
       if (!res.ok) {
         console.error(`  ✗ ${filename}: ${res.status} ${res.statusText}`);
@@ -162,6 +154,8 @@ for (const variant of ["profit", "loss"]) {
       const outPath = resolve(promoDir, filename);
       writeFileSync(outPath, buf);
       console.log(`  ✓ Saved ${filename} (${(buf.length / 1024).toFixed(0)} KB)`);
+    } catch (err) {
+      console.error(`  ✗ ${filename}: ${err.message}`);
     }
   }
 }
