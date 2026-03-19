@@ -2,11 +2,12 @@
  * API route: GET /api/og/daily
  *
  * Generates a 1080×1080 PNG daily recap card for social sharing.
+ * Clean white design with adaptive layout — sections omitted when data is missing.
  *
- * Query params: date, pnl, charges?, netPnl, netRoi?, trades, streak,
- *               handle?, theme, currency?
+ * Query params: date, pnl, netPnl, netRoi?, trades, handle?, currency?,
+ *               disciplineScore?, executionTag?, format?
  *
- * SATORI RULES (the image generator is very strict):
+ * SATORI RULES:
  *  - Every element with >1 child MUST have display:"flex"
  *  - No {var} text patterns — always use template literals {`${var} text`}
  *  - No CSS Grid, no filter:blur, no box-shadow
@@ -18,64 +19,104 @@ import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
-/* S (scale factor) is computed inside the handler based on output format. */
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const date = searchParams.get("date") ?? "12th Feb, 2026";
-    const pnl = searchParams.get("pnl") ?? "+21,294";
-    const charges = searchParams.get("charges");
-    const netPnl = searchParams.get("netPnl") ?? pnl;
+    const date = searchParams.get("date") ?? "Thursday, 19 Mar 2026";
+    const netPnl = searchParams.get("netPnl") ?? searchParams.get("pnl") ?? "+21,294";
     const netRoi = searchParams.get("netRoi");
     const trades = searchParams.get("trades") ?? "3";
-    const streak = parseInt(searchParams.get("streak") ?? "0", 10);
     const handle = searchParams.get("handle");
-    const theme = searchParams.get("theme") ?? "light";
     const format = searchParams.get("format") ?? "square";
+    const disciplineScoreRaw = searchParams.get("disciplineScore");
+    const executionTag = searchParams.get("executionTag");
+
     const isStory = format === "story";
     const isOg = format === "og";
-    const S = isOg ? 630 / 370 : 1080 / 370;
+    const S = isOg ? 630 / 370 : isStory ? (1080 / 370) * 1.35 : 1080 / 370;
     const imgW = isOg ? 1200 : 1080;
     const imgH = isStory ? 1920 : isOg ? 630 : 1080;
-    const isDark = theme === "dark";
+
     const netPnlNum = parseFloat(netPnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = netPnlNum >= 0;
-    const s = getOgStyles(isDark, isProfit);
-    const hasCharges = charges != null && charges !== "";
+    const s = getOgStyles(isProfit);
+
     const hasRoi = netRoi != null && netRoi !== "";
+    const disciplineScore = disciplineScoreRaw ? parseInt(disciplineScoreRaw, 10) : null;
+    const hasDiscipline = disciplineScore != null && disciplineScore >= 1 && disciplineScore <= 5;
+    const hasTag = executionTag != null && executionTag !== "";
 
-    const pnlLabel = hasCharges ? "Net P/L" : "P/L";
-    const roiLabel = hasCharges ? "Net ROI" : "ROI";
     const tradeCount = trades.trim();
-    const tradesText = tradeCount === "1" ? "1 Trade" : `${trades} Trades`;
-    const streakText = streak >= 5 ? `${streak}d streak` : "";
 
-    // --- Build content groups (trades count + P&L section) ---
-    const sectionGap = Math.round(14 * S);
-    const labelToValueGap = Math.round(6 * S);
-    const headerToContentGap = Math.round(8 * S);
+    // Format execution tags: "fomo_entry,no_stop_loss" → ["FOMO Entry", "No Stop Loss"]
+    const formatTag = (raw: string): string =>
+      raw
+        .split("_")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
+    const tagList = hasTag
+      ? executionTag!.split(",").map((t) => formatTag(t.trim())).filter(Boolean)
+      : [];
 
-    const tradesGroup = (
-      <div key="trades-group" style={{ display: "flex", flexDirection: "column" }}>
+    // --- Build sections ---
+    const sections: React.ReactNode[] = [];
+
+    // Count optional sections to scale spacing adaptively
+    const optionalCount = (hasRoi ? 1 : 0) + (hasDiscipline ? 1 : 0) + (tagList.length > 0 ? 1 : 0);
+    const sectionGap = optionalCount >= 2 ? Math.round(14 * S) : Math.round(20 * S);
+
+    // P&L label + hero number
+    sections.push(
+      <div key="pnl" style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
             display: "flex",
             fontSize: Math.round(10 * S),
             color: s.labelColor,
-            letterSpacing: "0.1em",
-            fontWeight: 500,
+            letterSpacing: "0.12em",
+            fontWeight: 600,
             marginBottom: Math.round(4 * S),
           }}
         >
-          {"Trades"}
+          {"P&L"}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            fontSize: Math.round(38 * S),
+            fontWeight: 800,
+            color: s.accent,
+            letterSpacing: "-0.04em",
+            lineHeight: 1,
+          }}
+        >
+          {netPnl}
+        </div>
+      </div>
+    );
+
+    // TRADES + ROI side-by-side
+    const statColumns: React.ReactNode[] = [];
+    statColumns.push(
+      <div key="trades-col" style={{ display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            display: "flex",
+            fontSize: Math.round(10 * S),
+            color: s.labelColor,
+            letterSpacing: "0.12em",
+            fontWeight: 600,
+            marginBottom: Math.round(3 * S),
+          }}
+        >
+          {"TRADES"}
         </div>
         <div
           style={{
             display: "flex",
             fontSize: Math.round(18 * S),
             fontWeight: 700,
-            color: s.accent,
+            color: s.text1,
           }}
         >
           {tradeCount}
@@ -83,103 +124,135 @@ export async function GET(request: Request) {
       </div>
     );
 
-    const pnlChildren: React.ReactNode[] = [];
-
-    pnlChildren.push(
-      <div
-        key="pnl-label"
-        style={{
-          display: "flex",
-          fontSize: Math.round(10 * S),
-          color: s.labelColor,
-          letterSpacing: "0.1em",
-          fontWeight: 500,
-          marginBottom: labelToValueGap,
-        }}
-      >
-        {pnlLabel}
-      </div>
-    );
-
-    pnlChildren.push(
-      <div
-        key="pnl-value"
-        style={{
-          display: "flex",
-          fontSize: Math.round(50 * S),
-          fontWeight: 800,
-          color: s.accent,
-          letterSpacing: "-0.04em",
-          lineHeight: 1,
-          marginBottom: hasRoi ? sectionGap : 0,
-        }}
-      >
-        {netPnl}
-      </div>
-    );
-
     if (hasRoi) {
-      pnlChildren.push(
-      <div
-        key="roi-label"
-        style={{
-          display: "flex",
-          fontSize: Math.round(10 * S),
-          color: s.labelColor,
-          letterSpacing: "0.1em",
-          fontWeight: 500,
-          marginBottom: labelToValueGap,
-        }}
-      >
-        {roiLabel}
-      </div>
-      );
-      pnlChildren.push(
-        <div
-          key="roi-value"
-          style={{
-            display: "flex",
-            fontSize: Math.round(42 * S),
-            fontWeight: 800,
-            color: s.accent,
-            letterSpacing: "-0.04em",
-            lineHeight: 1,
-          }}
-        >
-          {netRoi}
+      statColumns.push(
+        <div key="roi-col" style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(10 * S),
+              color: s.labelColor,
+              letterSpacing: "0.12em",
+              fontWeight: 600,
+              marginBottom: Math.round(3 * S),
+            }}
+          >
+            {"ROI"}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(18 * S),
+              fontWeight: 700,
+              color: s.accent,
+            }}
+          >
+            {netRoi}
+          </div>
         </div>
       );
     }
 
-    const pnlGroup = (
-      <div key="pnl-group" style={{ display: "flex", flexDirection: "column" }}>
-        {pnlChildren}
+    sections.push(
+      <div key="stats" style={{ display: "flex", gap: Math.round(40 * S), marginTop: sectionGap }}>
+        {statColumns}
       </div>
     );
 
-    // --- Streak dots (last dot solid, rest muted to match target) ---
-    const streakDots: React.ReactNode[] = [];
-    if (streak >= 5) {
-      for (let i = 0; i < Math.min(streak, 10); i++) {
-        const isLast = i === Math.min(streak, 10) - 1;
-        streakDots.push(
+    // Discipline dots
+    if (hasDiscipline) {
+      const dots: React.ReactNode[] = [];
+      for (let i = 1; i <= 5; i++) {
+        const filled = i <= disciplineScore;
+        dots.push(
           <div
             key={`dot-${i}`}
             style={{
-              width: Math.round(6 * S),
-              height: Math.round(6 * S),
-              borderRadius: Math.round(3 * S),
-              background: s.accent,
-              opacity: isLast ? 1 : 0.5,
+              width: Math.round(10 * S),
+              height: Math.round(10 * S),
+              borderRadius: Math.round(5 * S),
+              background: filled ? "#16a34a" : "#e5e7eb",
             }}
           />
         );
       }
+      sections.push(
+        <div key="discipline" style={{ display: "flex", flexDirection: "column", marginTop: sectionGap }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(10 * S),
+              color: s.labelColor,
+              letterSpacing: "0.12em",
+              fontWeight: 600,
+              marginBottom: Math.round(6 * S),
+            }}
+          >
+            {"DISCIPLINE"}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: Math.round(6 * S) }}>
+            <div style={{ display: "flex", gap: Math.round(5 * S) }}>
+              {dots}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: Math.round(12 * S),
+                color: s.text3,
+                fontWeight: 500,
+                marginLeft: Math.round(4 * S),
+              }}
+            >
+              {`${disciplineScore}/5`}
+            </div>
+          </div>
+        </div>
+      );
     }
 
-    // --- Watermark left side ---
+    // Execution tag pills (mistakes)
+    if (tagList.length > 0) {
+      const pills = tagList.map((tag, i) => (
+        <div
+          key={`pill-${i}`}
+          style={{
+            display: "flex",
+            background: "rgba(220,38,38,0.08)",
+            border: "1px solid rgba(220,38,38,0.18)",
+            borderRadius: Math.round(6 * S),
+            padding: `${Math.round(4 * S)}px ${Math.round(12 * S)}px`,
+            fontSize: Math.round(11 * S),
+            fontWeight: 600,
+            color: "#b91c1c",
+          }}
+        >
+          {tag}
+        </div>
+      ));
+      sections.push(
+        <div key="tag" style={{ display: "flex", flexDirection: "column", marginTop: sectionGap }}>
+          <div
+            style={{
+              display: "flex",
+              fontSize: Math.round(10 * S),
+              color: s.labelColor,
+              letterSpacing: "0.12em",
+              fontWeight: 600,
+              marginBottom: Math.round(6 * S),
+            }}
+          >
+            {"MISTAKES"}
+          </div>
+          <div style={{ display: "flex", gap: Math.round(6 * S), flexWrap: "wrap" }}>
+            {pills}
+          </div>
+        </div>
+      );
+    }
+
+    // Footer
     const watermarkLeft = !handle ? (
-      <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
+      <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
         {"PnLCard"}
       </div>
     ) : (
@@ -197,67 +270,48 @@ export async function GET(request: Request) {
           height: imgH,
           fontFamily: "Inter",
           background: s.bg,
-          padding: `${Math.round(24 * S)}px ${Math.round(36 * S)}px ${Math.round(24 * S)}px`,
+          border: `2px solid ${s.accent}`,
+          borderRadius: Math.round(12 * S),
+          padding: `${Math.round(32 * S)}px ${Math.round(36 * S)}px ${Math.round(24 * S)}px`,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
         }}
       >
-          {/* Header: centered, accent-colored, prominent */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: headerToContentGap,
-            }}
-          >
-            <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
-              {date}
-            </div>
-          </div>
+        {/* Date — pinned to top */}
+        <div
+          style={{
+            display: "flex",
+            fontSize: Math.round(13 * S),
+            color: s.text1,
+            fontWeight: 600,
+            fontFamily: "SpaceGrotesk",
+          }}
+        >
+          {date}
+        </div>
 
-          {/* Main content — TRADES + P/L + ROI grouped tightly, centered vertically */}
-          <div style={{ flex: 1, display: "flex" }} />
-          <div style={{ display: "flex", flexDirection: "column", gap: Math.round(14 * S) }}>
-            {tradesGroup}
-            {pnlGroup}
-          </div>
-          <div style={{ flex: 1, display: "flex" }} />
+        {/* Main content — vertically centered in remaining space */}
+        <div style={{ flex: 1, display: "flex" }} />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {sections}
+        </div>
+        <div style={{ flex: 1, display: "flex" }} />
 
-          {/* Footer */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {streak >= 5 && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: Math.round(6 * S),
-                  marginBottom: Math.round(6 * S),
-                }}
-              >
-                <div style={{ display: "flex", gap: Math.round(3 * S) }}>
-                  {streakDots}
-                </div>
-                <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.text3, fontWeight: 500 }}>
-                  {streakText}
-                </div>
-              </div>
-            )}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              {watermarkLeft}
-              <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
-                {"Daily Recap"}
-              </div>
-            </div>
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {watermarkLeft}
+          <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.footerText }}>
+            {"Daily Recap"}
           </div>
         </div>
+      </div>
     );
 
     return new ImageResponse(cardContent, {

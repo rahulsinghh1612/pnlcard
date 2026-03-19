@@ -9,18 +9,19 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Link2, Lock, Square, LayoutGrid } from "lucide-react";
+import { Download, Link2, Square, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import type { DailyCardParams } from "@/lib/card-data";
 import type { WeeklyCardParams } from "@/lib/card-data";
 import type { MonthlyCardParams } from "@/lib/card-data";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
+import type { AccessStatus } from "@/lib/types";
 
 type CardGeneratorProps = {
   dailyParams: DailyCardParams;
   weeklyParams: WeeklyCardParams | null;
   monthlyParams: MonthlyCardParams | null;
-  isPremium: boolean;
+  accessStatus: AccessStatus;
   baseUrl: string;
   defaultCardType?: "daily" | "weekly" | "monthly";
   userEmail?: string;
@@ -34,53 +35,48 @@ function getImageUrl(path: string, baseUrl: string): string {
   return `${origin}${path}`;
 }
 
-function buildDailyOgUrl(params: DailyCardParams, theme: string): string {
+function buildDailyOgUrl(params: DailyCardParams): string {
   const search = new URLSearchParams({
     date: params.date,
     pnl: params.pnl,
     netPnl: params.netPnl,
     trades: params.trades,
-    streak: String(params.streak),
-    theme,
     currency: params.currency,
   });
-  if (params.charges) search.set("charges", params.charges);
   if (params.netRoi) search.set("netRoi", params.netRoi);
   if (params.handle) search.set("handle", params.handle);
+  if (params.disciplineScore != null) search.set("disciplineScore", String(params.disciplineScore));
+  if (params.executionTag) search.set("executionTag", params.executionTag);
   return `/api/og/daily?${search.toString()}`;
 }
 
-function buildWeeklyOgUrl(params: WeeklyCardParams, theme: string): string {
+function buildWeeklyOgUrl(params: WeeklyCardParams): string {
   const search = new URLSearchParams({
     range: params.range,
     pnl: params.pnl,
     winRate: params.winRate,
     wl: params.wl,
-    totalTrades: String(params.totalTrades ?? 0),
-    bestDay: params.bestDay,
     days: JSON.stringify(params.days),
-    theme,
     currency: params.currency,
+    avgPerDay: params.avgPerDay,
   });
   if (params.roi) search.set("roi", params.roi);
+  if (params.roiLabel) search.set("roiLabel", params.roiLabel);
   if (params.handle) search.set("handle", params.handle);
   return `/api/og/weekly?${search.toString()}`;
 }
 
-function buildMonthlyOgUrl(params: MonthlyCardParams, theme: string): string {
+function buildMonthlyOgUrl(params: MonthlyCardParams): string {
   const search = new URLSearchParams({
     month: params.month,
     pnl: params.pnl,
-    winRate: params.winRate,
-    wl: params.wl,
-    best: params.best,
-    worst: params.worst,
     calendar: JSON.stringify(params.calendar),
     calendarGrid: JSON.stringify(params.calendarGrid),
-    theme,
     currency: params.currency,
+    avgPerDay: params.avgPerDay,
   });
   if (params.roi) search.set("roi", params.roi);
+  if (params.roiLabel) search.set("roiLabel", params.roiLabel);
   if (params.handle) search.set("handle", params.handle);
   return `/api/og/monthly?${search.toString()}`;
 }
@@ -89,13 +85,12 @@ export function CardGenerator({
   dailyParams,
   weeklyParams,
   monthlyParams,
-  isPremium,
+  accessStatus,
   baseUrl,
   defaultCardType,
   userEmail,
   userName,
 }: CardGeneratorProps) {
-  const [theme, setTheme] = useState(dailyParams.theme);
   const [downloadFormat, setDownloadFormat] = useState<"square" | "story">("square");
   const [cardType, setCardType] = useState<"daily" | "weekly" | "monthly">(
     defaultCardType && ["daily", "weekly", "monthly"].includes(defaultCardType)
@@ -103,16 +98,17 @@ export function CardGenerator({
       : "daily"
   );
 
-  const canUseWeekly = isPremium && weeklyParams != null;
-  const canUseMonthly = isPremium && monthlyParams != null;
+  const isExpired = accessStatus === "expired";
+  const canUseWeekly = weeklyParams != null;
+  const canUseMonthly = monthlyParams != null;
 
   let ogUrl = "";
   if (cardType === "daily") {
-    ogUrl = buildDailyOgUrl(dailyParams, theme);
+    ogUrl = buildDailyOgUrl(dailyParams);
   } else if (cardType === "weekly" && weeklyParams) {
-    ogUrl = buildWeeklyOgUrl(weeklyParams, theme);
+    ogUrl = buildWeeklyOgUrl(weeklyParams);
   } else if (cardType === "monthly" && monthlyParams) {
-    ogUrl = buildMonthlyOgUrl(monthlyParams, theme);
+    ogUrl = buildMonthlyOgUrl(monthlyParams);
   }
 
   const shareUrl = `${baseUrl}/card/${dailyParams.tradeId}`;
@@ -136,7 +132,8 @@ export function CardGenerator({
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = `pnlcard-${cardType}-${downloadLabel}.png`;
+      const typeLabel = cardType.charAt(0).toUpperCase() + cardType.slice(1);
+      a.download = `PnLCard-${typeLabel}-${downloadLabel}.png`;
       a.click();
       URL.revokeObjectURL(blobUrl);
       toast.success("Card downloaded!");
@@ -177,41 +174,22 @@ export function CardGenerator({
               }`}
             >
               {t.charAt(0).toUpperCase() + t.slice(1)}
-              {(t === "weekly" || t === "monthly") && !isPremium && (
-                <Lock className="h-3.5 w-3.5" />
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="flex rounded-lg border border-border p-1">
-          {(["light", "dark"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTheme(t)}
-              className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition-colors ${
-                theme === t
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {t}
             </button>
           ))}
         </div>
       </div>
 
-      {!isPremium && (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <Lock className="h-4 w-4 text-amber-600 shrink-0" />
-          <p className="text-sm text-amber-800 flex-1">
-            Weekly &amp; monthly cards are a Pro feature.
+      {isExpired && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-800 flex-1">
+            Your trial has ended. Subscribe to generate and download cards.
           </p>
           <UpgradeButton
             userEmail={userEmail ?? ""}
             userName={userName ?? ""}
-            className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition-colors"
+            className="shrink-0 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition-colors"
           >
-            Upgrade
+            Subscribe
           </UpgradeButton>
         </div>
       )}
@@ -270,11 +248,11 @@ export function CardGenerator({
                 Story
               </button>
             </div>
-            <Button onClick={handleDownload}>
+            <Button onClick={handleDownload} disabled={isExpired}>
               <Download className="mr-2 h-4 w-4" />
               Download
             </Button>
-            <Button variant="outline" onClick={handleCopyLink}>
+            <Button variant="outline" onClick={handleCopyLink} disabled={isExpired}>
               <Link2 className="mr-2 h-4 w-4" />
               Copy Link
             </Button>

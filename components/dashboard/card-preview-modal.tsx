@@ -7,7 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Pencil, Sun, Moon, Eye, EyeOff, Sparkles, Square, LayoutGrid, Lock, BarChart3, CalendarDays } from "lucide-react";
+import { Download, Pencil, Eye, EyeOff, Sparkles, Square, LayoutGrid, BarChart3, CalendarDays } from "lucide-react";
+import type { AccessStatus } from "@/lib/types";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import { toast } from "sonner";
 import {
@@ -48,7 +49,7 @@ type CardPreviewModalProps = {
     currency: string;
     timezone: string;
   };
-  isPremium?: boolean;
+  accessStatus?: AccessStatus;
   userEmail?: string;
   userName?: string;
   onEditTrade: (trade: Trade) => void;
@@ -56,7 +57,6 @@ type CardPreviewModalProps = {
 
 function buildDailyOgUrl(
   params: DailyCardParams,
-  theme: string,
   showRoi: boolean
 ): string {
   const search = new URLSearchParams({
@@ -64,19 +64,17 @@ function buildDailyOgUrl(
     pnl: params.pnl,
     netPnl: params.netPnl,
     trades: params.trades,
-    streak: String(params.streak),
-    theme,
     currency: params.currency,
   });
-  if (params.charges) search.set("charges", params.charges);
   if (showRoi && params.netRoi) search.set("netRoi", params.netRoi);
   if (params.handle) search.set("handle", params.handle);
+  if (params.disciplineScore != null) search.set("disciplineScore", String(params.disciplineScore));
+  if (params.executionTag) search.set("executionTag", params.executionTag);
   return `/api/og/daily?${search.toString()}`;
 }
 
 function buildWeeklyOgUrl(
   params: WeeklyCardParams,
-  theme: string,
   showRoi: boolean
 ): string {
   const search = new URLSearchParams({
@@ -84,35 +82,30 @@ function buildWeeklyOgUrl(
     pnl: params.pnl,
     winRate: params.winRate,
     wl: params.wl,
-    totalTrades: String(params.totalTrades ?? 0),
-    bestDay: params.bestDay,
     days: JSON.stringify(params.days),
-    theme,
     currency: params.currency,
+    avgPerDay: params.avgPerDay,
   });
   if (showRoi && params.roi) search.set("roi", params.roi);
+  if (params.roiLabel) search.set("roiLabel", params.roiLabel);
   if (params.handle) search.set("handle", params.handle);
   return `/api/og/weekly?${search.toString()}`;
 }
 
 function buildMonthlyOgUrl(
   params: MonthlyCardParams,
-  theme: string,
   showRoi: boolean
 ): string {
   const search = new URLSearchParams({
     month: params.month,
     pnl: params.pnl,
-    winRate: params.winRate,
-    wl: params.wl,
-    best: params.best,
-    worst: params.worst,
     calendar: JSON.stringify(params.calendar),
     calendarGrid: JSON.stringify(params.calendarGrid),
-    theme,
     currency: params.currency,
+    avgPerDay: params.avgPerDay,
   });
   if (showRoi && params.roi) search.set("roi", params.roi);
+  if (params.roiLabel) search.set("roiLabel", params.roiLabel);
   if (params.handle) search.set("handle", params.handle);
   return `/api/og/monthly?${search.toString()}`;
 }
@@ -127,14 +120,13 @@ export function CardPreviewModal({
   allTrades,
   baseUrl,
   profile,
-  isPremium = false,
+  accessStatus = "expired",
   userEmail = "",
   userName = "",
   onEditTrade,
 }: CardPreviewModalProps) {
-  const isPremiumCard = cardType === "weekly" || cardType === "monthly";
-  const isLocked = isPremiumCard && !isPremium;
-  const [theme, setTheme] = useState(profile.card_theme);
+  const isExpired = accessStatus === "expired";
+  const isLocked = isExpired;
   const [showRoi, setShowRoi] = useState(profile.trading_capital != null);
   const [downloadFormat, setDownloadFormat] = useState<"square" | "story">("square");
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -149,6 +141,8 @@ export function CardPreviewModal({
         charges: t.charges,
         num_trades: t.num_trades,
         capital_deployed: t.capital_deployed,
+        execution_tag: t.execution_tag,
+        discipline_score: t.discipline_score,
       })),
     [allTrades]
   );
@@ -162,6 +156,8 @@ export function CardPreviewModal({
       charges: trade.charges,
       num_trades: trade.num_trades,
       capital_deployed: trade.capital_deployed,
+      execution_tag: trade.execution_tag,
+      discipline_score: trade.discipline_score,
     };
     return buildDailyCardParams(tradeForCard, tradesForCard, profile);
   }, [cardType, trade, tradesForCard, profile]);
@@ -185,16 +181,16 @@ export function CardPreviewModal({
 
   const ogUrl = useMemo(() => {
     if (cardType === "daily" && dailyParams) {
-      return buildDailyOgUrl(dailyParams, theme, showRoi);
+      return buildDailyOgUrl(dailyParams, showRoi);
     }
     if (cardType === "weekly" && weeklyParams) {
-      return buildWeeklyOgUrl(weeklyParams, theme, showRoi);
+      return buildWeeklyOgUrl(weeklyParams, showRoi);
     }
     if (cardType === "monthly" && monthlyParams) {
-      return buildMonthlyOgUrl(monthlyParams, theme, showRoi);
+      return buildMonthlyOgUrl(monthlyParams, showRoi);
     }
     return "";
-  }, [cardType, dailyParams, weeklyParams, monthlyParams, theme, showRoi]);
+  }, [cardType, dailyParams, weeklyParams, monthlyParams, showRoi]);
 
   const imgSrc = useMemo(() => {
     if (!ogUrl) return "";
@@ -241,15 +237,15 @@ export function CardPreviewModal({
 
   const downloadFilename = useMemo(() => {
     if (cardType === "daily" && dailyParams) {
-      return `pnlcard-daily-${dailyParams.date.replace(/\s/g, "-")}.png`;
+      return `PnLCard-Daily-${dailyParams.date.replace(/\s/g, "-")}.png`;
     }
     if (cardType === "weekly" && weeklyParams) {
-      return `pnlcard-weekly-${weeklyParams.range.replace(/\s/g, "-")}.png`;
+      return `PnLCard-Weekly-${weeklyParams.range.replace(/\s/g, "-")}.png`;
     }
     if (cardType === "monthly" && monthlyParams) {
-      return `pnlcard-monthly-${monthlyParams.month.replace(/\s/g, "-")}.png`;
+      return `PnLCard-Monthly-${monthlyParams.month.replace(/\s/g, "-")}.png`;
     }
-    return "pnlcard.png";
+    return "PnLCard.png";
   }, [cardType, dailyParams, weeklyParams, monthlyParams]);
 
   const fetchCardBlob = useCallback(async (format: "square" | "story" = "square"): Promise<Blob | null> => {
@@ -359,17 +355,17 @@ export function CardPreviewModal({
                 </div>
                 <div>
                   <p className="text-xl font-bold tracking-tight text-foreground">
-                    Unlock weekly & monthly cards
+                    Subscribe to continue
                   </p>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    Upgrade to Pro to access weekly recap cards, monthly reviews, story downloads, and more.
+                    Your trial has ended. Subscribe to generate cards, download recaps, and keep logging trades.
                   </p>
                 </div>
                 <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left">
                   {[
-                    { icon: BarChart3, text: "Weekly & monthly performance reports" },
-                    { icon: CalendarDays, text: "Discipline & mistake tracking" },
-                    { icon: Sparkles, text: "All card types, no watermark" },
+                    { icon: BarChart3, text: "Keep logging trades daily" },
+                    { icon: CalendarDays, text: "Generate all card types" },
+                    { icon: Sparkles, text: "Uninterrupted access to reviews" },
                   ].map(({ icon: Icon, text }) => (
                     <li key={text} className="flex items-center gap-3">
                       <Icon className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -384,7 +380,7 @@ export function CardPreviewModal({
                     dropdownPosition="top"
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Upgrade to Pro
+                    Subscribe to PnLCard
                   </UpgradeButton>
                   <button
                     type="button"
@@ -401,32 +397,6 @@ export function CardPreviewModal({
           <>
             {/* Controls */}
             <div className="flex items-center gap-2 px-5 pb-4 flex-wrap">
-              {/* Light / Dark pill toggle */}
-              <div className="inline-flex rounded-full border border-border p-0.5 bg-muted/40">
-                <button
-                  onClick={() => setTheme("light")}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    theme === "light"
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Sun className="h-3 w-3" />
-                  Light
-                </button>
-                <button
-                  onClick={() => setTheme("dark")}
-                  className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                    theme === "dark"
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Moon className="h-3 w-3" />
-                  Dark
-                </button>
-              </div>
-
               {/* ROI pill toggle */}
               {hasRoi && (
                 <button
@@ -461,23 +431,15 @@ export function CardPreviewModal({
                   Square
                 </button>
                 <button
-                  onClick={() => {
-                    if (!isPremium) {
-                      toast("Story format is a Pro feature", { description: "Upgrade to unlock story downloads." });
-                      return;
-                    }
-                    setDownloadFormat("story");
-                  }}
+                  onClick={() => setDownloadFormat("story")}
                   className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${
-                    !isPremium
-                      ? "text-muted-foreground/50 cursor-not-allowed"
-                      : downloadFormat === "story"
-                        ? "bg-white text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                    downloadFormat === "story"
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
-                  title={isPremium ? "Story (1080×1920) for Instagram" : "Pro feature"}
+                  title="Story (1080×1920) for Instagram"
                 >
-                  {!isPremium ? <Lock className="h-2.5 w-2.5" /> : <LayoutGrid className="h-2.5 w-2.5" />}
+                  <LayoutGrid className="h-2.5 w-2.5" />
                   Story
                 </button>
               </div>

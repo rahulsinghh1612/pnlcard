@@ -20,16 +20,16 @@ function buildMonthlyOgUrl(params: MonthlyCardParams, baseUrl: string): string {
   const search = new URLSearchParams({
     month: params.month,
     pnl: params.pnl,
-    winRate: params.winRate,
-    wl: params.wl,
     best: params.best,
     worst: params.worst,
     calendar: JSON.stringify(params.calendar),
     calendarGrid: JSON.stringify(params.calendarGrid),
     theme: params.theme,
     currency: params.currency,
+    avgPerDay: params.avgPerDay,
   });
   if (params.roi) search.set("roi", params.roi);
+  if (params.roiLabel) search.set("roiLabel", params.roiLabel);
   if (params.handle) search.set("handle", params.handle);
   return `${baseUrl}/api/og/monthly?${search.toString()}`;
 }

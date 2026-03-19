@@ -29,6 +29,7 @@ function buildWeeklyOgUrl(params: WeeklyCardParams, baseUrl: string): string {
     currency: params.currency,
   });
   if (params.roi) search.set("roi", params.roi);
+  if (params.roiLabel) search.set("roiLabel", params.roiLabel);
   if (params.handle) search.set("handle", params.handle);
   return `${baseUrl}/api/og/weekly?${search.toString()}`;
 }

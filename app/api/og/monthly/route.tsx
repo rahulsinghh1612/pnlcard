@@ -2,8 +2,10 @@
  * API route: GET /api/og/monthly
  *
  * Generates a 1080×1080 PNG monthly recap card with calendar heatmap.
- * Params: month, pnl, roi?, winRate, wl, best, worst, calendar (JSON),
- *         handle?, theme, currency?
+ * Clean white design — month pinned to top, P&L + ROI/Avg inline, calendar heatmap.
+ *
+ * Params: month, pnl, roi?, roiLabel?, avgPerDay?, calendar (JSON), calendarGrid (JSON),
+ *         handle?, currency?, format?
  *
  * SATORI RULES: display:"flex" on every multi-child element, template
  * literals for all text, no CSS Grid (use nested flex), no fragments.
@@ -14,9 +16,7 @@ import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
-/* S is computed inside the handler based on output format. */
-
-const CELL_HEIGHT = 18;
+const CELL_HEIGHT = 15;
 
 const DEFAULT_CALENDAR_GRID: (number | null)[] = [
   null, null, null, null, null, null, 1,
@@ -31,26 +31,21 @@ const DAY_HEADERS = ["M", "T", "W", "T", "F", "S", "S"];
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get("month") ?? "February 2026";
+    const month = searchParams.get("month") ?? "March 2026";
     const pnl = searchParams.get("pnl") ?? "+1,87,420";
     const roi = searchParams.get("roi");
-    const winRate = searchParams.get("winRate") ?? "73.7%";
-    const wl = searchParams.get("wl") ?? "14W - 5L";
-    const best = searchParams.get("best") ?? "16th +24,800";
-    const worst = searchParams.get("worst") ?? "4th -8,200";
+    const roiLabel = searchParams.get("roiLabel") ?? "ROI";
+    const avgPerDay = searchParams.get("avgPerDay") ?? "";
     const calendarJson = searchParams.get("calendar");
     const calendarGridJson = searchParams.get("calendarGrid");
     const handle = searchParams.get("handle");
-    const theme = searchParams.get("theme") ?? "light";
     const format = searchParams.get("format") ?? "square";
+
     const isStory = format === "story";
     const isOg = format === "og";
-    const S = isOg ? 630 / 370 : 1080 / 370;
+    const S = isOg ? 630 / 370 : isStory ? (1080 / 370) * 1.35 : 1080 / 370;
     const imgW = isOg ? 1200 : 1080;
     const imgH = isStory ? 1920 : isOg ? 630 : 1080;
-    const currency = searchParams.get("currency") ?? "INR";
-    // INR: no symbol (redundant for Indian users). USD: show "$".
-    const symbol = currency === "USD" ? "$" : "";
 
     let tradeData: Record<string, number> = {
       2: 8400, 3: 12600, 4: -3200, 5: 5800, 6: 15200,
@@ -80,15 +75,13 @@ export async function GET(request: Request) {
     const values = Object.values(tradeData).map(Math.abs);
     const maxVal = Math.max(...values, 1);
 
-    const isDark = theme === "dark";
-    const emptyColor = isDark
-      ? "rgba(255,255,255,0.04)"
-      : "rgba(0,0,0,0.04)";
+    const emptyColor = "rgba(0,0,0,0.04)";
     const pnlNum = parseFloat(pnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = pnlNum >= 0;
-    const s = getOgStyles(isDark, isProfit);
+    const s = getOgStyles(isProfit);
+
     const hasRoi = roi != null && roi !== "";
-    const pnlLabel = symbol ? `Net P/L (${symbol})` : "Net P/L";
+    const hasAvg = avgPerDay !== "";
 
     const getCellColor = (day: number): string => {
       const pnlVal = tradeData[day];
@@ -98,13 +91,9 @@ export async function GET(request: Request) {
       const maxOpacity = 0.75;
       const opacity = minOpacity + intensity * (maxOpacity - minOpacity);
       if (pnlVal > 0) {
-        return isDark
-          ? `rgba(34,197,94,${opacity})`
-          : `rgba(22,163,74,${opacity})`;
+        return `rgba(22,163,74,${opacity})`;
       }
-      return isDark
-        ? `rgba(239,68,68,${opacity})`
-        : `rgba(220,38,38,${opacity})`;
+      return `rgba(220,38,38,${opacity})`;
     };
 
     // --- Calendar header row ---
@@ -115,7 +104,7 @@ export async function GET(request: Request) {
           flex: 1,
           height: Math.round(12 * S),
           fontSize: Math.round(8 * S),
-          color: s.text3,
+          color: s.labelColor,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -149,9 +138,7 @@ export async function GET(request: Request) {
           }
           const c = getCellColor(day);
           const hasTrade = tradeData[day] != null;
-          const dayNumColor = hasTrade
-            ? isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.5)"
-            : isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.2)";
+          const dayNumColor = hasTrade ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)";
           return (
             <div
               key={`${row}-${col}`}
@@ -182,111 +169,9 @@ export async function GET(request: Request) {
       </div>
     ));
 
-    // --- Hero numbers children ---
-    const heroChildren: React.ReactNode[] = [];
-
-    heroChildren.push(
-      <div
-        key="pnl-label"
-        style={{
-          display: "flex",
-          fontSize: Math.round(10 * S),
-          color: s.labelColor,
-          letterSpacing: "0.1em",
-          fontWeight: 500,
-          marginBottom: Math.round(4 * S),
-        }}
-      >
-        {pnlLabel}
-      </div>
-    );
-
-    heroChildren.push(
-      <div
-        key="pnl-value"
-        style={{
-          display: "flex",
-          fontSize: Math.round(32 * S),
-          fontWeight: 900,
-          color: s.accent,
-          letterSpacing: "-0.04em",
-          lineHeight: 1,
-          marginBottom: Math.round(12 * S),
-        }}
-      >
-        {pnl}
-      </div>
-    );
-
-    heroChildren.push(
-      <div
-        key="stats-row"
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: Math.round(24 * S),
-        }}
-      >
-        {hasRoi ? (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(10 * S),
-                color: s.labelColor,
-                letterSpacing: "0.1em",
-                fontWeight: 500,
-                marginBottom: Math.round(3 * S),
-              }}
-            >
-              {"Net ROI"}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: Math.round(20 * S),
-                fontWeight: 900,
-                color: s.accent,
-                letterSpacing: "-0.03em",
-                lineHeight: 1,
-              }}
-            >
-              {roi}
-            </div>
-          </div>
-        ) : null}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              display: "flex",
-              fontSize: Math.round(10 * S),
-              color: s.labelColor,
-              letterSpacing: "0.1em",
-              fontWeight: 500,
-              marginBottom: Math.round(3 * S),
-            }}
-          >
-            {"Win Rate"}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: Math.round(20 * S),
-              fontWeight: 900,
-              color: s.accent,
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-            }}
-          >
-            {winRate}
-          </div>
-        </div>
-      </div>
-    );
-
     // --- Watermark ---
     const watermarkLeft = !handle ? (
-      <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
+      <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.footerText, fontWeight: 700, letterSpacing: "-0.02em" }}>
         {"PnLCard"}
       </div>
     ) : (
@@ -304,57 +189,146 @@ export async function GET(request: Request) {
           height: imgH,
           fontFamily: "Inter",
           background: s.bg,
-          padding: `${Math.round(20 * S)}px ${Math.round(26 * S)}px ${Math.round(16 * S)}px`,
+          border: `2px solid ${s.accent}`,
+          borderRadius: Math.round(12 * S),
+          padding: `${Math.round(32 * S)}px ${Math.round(36 * S)}px ${Math.round(24 * S)}px`,
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
         }}
       >
+        {/* Month name — pinned to top */}
         <div
           style={{
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            marginBottom: Math.round(14 * S),
+            fontSize: Math.round(13 * S),
+            color: s.text1,
+            fontWeight: 600,
+            fontFamily: "SpaceGrotesk",
           }}
         >
-          <div style={{ display: "flex", fontSize: Math.round(16 * S), color: s.accent, fontWeight: 700, fontFamily: "SpaceGrotesk" }}>
-            {month}
-          </div>
+          {month}
         </div>
+
+        {/* Top spacer */}
+        <div style={{ flex: 1, display: "flex" }} />
+
+        {/* P&L label */}
         <div
           style={{
-            flex: 1,
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            minHeight: 0,
+            fontSize: Math.round(10 * S),
+            color: s.labelColor,
+            letterSpacing: "0.12em",
+            fontWeight: 600,
+            marginBottom: Math.round(4 * S),
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", marginBottom: Math.round(10 * S) }}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                marginBottom: Math.round(3 * S),
-              }}
-            >
-              {calHeaderCells}
+          {"P&L"}
+        </div>
+
+        {/* Hero P&L */}
+        <div
+          style={{
+            display: "flex",
+            fontSize: Math.round(34 * S),
+            fontWeight: 800,
+            color: s.accent,
+            letterSpacing: "-0.04em",
+            lineHeight: 1,
+          }}
+        >
+          {pnl}
+        </div>
+
+        {/* Spacer between P&L and stats */}
+        <div style={{ height: Math.round(12 * S), display: "flex" }} />
+
+        {/* ROI + Avg/Day inline (no card) */}
+        <div style={{ display: "flex", gap: Math.round(24 * S) }}>
+          {hasRoi && (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: Math.round(7 * S),
+                  color: s.labelColor,
+                  letterSpacing: "0.1em",
+                  fontWeight: 600,
+                  marginBottom: Math.round(2 * S),
+                }}
+              >
+                {roiLabel}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: Math.round(14 * S),
+                  fontWeight: 700,
+                  color: s.accent,
+                }}
+              >
+                {roi}
+              </div>
             </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: Math.round(3 * S),
-              }}
-            >
-              {calRows}
+          )}
+          {hasAvg && (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: Math.round(7 * S),
+                  color: s.labelColor,
+                  letterSpacing: "0.1em",
+                  fontWeight: 600,
+                  marginBottom: Math.round(2 * S),
+                }}
+              >
+                {"Avg/Day"}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: Math.round(14 * S),
+                  fontWeight: 700,
+                  color: s.accent,
+                }}
+              >
+                {avgPerDay}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Spacer between stats and calendar */}
+        <div style={{ height: Math.round(16 * S), display: "flex" }} />
+
+        {/* Calendar heatmap */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              marginBottom: Math.round(3 * S),
+            }}
+          >
+            {calHeaderCells}
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {heroChildren}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: Math.round(3 * S),
+            }}
+          >
+            {calRows}
           </div>
         </div>
+
+        {/* Bottom spacer */}
+        <div style={{ flex: 1, display: "flex" }} />
+
+        {/* Footer */}
         <div
           style={{
             display: "flex",
@@ -363,7 +337,7 @@ export async function GET(request: Request) {
           }}
         >
           {watermarkLeft}
-          <div style={{ display: "flex", fontSize: Math.round(10 * S), color: s.footerText }}>
+          <div style={{ display: "flex", fontSize: Math.round(11 * S), color: s.footerText }}>
             {"Monthly Recap"}
           </div>
         </div>

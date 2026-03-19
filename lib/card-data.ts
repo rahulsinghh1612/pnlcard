@@ -25,6 +25,8 @@ export type TradeForCard = {
   charges: number | null;
   num_trades: number;
   capital_deployed: number | null;
+  execution_tag?: string | null;
+  discipline_score?: number | null;
 };
 
 function getFinalResult(t: TradeForCard): number {
@@ -89,16 +91,7 @@ export function formatPnl(value: number, currency: string): string {
  */
 export function formatDateForCard(dateStr: string): string {
   const d = parseISO(dateStr);
-  const day = d.getDate();
-  const suffix =
-    day === 1 || day === 21 || day === 31
-      ? "st"
-      : day === 2 || day === 22
-        ? "nd"
-        : day === 3 || day === 23
-          ? "rd"
-          : "th";
-  return format(d, `d'${suffix}' MMM, yyyy`);
+  return format(d, "EEEE, d MMM yyyy");
 }
 
 /** Streak up to and including the given date (from user's trades) */
@@ -168,6 +161,8 @@ export type DailyCardParams = {
   theme: string;
   currency: string;
   tradeId: string;
+  disciplineScore: number | null;
+  executionTag: string | null;
 };
 
 export function buildDailyCardParams(
@@ -209,6 +204,8 @@ export function buildDailyCardParams(
     theme: profile.card_theme,
     currency: profile.currency,
     tradeId: trade.id,
+    disciplineScore: trade.discipline_score ?? null,
+    executionTag: trade.execution_tag ?? null,
   };
 }
 
@@ -216,11 +213,13 @@ export type WeeklyCardParams = {
   range: string;
   pnl: string;
   roi: string | null;
+  roiLabel: string;
   winRate: string;
   wl: string;
   totalTrades: number;
   days: Array<{ day: string; pnl: number; win: boolean }>;
   bestDay: string;
+  avgPerDay: string;
   handle: string | null;
   theme: string;
   currency: string;
@@ -268,6 +267,8 @@ export function buildWeeklyCardParams(
     capital != null && capital > 0
       ? (totalPnl / capital) * 100
       : null;
+  const hasCharges = weekTrades.some((t) => t.charges != null);
+  const roiLabel = hasCharges ? "Net ROI" : "ROI";
 
   const dayOrder = [1, 2, 3, 4, 5, 6, 7]; // Mon–Sun
   const byWeekday = new Map<number, TradeForCard>();
@@ -304,15 +305,21 @@ export function buildWeeklyCardParams(
 
   const totalTrades = weekTrades.reduce((sum, t) => sum + t.num_trades, 0);
 
+  const tradingDays = weekTrades.length;
+  const avgPnlPerDay = tradingDays > 0 ? totalPnl / tradingDays : 0;
+  const avgPerDay = formatPnl(Math.round(avgPnlPerDay), profile.currency);
+
   return {
     range,
     pnl: formatPnl(totalPnl, profile.currency),
     roi: roi != null ? `${roi >= 0 ? "+" : ""}${roi.toFixed(2)}%` : null,
+    roiLabel,
     winRate: `${winRate}%`,
     wl: `${wins}W · ${losses}L`,
     totalTrades,
     days,
     bestDay,
+    avgPerDay,
     handle: profile.x_handle,
     theme: profile.card_theme,
     currency: profile.currency,
@@ -323,10 +330,12 @@ export type MonthlyCardParams = {
   month: string;
   pnl: string;
   roi: string | null;
+  roiLabel: string;
   winRate: string;
   wl: string;
   best: string;
   worst: string;
+  avgPerDay: string;
   calendar: Record<string, number>;
   /** Monday-first grid: null for empty cells, day number (1–31) for cells. Length is multiple of 7. */
   calendarGrid: (number | null)[];
@@ -367,6 +376,11 @@ export function buildMonthlyCardParams(
     capital != null && capital > 0
       ? (totalPnl / capital) * 100
       : null;
+  const hasCharges = monthTrades.some((t) => t.charges != null);
+  const roiLabel = hasCharges ? "Net ROI" : "ROI";
+
+  const tradingDays = monthTrades.length;
+  const avgPnlPerDay = tradingDays > 0 ? totalPnl / tradingDays : 0;
 
   const calendar: Record<string, number> = {};
   for (const t of monthTrades) {
@@ -400,10 +414,12 @@ export function buildMonthlyCardParams(
     month: format(start, "MMMM yyyy"),
     pnl: formatPnl(totalPnl, profile.currency),
     roi: roi != null ? `${roi >= 0 ? "+" : ""}${roi.toFixed(2)}%` : null,
+    roiLabel,
     winRate: `${winRate}%`,
     wl: `${wins}W · ${losses}L`,
     best: bestStr,
     worst: worstStr,
+    avgPerDay: formatPnl(Math.round(avgPnlPerDay), profile.currency),
     calendar,
     calendarGrid,
     handle: profile.x_handle,
