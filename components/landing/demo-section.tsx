@@ -76,7 +76,7 @@ function DemoEnterPnl({ active }: { active: boolean }) {
   const pnlFields = [
     { label: "Date", value: "15/01/2026", id: "date" },
     { label: "Number of trades", value: String(highlight.num_trades), id: "num" },
-    { label: isINR ? "P&L (\u20B9)" : "P&L ($)", value: formatValue(highlight.net_pnl), id: "pnl", positive: highlight.net_pnl >= 0 },
+    { label: isINR ? "P&L (\u20B9)" : "P&L ($)", value: formatValue(hFinal), id: "pnl", positive: hFinal >= 0 },
   ];
 
   const [revealed, setRevealed] = useState(0);
