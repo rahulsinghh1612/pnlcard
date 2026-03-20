@@ -1313,14 +1313,14 @@ export default function LandingPage() {
         <div className="-rotate-1 -mx-6 space-y-3">
           <div className="overflow-hidden">
             <div className="ticker-landing-2 flex flex-row flex-nowrap w-max gap-3 hover:[animation-play-state:paused]">
-              {[...TICKER_2, ...TICKER_2].map((c, i) => (
+              {[...(currency.isINR ? TICKER_2 : TICKER_2_USD), ...(currency.isINR ? TICKER_2 : TICKER_2_USD)].map((c, i) => (
                 <TickerChip key={`cta-t1-${i}`} date={c.date} pnl={c.pnl} />
               ))}
             </div>
           </div>
           <div className="overflow-hidden">
             <div className="ticker-landing-1 flex flex-row flex-nowrap w-max gap-3 hover:[animation-play-state:paused]">
-              {[...TICKER_3, ...TICKER_3].map((c, i) => (
+              {[...(currency.isINR ? TICKER_3 : TICKER_3_USD), ...(currency.isINR ? TICKER_3 : TICKER_3_USD)].map((c, i) => (
                 <TickerChip key={`cta-t2-${i}`} date={c.date} pnl={c.pnl} />
               ))}
             </div>
