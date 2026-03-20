@@ -1,36 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
-  DEMO_TRADES,
-  DEMO_MONTHS,
   DEMO_MONTH_KEYS,
   DEMO_MONTH_LABELS,
   type DemoMonthKey,
   type DemoTradeType,
+  getDemoTrades,
+  getDemoMonths,
 } from "@/lib/demo-trades";
+import { useCurrencyCtx, formatCompactCurrency } from "@/lib/currency";
 
 /* ─── Helpers ────────────────────────────────────────────── */
 
 function getFinalResult(t: { net_pnl: number; charges: number | null }): number {
   return t.charges != null ? t.net_pnl - t.charges : t.net_pnl;
 }
-
-function formatINR(value: number): string {
-  return Math.abs(value).toLocaleString("en-IN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-}
-
-function formatCompact(value: number): string {
-  return `${value >= 0 ? "+" : "-"}₹${formatINR(value)}`;
-}
-
-/* ─── Pre-computed January 2026 data (for DemoLogTrade form) ── */
-
-const HIGHLIGHT = DEMO_TRADES.find((t) => t.trade_date === "2026-01-15")!;
-const H_FINAL = getFinalResult(HIGHLIGHT);
 
 /* ─── Month grid builder ──────────────────────────────────── */
 
@@ -75,13 +60,25 @@ function lossBg(v: number, max: number): string {
 
 /* ─── Step 1: DemoEnterPnl ─────────────────────────────────── */
 
-const PNL_FIELDS = [
-  { label: "Date", value: "15/01/2026", id: "date" },
-  { label: "Number of trades", value: String(HIGHLIGHT.num_trades), id: "num" },
-  { label: "P&L (₹)", value: formatINR(HIGHLIGHT.net_pnl), id: "pnl", positive: HIGHLIGHT.net_pnl >= 0 },
-];
-
 function DemoEnterPnl({ active }: { active: boolean }) {
+  const { isINR } = useCurrencyCtx();
+  const trades = getDemoTrades(isINR);
+  const highlight = trades.find((t) => t.trade_date === "2026-01-15")!;
+  const hFinal = getFinalResult(highlight);
+
+  const formatValue = (v: number) =>
+    isINR
+      ? Math.abs(v).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+      : Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  const symbol = isINR ? "\u20B9" : "$";
+
+  const pnlFields = [
+    { label: "Date", value: "15/01/2026", id: "date" },
+    { label: "Number of trades", value: String(highlight.num_trades), id: "num" },
+    { label: isINR ? "P&L (\u20B9)" : "P&L ($)", value: formatValue(highlight.net_pnl), id: "pnl", positive: highlight.net_pnl >= 0 },
+  ];
+
   const [revealed, setRevealed] = useState(0);
 
   useEffect(() => {
@@ -90,17 +87,17 @@ function DemoEnterPnl({ active }: { active: boolean }) {
     const id = setInterval(() => {
       count++;
       setRevealed(count);
-      if (count >= PNL_FIELDS.length + 1) clearInterval(id);
+      if (count >= pnlFields.length + 1) clearInterval(id);
     }, 600);
     return () => clearInterval(id);
-  }, [active]);
+  }, [active, pnlFields.length]);
 
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="rounded-xl border border-border bg-background p-6 shadow-xl">
         <h3 className="text-base font-semibold text-foreground text-center mb-6">Log trade</h3>
         <div className="space-y-5">
-          {PNL_FIELDS.map((f, i) => (
+          {pnlFields.map((f, i) => (
             <div
               key={f.id}
               className="space-y-2 transition-[opacity,transform] duration-500 ease-out"
@@ -115,7 +112,7 @@ function DemoEnterPnl({ active }: { active: boolean }) {
                   ? f.positive ? "text-emerald-600 font-semibold" : "text-red-600 font-semibold"
                   : "text-foreground"
               }`}>
-                {f.id === "pnl" ? `${f.positive ? "+" : "-"}₹${f.value}` : f.value}
+                {f.id === "pnl" ? `${f.positive ? "+" : "-"}${symbol}${f.value}` : f.value}
               </div>
             </div>
           ))}
@@ -125,13 +122,13 @@ function DemoEnterPnl({ active }: { active: boolean }) {
         <div
           className="mt-6 rounded-lg bg-emerald-50/60 border border-emerald-200/60 p-3 text-center transition-[opacity,transform] duration-500 ease-out"
           style={{
-            opacity: revealed > PNL_FIELDS.length ? 1 : 0,
-            transform: `translateY(${revealed > PNL_FIELDS.length ? 0 : 12}px)`,
+            opacity: revealed > pnlFields.length ? 1 : 0,
+            transform: `translateY(${revealed > pnlFields.length ? 0 : 12}px)`,
           }}
         >
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">P&L</p>
-          <p className={`text-lg font-bold ${H_FINAL >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-            {formatCompact(H_FINAL)}
+          <p className={`text-lg font-bold ${hFinal >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+            {formatCompactCurrency(hFinal, isINR)}
           </p>
         </div>
       </div>
@@ -321,12 +318,14 @@ function DemoMistakes({ active }: { active: boolean }) {
 /* ─── DemoCalendar (with multi-month navigation) ─────────── */
 
 export function DemoCalendar({ active = true }: { active?: boolean }) {
+  const { isINR } = useCurrencyCtx();
   const [show, setShow] = useState(false);
   const [monthIdx, setMonthIdx] = useState(1);
   const ref = useRef<HTMLDivElement>(null);
 
+  const demoMonths = getDemoMonths(isINR);
   const monthKey = DEMO_MONTH_KEYS[monthIdx];
-  const trades = DEMO_MONTHS[monthKey];
+  const trades = demoMonths[monthKey];
   const label = DEMO_MONTH_LABELS[monthKey];
   const { tradeMap, monthPnl, maxProfit: mxP, maxLoss: mxL } = computeMonthData(trades);
 
@@ -389,7 +388,7 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
                 show ? "opacity-100" : "opacity-0"
               } ${monthPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}
             >
-              {formatCompact(monthPnl)}
+              {formatCompactCurrency(monthPnl, isINR)}
             </span>
           </div>
 
@@ -459,7 +458,7 @@ export function DemoCalendar({ active = true }: { active?: boolean }) {
                           {day}
                         </span>
                         <span className="text-[9px] sm:text-[11px] font-bold leading-tight truncate max-w-full">
-                          {formatCompact(result)}
+                          {formatCompactCurrency(result, isINR)}
                         </span>
                         <span className="text-[6px] sm:text-[7px] font-medium leading-none opacity-75 mt-0.5">
                           {trade.num_trades === 1
@@ -570,13 +569,15 @@ function buildWeekRows(
 }
 
 export function DemoWeeklyBreakdown() {
+  const { isINR } = useCurrencyCtx();
   const [show, setShow] = useState(false);
   const [revealedCount, setRevealedCount] = useState(0);
   const [showAvg, setShowAvg] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const { tradeMap } = computeMonthData(DEMO_TRADES);
+  const demoTrades = getDemoTrades(isINR);
+  const { tradeMap } = computeMonthData(demoTrades);
   const grid = buildGridForMonth(2026, 0);
   const weeks = buildWeekRows(grid, tradeMap, "2026-01", "Jan");
 
@@ -690,7 +691,7 @@ export function DemoWeeklyBreakdown() {
                           : "text-red-600"
                       }`}
                     >
-                      {formatCompact(week.pnl)}
+                      {formatCompactCurrency(week.pnl, isINR)}
                     </span>
                   </div>
                 </div>
@@ -777,7 +778,7 @@ export function DemoWeeklyBreakdown() {
               avgWeekly >= 0 ? "text-emerald-600" : "text-red-600"
             }`}
           >
-            {formatCompact(avgWeekly)}
+            {formatCompactCurrency(avgWeekly, isINR)}
           </span>
         </div>
       </div>

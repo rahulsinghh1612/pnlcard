@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
 
   let trade: { trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null } | null = null;
-  let profile: { x_handle: string | null; trading_capital: number | null; card_theme: string; currency: string; timezone: string } | null = null;
+  let profile: { x_handle: string | null; trading_capital: number | null; currency: string; timezone: string } | null = null;
   let tradesForCard: Array<{ id: string; trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null }> = [];
 
   try {
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: PageProps) {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("x_handle, trading_capital, card_theme, currency, timezone")
+      .select("x_handle, trading_capital, currency, timezone")
       .eq("id", t.user_id)
       .single();
 
@@ -54,7 +54,6 @@ export async function generateMetadata({ params }: PageProps) {
     profile = {
       x_handle: p.x_handle,
       trading_capital: p.trading_capital != null ? Number(p.trading_capital) : null,
-      card_theme: p.card_theme ?? "light",
       currency: p.currency ?? "INR",
       timezone: p.timezone ?? "Asia/Kolkata",
     };
@@ -118,7 +117,6 @@ function buildOgImageUrl(params: DailyCardParams, baseUrl: string): string {
     netPnl: params.netPnl,
     trades: params.trades,
     streak: String(params.streak),
-    theme: params.theme,
     currency: params.currency,
   });
   if (params.charges) search.set("charges", params.charges);
@@ -131,7 +129,7 @@ export default async function CardPage({ params }: PageProps) {
   const { id } = await params;
 
   let trade: { user_id: string; trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null } | null = null;
-  let profile: { x_handle: string | null; trading_capital: number | null; card_theme: string; currency: string; timezone: string } | null = null;
+  let profile: { x_handle: string | null; trading_capital: number | null; currency: string; timezone: string } | null = null;
   let tradesForCard: Array<{ id: string; trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null }> = [];
 
   try {
@@ -155,7 +153,7 @@ export default async function CardPage({ params }: PageProps) {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("x_handle, trading_capital, card_theme, currency, timezone")
+      .select("x_handle, trading_capital, currency, timezone")
       .eq("id", trade.user_id)
       .single();
 
@@ -163,7 +161,6 @@ export default async function CardPage({ params }: PageProps) {
     profile = {
       x_handle: p.x_handle,
       trading_capital: p.trading_capital != null ? Number(p.trading_capital) : null,
-      card_theme: p.card_theme ?? "light",
       currency: p.currency ?? "INR",
       timezone: p.timezone ?? "Asia/Kolkata",
     };

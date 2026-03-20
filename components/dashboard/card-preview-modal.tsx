@@ -45,7 +45,6 @@ type CardPreviewModalProps = {
   profile: {
     x_handle: string | null;
     trading_capital: number | null;
-    card_theme: string;
     currency: string;
     timezone: string;
   };

@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Sun, Moon } from "lucide-react";
 import { formatTradingCapital, parseTradingCapital } from "@/lib/utils";
 
 interface ProfileFormProps {
@@ -18,7 +17,6 @@ interface ProfileFormProps {
     currency: "INR" | "USD";
     timezone: string;
     tradingCapital: string;
-    cardTheme: "light" | "dark";
   };
 }
 
@@ -45,7 +43,6 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
   const [currency, setCurrency] = useState(initialData.currency);
   const [timezone, setTimezone] = useState(initialData.timezone);
   const [tradingCapital, setTradingCapital] = useState(initialData.tradingCapital);
-  const [cardTheme, setCardTheme] = useState(initialData.cardTheme);
 
   // Format trading capital on mount and when currency changes
   useEffect(() => {
@@ -86,7 +83,6 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
         currency,
         timezone,
         trading_capital: capital,
-        card_theme: cardTheme,
       })
       .eq("id", userId);
 
@@ -198,37 +194,6 @@ export function ProfileForm({ userId, initialData }: ProfileFormProps) {
             <p className="text-xs text-muted-foreground">
               Used for ROI calculations on your cards.
             </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Card theme */}
-      <Card>
-        <CardContent className="pt-6 space-y-2">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-sm font-medium text-foreground">Card theme</h2>
-              <p className="text-xs text-muted-foreground">
-                Default theme for your generated recap cards.
-              </p>
-            </div>
-            <div className="flex items-center rounded-full border border-border bg-muted/50 p-1 shrink-0">
-              {(["light", "dark"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setCardTheme(t)}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                    cardTheme === t
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t === "light" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  {t === "light" ? "Light" : "Dark"}
-                </button>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>

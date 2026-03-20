@@ -158,7 +158,6 @@ export type DailyCardParams = {
   trades: string;
   streak: number;
   handle: string | null;
-  theme: string;
   currency: string;
   tradeId: string;
   disciplineScore: number | null;
@@ -171,7 +170,6 @@ export function buildDailyCardParams(
   profile: {
     x_handle: string | null;
     trading_capital: number | null;
-    card_theme: string;
     currency: string;
     timezone?: string;
   }
@@ -201,7 +199,6 @@ export function buildDailyCardParams(
     trades: String(trade.num_trades),
     streak,
     handle: profile.x_handle,
-    theme: profile.card_theme,
     currency: profile.currency,
     tradeId: trade.id,
     disciplineScore: trade.discipline_score ?? null,
@@ -221,7 +218,6 @@ export type WeeklyCardParams = {
   bestDay: string;
   avgPerDay: string;
   handle: string | null;
-  theme: string;
   currency: string;
 };
 
@@ -241,7 +237,6 @@ export function buildWeeklyCardParams(
   profile: {
     x_handle: string | null;
     trading_capital: number | null;
-    card_theme: string;
     currency: string;
     timezone?: string;
   }
@@ -321,7 +316,6 @@ export function buildWeeklyCardParams(
     bestDay,
     avgPerDay,
     handle: profile.x_handle,
-    theme: profile.card_theme,
     currency: profile.currency,
   };
 }
@@ -340,7 +334,6 @@ export type MonthlyCardParams = {
   /** Monday-first grid: null for empty cells, day number (1–31) for cells. Length is multiple of 7. */
   calendarGrid: (number | null)[];
   handle: string | null;
-  theme: string;
   currency: string;
 };
 
@@ -350,7 +343,6 @@ export function buildMonthlyCardParams(
   profile: {
     x_handle: string | null;
     trading_capital: number | null;
-    card_theme: string;
     currency: string;
     timezone?: string;
   }
@@ -423,7 +415,6 @@ export function buildMonthlyCardParams(
     calendar,
     calendarGrid,
     handle: profile.x_handle,
-    theme: profile.card_theme,
     currency: profile.currency,
   };
 }

@@ -16,7 +16,7 @@ import { getOgFonts } from "../og-fonts";
 
 export const runtime = "edge";
 
-const CELL_HEIGHT = 15;
+const CELL_HEIGHT = 24;
 
 const DEFAULT_CALENDAR_GRID: (number | null)[] = [
   null, null, null, null, null, null, 1,
@@ -26,7 +26,6 @@ const DEFAULT_CALENDAR_GRID: (number | null)[] = [
   23, 24, 25, 26, 27, 28, null,
 ];
 
-const DAY_HEADERS = ["M", "T", "W", "T", "F", "S", "S"];
 
 export async function GET(request: Request) {
   try {
@@ -75,7 +74,6 @@ export async function GET(request: Request) {
     const values = Object.values(tradeData).map(Math.abs);
     const maxVal = Math.max(...values, 1);
 
-    const emptyColor = "rgba(0,0,0,0.04)";
     const pnlNum = parseFloat(pnl.replace(/[^0-9.\-]/g, "")) || 0;
     const isProfit = pnlNum >= 0;
     const s = getOgStyles(isProfit);
@@ -83,37 +81,13 @@ export async function GET(request: Request) {
     const hasRoi = roi != null && roi !== "";
     const hasAvg = avgPerDay !== "";
 
-    const getCellColor = (day: number): string => {
+    const getDotOpacity = (day: number): number => {
       const pnlVal = tradeData[day];
-      if (pnlVal == null) return emptyColor;
+      if (pnlVal == null) return 0;
       const intensity = Math.abs(pnlVal) / maxVal;
-      const minOpacity = 0.15;
-      const maxOpacity = 0.75;
-      const opacity = minOpacity + intensity * (maxOpacity - minOpacity);
-      if (pnlVal > 0) {
-        return `rgba(22,163,74,${opacity})`;
-      }
-      return `rgba(220,38,38,${opacity})`;
+      return 0.35 + intensity * 0.5;
     };
-
-    // --- Calendar header row ---
-    const calHeaderCells = DAY_HEADERS.map((d, i) => (
-      <div
-        key={`h${i}`}
-        style={{
-          flex: 1,
-          height: Math.round(12 * S),
-          fontSize: Math.round(8 * S),
-          color: s.labelColor,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 600,
-        }}
-      >
-        {d}
-      </div>
-    ));
+    const isWin = (day: number): boolean => (tradeData[day] ?? 0) > 0;
 
     const numRows = Math.ceil(calendarGrid.length / 7);
     const cellHeightPx = Math.round(CELL_HEIGHT * S);
@@ -136,17 +110,13 @@ export async function GET(request: Request) {
               />
             );
           }
-          const c = getCellColor(day);
           const hasTrade = tradeData[day] != null;
-          const dayNumColor = hasTrade ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)";
           return (
             <div
               key={`${row}-${col}`}
               style={{
                 flex: 1,
                 height: cellHeightPx,
-                borderRadius: Math.round(4 * S),
-                background: c,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -154,15 +124,16 @@ export async function GET(request: Request) {
             >
               <div
                 style={{
-                  display: "flex",
-                  fontSize: Math.round(7 * S),
-                  fontWeight: 500,
-                  color: dayNumColor,
-                  lineHeight: 1,
+                  width: Math.round(18 * S),
+                  height: Math.round(18 * S),
+                  borderRadius: Math.round(4 * S),
+                  background: hasTrade
+                    ? isWin(day)
+                      ? `rgba(22,163,74,${getDotOpacity(day)})`
+                      : `rgba(220,38,38,${getDotOpacity(day)})`
+                    : "rgba(0,0,0,0.06)",
                 }}
-              >
-                {`${day}`}
-              </div>
+              />
             </div>
           );
         })}
@@ -304,25 +275,14 @@ export async function GET(request: Request) {
         <div style={{ height: Math.round(16 * S), display: "flex" }} />
 
         {/* Calendar heatmap */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              marginBottom: Math.round(3 * S),
-            }}
-          >
-            {calHeaderCells}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: Math.round(3 * S),
-            }}
-          >
-            {calRows}
-          </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: Math.round(3 * S),
+          }}
+        >
+          {calRows}
         </div>
 
         {/* Bottom spacer */}

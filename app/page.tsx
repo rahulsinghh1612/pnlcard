@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useContext } from "react";
+import { CurrencyCtx, useCurrency } from "@/lib/currency";
 import Link from "next/link";
 import {
   TrendingUp,
   TrendingDown,
   Check,
+  Menu,
+  X,
 } from "lucide-react";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import dynamic from "next/dynamic";
@@ -57,16 +60,47 @@ const TICKER_3 = [
   { date: "Jan 16", pnl: 10100 },
 ];
 
+// ─── USD ticker data ─────────────────────────────────────────────
+const TICKER_1_USD = [
+  { date: "Feb 18", pnl: 295 },
+  { date: "Feb 17", pnl: -38 },
+  { date: "Feb 14", pnl: 148 },
+  { date: "Feb 13", pnl: 106 },
+  { date: "Feb 12", pnl: -67 },
+  { date: "Feb 11", pnl: 255 },
+  { date: "Feb 10", pnl: -22 },
+  { date: "Feb 7", pnl: 186 },
+  { date: "Feb 6", pnl: 112 },
+  { date: "Feb 5", pnl: -86 },
+];
+
+const TICKER_2_USD = [
+  { date: "Jan 31", pnl: 220 },
+  { date: "Jan 30", pnl: -49 },
+  { date: "Jan 29", pnl: 82 },
+  { date: "Jan 28", pnl: 390 },
+  { date: "Jan 27", pnl: -148 },
+  { date: "Jan 24", pnl: 98 },
+  { date: "Jan 23", pnl: -35 },
+  { date: "Jan 22", pnl: 176 },
+  { date: "Jan 21", pnl: 65 },
+  { date: "Jan 20", pnl: -118 },
+];
+
+const TICKER_3_USD = [
+  { date: "Feb 20", pnl: 135 },
+  { date: "Feb 19", pnl: -77 },
+  { date: "Feb 15", pnl: 340 },
+  { date: "Feb 8", pnl: 56 },
+  { date: "Feb 4", pnl: -97 },
+  { date: "Feb 3", pnl: 235 },
+  { date: "Jan 19", pnl: 88 },
+  { date: "Jan 18", pnl: -30 },
+  { date: "Jan 17", pnl: 200 },
+  { date: "Jan 16", pnl: 120 },
+];
+
 // ─── Helpers ─────────────────────────────────────────────────────
-
-function formatINR(value: number): string {
-  const abs = Math.abs(value);
-  const formatted = abs.toLocaleString("en-IN");
-  const sign = value >= 0 ? "+" : "\u2212";
-  return `${sign}\u20B9${formatted}`;
-}
-
-// ─── Hooks ───────────────────────────────────────────────────────
 
 function useScrolled() {
   const [scrolled, setScrolled] = useState(false);
@@ -102,6 +136,7 @@ function useInView(threshold = 0.15) {
 // ─── Ticker chip ─────────────────────────────────────────────────
 
 function TickerChip({ date, pnl }: { date: string; pnl: number }) {
+  const { fmt } = useContext(CurrencyCtx);
   const positive = pnl >= 0;
   return (
     <div
@@ -117,7 +152,7 @@ function TickerChip({ date, pnl }: { date: string; pnl: number }) {
         <TrendingDown className="h-3.5 w-3.5" />
       )}
       <span className="opacity-60">{date}</span>
-      <span className="font-bold">{formatINR(pnl)}</span>
+      <span className="font-bold">{fmt(pnl)}</span>
     </div>
   );
 }
@@ -221,6 +256,81 @@ const HERO_MONTHS: HeroMonth[] = [
   },
 ];
 
+const HERO_MONTHS_USD: HeroMonth[] = [
+  {
+    // December 2025 — loss month, total ≈ -$420
+    label: "December 2025", shortLabel: "December", daysInMonth: 31, startPad: 0,
+    trades: {
+      1: { pnl: 86, trades: 2 }, 2: { pnl: -41, trades: 1 },
+      4: { pnl: 70, trades: 2 }, 5: { pnl: -14, trades: 1 }, 6: { pnl: -26, trades: 1 },
+      8: { pnl: -103, trades: 3 }, 10: { pnl: -50, trades: 1 }, 11: { pnl: 29, trades: 1 },
+      12: { pnl: -82, trades: 2 }, 13: { pnl: -14, trades: 1 },
+      15: { pnl: 113, trades: 3 }, 16: { pnl: -50, trades: 1 }, 18: { pnl: 82, trades: 2 },
+      19: { pnl: -41, trades: 1 },
+      22: { pnl: -135, trades: 3 }, 23: { pnl: 55, trades: 1 }, 24: { pnl: -101, trades: 2 },
+      25: { pnl: -50, trades: 1 }, 26: { pnl: -43, trades: 1 },
+      29: { pnl: 38, trades: 1 }, 30: { pnl: -89, trades: 2 }, 31: { pnl: -53, trades: 1 },
+    },
+    weeks: [
+      { label: "Week 1", range: "1 – 7 Dec", pnl: 75, wins: 2, losses: 3, daily: [86, -41, null, 70, -14, -26, null] },
+      { label: "Week 2", range: "8 – 14 Dec", pnl: -220, wins: 1, losses: 4, daily: [-103, null, -50, 29, -82, -14, null] },
+      { label: "Week 3", range: "15 – 21 Dec", pnl: 104, wins: 2, losses: 2, daily: [113, -50, null, 82, -41, null, null] },
+      { label: "Week 4", range: "22 – 28 Dec", pnl: -274, wins: 1, losses: 4, daily: [-135, 55, -101, -50, -43, null, null] },
+      { label: "Week 5", range: "29 – 31 Dec", pnl: -104, wins: 1, losses: 2, daily: [38, -89, -53, null, null, null, null] },
+    ],
+  },
+  {
+    // January 2026 — profit month, total ≈ +$760
+    label: "January 2026", shortLabel: "January", daysInMonth: 31, startPad: 3,
+    trades: {
+      2: { pnl: 100, trades: 2 }, 3: { pnl: 26, trades: 1 },
+      5: { pnl: -41, trades: 1 }, 6: { pnl: -74, trades: 2 }, 7: { pnl: 38, trades: 1 },
+      9: { pnl: -34, trades: 1 }, 10: { pnl: 53, trades: 2 },
+      12: { pnl: 118, trades: 3 }, 14: { pnl: 74, trades: 1 }, 15: { pnl: 100, trades: 2 },
+      16: { pnl: -24, trades: 1 },
+      19: { pnl: 91, trades: 3 }, 20: { pnl: -29, trades: 1 }, 21: { pnl: 58, trades: 2 },
+      22: { pnl: -38, trades: 1 }, 23: { pnl: 91, trades: 2 },
+      27: { pnl: 98, trades: 2 }, 28: { pnl: 77, trades: 2 }, 29: { pnl: -22, trades: 1 },
+      30: { pnl: 67, trades: 2 }, 31: { pnl: 26, trades: 1 },
+    },
+    weeks: [
+      { label: "Week 1", range: "1 – 4 Jan", pnl: 126, wins: 2, losses: 0, daily: [null, null, null, null, 100, 26, null] },
+      { label: "Week 2", range: "5 – 11 Jan", pnl: -58, wins: 2, losses: 3, daily: [-41, -74, 38, null, -34, 53, null] },
+      { label: "Week 3", range: "12 – 18 Jan", pnl: 268, wins: 3, losses: 1, daily: [118, null, 74, 100, -24, null, null] },
+      { label: "Week 4", range: "19 – 25 Jan", pnl: 173, wins: 3, losses: 2, daily: [91, -29, 58, -38, 91, null, null] },
+      { label: "Week 5", range: "26 – 31 Jan", pnl: 246, wins: 4, losses: 1, daily: [null, 98, 77, -22, 67, 26, null] },
+    ],
+  },
+  {
+    // February 2026 — profit month, total ≈ +$650
+    label: "February 2026", shortLabel: "February", daysInMonth: 28, startPad: 6,
+    trades: {
+      1: { pnl: 62, trades: 1 },
+      2: { pnl: 100, trades: 2 }, 3: { pnl: -38, trades: 1 }, 4: { pnl: 82, trades: 2 },
+      5: { pnl: 110, trades: 3 }, 6: { pnl: -34, trades: 1 },
+      9: { pnl: -55, trades: 2 }, 10: { pnl: 38, trades: 1 }, 12: { pnl: -94, trades: 2 },
+      13: { pnl: -29, trades: 1 }, 14: { pnl: 36, trades: 1 },
+      16: { pnl: 137, trades: 3 }, 18: { pnl: -38, trades: 1 }, 19: { pnl: 86, trades: 2 },
+      20: { pnl: 82, trades: 2 }, 21: { pnl: 31, trades: 1 },
+      23: { pnl: 103, trades: 2 }, 24: { pnl: -29, trades: 1 }, 25: { pnl: 50, trades: 1 },
+      26: { pnl: -22, trades: 1 }, 27: { pnl: 70, trades: 2 },
+    },
+    weeks: [
+      { label: "Week 1", range: "1 – 1 Feb", pnl: 62, wins: 1, losses: 0, daily: [null, null, null, null, null, null, 62] },
+      { label: "Week 2", range: "2 – 8 Feb", pnl: 220, wins: 3, losses: 2, daily: [100, -38, 82, 110, -34, null, null] },
+      { label: "Week 3", range: "9 – 15 Feb", pnl: -104, wins: 2, losses: 3, daily: [-55, 38, null, -94, -29, 36, null] },
+      { label: "Week 4", range: "16 – 22 Feb", pnl: 298, wins: 4, losses: 1, daily: [137, null, -38, 86, 82, 31, null] },
+      { label: "Week 5", range: "23 – 28 Feb", pnl: 172, wins: 3, losses: 2, daily: [103, -29, 50, -22, 70, null, null] },
+    ],
+  },
+];
+
+const CARD_META_USD: Record<CardType, { label: string; pnl: number; pnlLoss: number; date: string }> = {
+  daily:   { label: "DAILY CARD",   pnl: 100,  pnlLoss: -86,   date: "2nd Jan, 2026" },
+  weekly:  { label: "WEEKLY CARD",  pnl: 135,  pnlLoss: -120,  date: "5 Jan – 11 Jan, 2026" },
+  monthly: { label: "MONTHLY CARD", pnl: 780,  pnlLoss: -420,  date: "Jan 2026" },
+};
+
 function heroMaxes(trades: Record<number, HeroTrade>) {
   const vals = Object.values(trades);
   return {
@@ -240,12 +350,9 @@ function heroLossBg(v: number, maxL: number): string {
   if (r >= 0.33) return "bg-red-100";
   return "bg-red-50";
 }
-function heroFormatPnl(v: number): string {
-  const sign = v >= 0 ? "+" : "\u2212";
-  return `${sign}₹${Math.abs(v).toLocaleString("en-IN")}`;
-}
-
 function HeroDashboard() {
+  const { fmt: heroFormatPnl, isINR } = useContext(CurrencyCtx);
+  const months = isINR ? HERO_MONTHS : HERO_MONTHS_USD;
   const [step, setStep] = useState(0);
   const [monthIdx, setMonthIdx] = useState(1);
   const ref = useRef<HTMLDivElement>(null);
@@ -284,7 +391,7 @@ function HeroDashboard() {
     return () => obs.disconnect();
   }, []);
 
-  const m = HERO_MONTHS[monthIdx];
+  const m = months[monthIdx];
   const days = Array.from({ length: m.daysInMonth }, (_, i) => i + 1);
   const { profit: maxP, loss: maxL } = heroMaxes(m.trades);
   const monthPnl = Object.values(m.trades).reduce((s, t) => s + t.pnl, 0);
@@ -296,8 +403,8 @@ function HeroDashboard() {
 
   const done = step >= 10;
 
-  const goPrev = () => setMonthIdx((prev) => (prev - 1 + HERO_MONTHS.length) % HERO_MONTHS.length);
-  const goNext = () => setMonthIdx((prev) => (prev + 1) % HERO_MONTHS.length);
+  const goPrev = () => setMonthIdx((prev) => (prev - 1 + months.length) % months.length);
+  const goNext = () => setMonthIdx((prev) => (prev + 1) % months.length);
 
   return (
     <div ref={ref} className="w-full max-w-[680px] space-y-5 sm:space-y-6">
@@ -630,23 +737,25 @@ function HeroDashboard() {
 type CardType = "daily" | "weekly" | "monthly";
 type CardSide = "profit" | "loss";
 
-const CARD_META: Record<CardType, { label: string; pnl: string; pnlLoss: string; date: string }> = {
-  daily:   { label: "DAILY CARD",   pnl: "+₹8,400", pnlLoss: "-₹7,200", date: "2nd Jan, 2026" },
-  weekly:  { label: "WEEKLY CARD",  pnl: "+₹11,400", pnlLoss: "-₹10,000", date: "5 Jan – 11 Jan, 2026" },
-  monthly: { label: "MONTHLY CARD", pnl: "+₹65,000", pnlLoss: "-₹35,000", date: "Jan 2026" },
+const CARD_META: Record<CardType, { label: string; pnl: number; pnlLoss: number; date: string }> = {
+  daily:   { label: "DAILY CARD",   pnl: 8400,  pnlLoss: -7200,  date: "2nd Jan, 2026" },
+  weekly:  { label: "WEEKLY CARD",  pnl: 11400, pnlLoss: -10000, date: "5 Jan – 11 Jan, 2026" },
+  monthly: { label: "MONTHLY CARD", pnl: 65000, pnlLoss: -35000, date: "Jan 2026" },
 };
 
-function getPromoSrc(type: CardType, side: CardSide): string {
+function getPromoSrc(type: CardType, side: CardSide, isINR: boolean): string {
   const loss = side === "loss" ? "-loss" : "";
-  return `/promo/${type}${loss}.png`;
+  const currency = isINR ? "" : "-usd";
+  return `/promo/${type}${loss}${currency}.png`;
 }
 
 function CardShowcase() {
+  const { fmt, isINR } = useContext(CurrencyCtx);
   const [cardType, setCardType] = useState<CardType>("daily");
   const [side, setSide] = useState<CardSide>("profit");
 
-  const meta = CARD_META[cardType];
-  const mainSrc = getPromoSrc(cardType, side);
+  const meta = (isINR ? CARD_META : CARD_META_USD)[cardType];
+  const mainSrc = getPromoSrc(cardType, side, isINR);
 
   const otherTypes = (["daily", "weekly", "monthly"] as const).filter((t) => t !== cardType);
 
@@ -711,7 +820,7 @@ function CardShowcase() {
           <div className="mt-4 text-center">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{meta.label}</p>
             <p className={`mt-0.5 text-lg font-bold ${side === "profit" ? "text-emerald-600" : "text-red-600"}`}>
-              {side === "profit" ? meta.pnl : meta.pnlLoss}
+              {fmt(side === "profit" ? meta.pnl : meta.pnlLoss)}
             </p>
             <p className="text-xs text-muted-foreground">{meta.date}</p>
           </div>
@@ -720,7 +829,7 @@ function CardShowcase() {
         {/* Side thumbnails */}
         <div className="hidden sm:flex flex-col gap-4 flex-shrink-0 pt-2">
           {otherTypes.map((t) => {
-            const src = getPromoSrc(t, side);
+            const src = getPromoSrc(t, side, isINR);
             const m = CARD_META[t];
             return (
               <button
@@ -749,7 +858,9 @@ function CardShowcase() {
 // ─── Main page ───────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const currency = useCurrency();
   const scrolled = useScrolled();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   const debriefFeature = useInView();
@@ -761,12 +872,13 @@ export default function LandingPage() {
   }, []);
 
   return (
+    <CurrencyCtx.Provider value={currency}>
     <main id="top" className="min-h-screen bg-page overflow-x-hidden">
       {/* ── Navbar ─────────────────────────────────────────── */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white/80 backdrop-blur-lg border-b border-border shadow-sm"
+          scrolled || mobileMenuOpen
+            ? "bg-white/95 backdrop-blur-lg border-b border-border shadow-sm"
             : "bg-transparent"
         }`}
       >
@@ -807,23 +919,74 @@ export default function LandingPage() {
 
             <div className="hidden md:block w-px h-5 bg-border mx-5" />
 
-            {/* Auth actions */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            {/* Auth actions — desktop only */}
+            <div className="hidden md:flex items-center gap-4">
               <Link
                 href="/login"
-                className="text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="inline-flex items-center justify-center rounded-lg sm:rounded-xl px-3.5 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
+                className="inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
               >
                 Start for Free
               </Link>
             </div>
+
+            {/* Hamburger — mobile only */}
+            <button
+              className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-foreground hover:bg-muted transition-colors"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1">
+            <a
+              href="#how-it-works"
+              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              See how it works
+            </a>
+            <a
+              href="#features"
+              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Features
+            </a>
+            <a
+              href="#pricing"
+              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Pricing
+            </a>
+            <div className="h-px bg-border my-1" />
+            <Link
+              href="/login"
+              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/signup"
+              className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Start for Free
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* ── Hero ───────────────────────────────────────────── */}
@@ -864,7 +1027,7 @@ export default function LandingPage() {
           {/* Row 1 — scrolls left */}
           <div className="overflow-hidden">
             <div className="ticker-landing-1 flex flex-row flex-nowrap w-max gap-3 hover:[animation-play-state:paused]">
-              {[...TICKER_1, ...TICKER_1].map((c, i) => (
+              {[...(currency.isINR ? TICKER_1 : TICKER_1_USD), ...(currency.isINR ? TICKER_1 : TICKER_1_USD)].map((c, i) => (
                 <TickerChip key={`t1-${i}`} date={c.date} pnl={c.pnl} />
               ))}
             </div>
@@ -872,7 +1035,7 @@ export default function LandingPage() {
           {/* Row 2 — scrolls right */}
           <div className="overflow-hidden">
             <div className="ticker-landing-2 flex flex-row flex-nowrap w-max gap-3 hover:[animation-play-state:paused]">
-              {[...TICKER_2, ...TICKER_2].map((c, i) => (
+              {[...(currency.isINR ? TICKER_2 : TICKER_2_USD), ...(currency.isINR ? TICKER_2 : TICKER_2_USD)].map((c, i) => (
                 <TickerChip key={`t2-${i}`} date={c.date} pnl={c.pnl} />
               ))}
             </div>
@@ -880,7 +1043,7 @@ export default function LandingPage() {
           {/* Row 3 — scrolls left */}
           <div className="overflow-hidden">
             <div className="ticker-landing-3 flex flex-row flex-nowrap w-max gap-3 hover:[animation-play-state:paused]">
-              {[...TICKER_3, ...TICKER_3].map((c, i) => (
+              {[...(currency.isINR ? TICKER_3 : TICKER_3_USD), ...(currency.isINR ? TICKER_3 : TICKER_3_USD)].map((c, i) => (
                 <TickerChip key={`t3-${i}`} date={c.date} pnl={c.pnl} />
               ))}
             </div>
@@ -1069,18 +1232,18 @@ export default function LandingPage() {
                 {billingCycle === "monthly" ? (
                   <>
                     <span className="text-4xl font-extrabold tracking-tight text-foreground">
-                      ₹249
+                      {currency.isINR ? "₹249" : "$3"}
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </>
                 ) : (
                   <>
                     <span className="text-4xl font-extrabold tracking-tight text-foreground">
-                      ₹1,999
+                      {currency.isINR ? "₹1,999" : "$24"}
                     </span>
                     <span className="text-muted-foreground">/year</span>
                     <p className="mt-1 text-xs text-emerald-600 font-medium">
-                      ₹167/mo &mdash; save ₹989 vs monthly
+                      {currency.isINR ? "₹167/mo" : "$2/mo"} &mdash; save {currency.isINR ? "₹989" : "$12"} vs monthly
                     </p>
                   </>
                 )}
@@ -1115,7 +1278,7 @@ export default function LandingPage() {
                     onClick={() => setBillingCycle("yearly")}
                     className="text-emerald-600 font-medium hover:underline"
                   >
-                    ₹1,999/year (save 33%)
+                    {currency.isINR ? "₹1,999" : "$24"}/year (save 33%)
                   </button>
                 </p>
               )}
@@ -1133,7 +1296,7 @@ export default function LandingPage() {
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
             Start your 14-day Free Trial{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-              today.
+              Today.
             </span>
           </h2>
           <div className="mt-8 flex justify-center">
@@ -1222,5 +1385,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </main>
+    </CurrencyCtx.Provider>
   );
 }

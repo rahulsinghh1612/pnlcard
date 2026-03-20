@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
-  DEMO_TRADES,
-  DEMO_TRADES_DEC_2025,
-  DEMO_TRADES_FEB_2026,
+  getDemoTrades,
+  getDemoTradesDec,
+  getDemoTradesFeb,
 } from "@/lib/demo-trades";
+import {
+  useCurrencyCtx,
+  formatPnlCurrency,
+  formatPnlShortCurrency,
+} from "@/lib/currency";
 
 /* ─── Derive all data from demo-trades.ts ─────────────────────
    This ensures the review showcase numbers always match the
@@ -96,12 +101,11 @@ function buildCalendarWeeks(
     .filter((w) => w.wins + w.losses > 0);
 }
 
-// ── Build weekly data from January 2026 trades ──
+// ── Build weekly data from trades ──
 
-function buildWeeklyReviewData() {
-  const weeks = buildCalendarWeeks(DEMO_TRADES, 2026, 0, "Jan");
+function buildWeeklyReviewData(trades: DemoTrade[]) {
+  const weeks = buildCalendarWeeks(trades, 2026, 0, "Jan");
 
-  // Pick the last full week with 4+ trades
   const fullWeeks = weeks.filter((w) => w.days.length >= 4);
   const reviewWeek = fullWeeks[fullWeeks.length - 1] || weeks[weeks.length - 1];
 
@@ -111,7 +115,6 @@ function buildWeeklyReviewData() {
   );
   const avgDaily = Math.round(totalPnl / reviewWeek.days.length);
 
-  // Weekly P&L trend — all calendar weeks in January
   const weeklyTrend = weeks.map((w) => ({
     label: w.label,
     pnl: w.pnl,
@@ -129,21 +132,19 @@ function buildWeeklyReviewData() {
   };
 }
 
-// ── Build monthly data from January 2026 trades ──
+// ── Build monthly data from trades ──
 
-function buildMonthlyReviewData() {
-  const allResults = DEMO_TRADES.map((t) => ({ ...t, final: finalResult(t) }));
+function buildMonthlyReviewData(trades: DemoTrade[], decTrades: DemoTrade[], febTrades: DemoTrade[]) {
+  const allResults = trades.map((t) => ({ ...t, final: finalResult(t) }));
   const totalPnl = allResults.reduce((s, t) => s + t.final, 0);
   const wins = allResults.filter((t) => t.final > 0).length;
   const winRate = Math.round((wins / allResults.length) * 100);
   const avgDaily = Math.round(totalPnl / allResults.length);
 
-  // Week by Week — same calendar-grid grouping
-  const weeks = buildCalendarWeeks(DEMO_TRADES, 2026, 0, "Jan");
+  const weeks = buildCalendarWeeks(trades, 2026, 0, "Jan");
 
-  // Monthly P&L trend — Dec, Jan, Feb
-  const decTotal = DEMO_TRADES_DEC_2025.reduce((s, t) => s + finalResult(t), 0);
-  const febTotal = DEMO_TRADES_FEB_2026.reduce((s, t) => s + finalResult(t), 0);
+  const decTotal = decTrades.reduce((s, t) => s + finalResult(t), 0);
+  const febTotal = febTrades.reduce((s, t) => s + finalResult(t), 0);
 
   const monthlyTrend = [
     { label: "Dec 2025", pnl: decTotal, isCurrent: false },
@@ -228,49 +229,7 @@ function buildMistakeData(
   return { mistakes, mistakeDays: lossDays.length, tradingDays };
 }
 
-// ── Pre-compute everything ──
-
-const WEEKLY = buildWeeklyReviewData();
-const MONTHLY = buildMonthlyReviewData();
-
-const WEEKLY_DISCIPLINE = buildDisciplineData(
-  WEEKLY.days.map((d) => ({ pnl: d.pnl })),
-  "day"
-);
-const MONTHLY_DISCIPLINE = buildDisciplineData(
-  DEMO_TRADES.map((t) => ({ pnl: finalResult(t) })),
-  "day"
-);
-
-const WEEKLY_MISTAKES = {
-  mistakes: [
-    { label: "FOMO Entry", count: 1 },
-    { label: "Overtraded", count: 1 },
-  ],
-  mistakeDays: 1,
-  tradingDays: WEEKLY.tradingDays,
-};
-const MONTHLY_MISTAKES = buildMistakeData(
-  DEMO_TRADES.map((t) => ({ pnl: finalResult(t) })),
-  MONTHLY.tradingDays
-);
-
 /* ─── Helpers ─────────────────────────────────────────────────── */
-
-function formatPnl(v: number): string {
-  const sign = v >= 0 ? "+" : "-";
-  return `${sign}₹${Math.abs(v).toLocaleString("en-IN")}`;
-}
-
-function formatPnlShort(v: number): string {
-  const abs = Math.abs(v);
-  if (abs >= 1000) {
-    const k = abs / 1000;
-    const formatted = k % 1 === 0 ? k.toFixed(0) : k.toFixed(1);
-    return `${v >= 0 ? "+" : "-"}₹${formatted}k`;
-  }
-  return `${v >= 0 ? "+" : "-"}₹${abs}`;
-}
 
 /* ─── Catmull-Rom spline ─────────────────────────────────────── */
 
@@ -303,10 +262,12 @@ function MiniTrendChart({
   data,
   show,
   uid,
+  isINR,
 }: {
   data: { label: string; pnl: number; isCurrent?: boolean }[];
   show: boolean;
   uid: string;
+  isINR: boolean;
 }) {
   const W = 400;
   const H = 100;
@@ -410,7 +371,7 @@ function MiniTrendChart({
           <div key={i} className="flex-1 text-center">
             <p className="text-[8px] tabular-nums text-muted-foreground leading-tight">{point.label}</p>
             <p className={`text-[8px] tabular-nums font-medium ${point.pnl === 0 ? "text-muted-foreground/40" : point.pnl > 0 ? "text-emerald-600" : "text-red-600"}`}>
-              {point.pnl === 0 ? "\u2014" : formatPnlShort(point.pnl)}
+              {point.pnl === 0 ? "\u2014" : formatPnlShortCurrency(point.pnl, isINR)}
             </p>
           </div>
         ))}
@@ -435,10 +396,12 @@ function MiniDonut({
   buckets,
   avgScore,
   show,
+  isINR,
 }: {
   buckets: BucketInfo[];
   avgScore: number;
   show: boolean;
+  isINR: boolean;
 }) {
   const R = 36;
   const CX = 44;
@@ -523,7 +486,7 @@ function MiniDonut({
             </div>
             {bucket.count > 0 && (
               <span className={`text-[10px] font-semibold tabular-nums shrink-0 ${bucket.avgPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                {formatPnlShort(bucket.avgPnl)} avg
+                {formatPnlShortCurrency(bucket.avgPnl, isINR)} avg
               </span>
             )}
           </div>
@@ -613,9 +576,43 @@ function MiniMistakes({
    ═══════════════════════════════════════════════════════════════ */
 
 export function ReviewShowcase({ visible }: { visible: boolean }) {
+  const { isINR } = useCurrencyCtx();
   const [tab, setTab] = useState<"weekly" | "monthly">("weekly");
   const [show, setShow] = useState(false);
   const prevTab = useRef(tab);
+
+  const computed = useMemo(() => {
+    const trades = getDemoTrades(isINR);
+    const decTrades = getDemoTradesDec(isINR);
+    const febTrades = getDemoTradesFeb(isINR);
+
+    const weekly = buildWeeklyReviewData(trades);
+    const monthly = buildMonthlyReviewData(trades, decTrades, febTrades);
+
+    const weeklyDiscipline = buildDisciplineData(
+      weekly.days.map((d) => ({ pnl: d.pnl })),
+      "day"
+    );
+    const monthlyDiscipline = buildDisciplineData(
+      trades.map((t) => ({ pnl: finalResult(t) })),
+      "day"
+    );
+
+    const weeklyMistakes = {
+      mistakes: [
+        { label: "FOMO Entry", count: 1 },
+        { label: "Overtraded", count: 1 },
+      ],
+      mistakeDays: 1,
+      tradingDays: weekly.tradingDays,
+    };
+    const monthlyMistakes = buildMistakeData(
+      trades.map((t) => ({ pnl: finalResult(t) })),
+      monthly.tradingDays
+    );
+
+    return { weekly, monthly, weeklyDiscipline, monthlyDiscipline, weeklyMistakes, monthlyMistakes };
+  }, [isINR]);
 
   useEffect(() => {
     if (!visible) { setShow(false); return; }
@@ -634,20 +631,20 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
 
   const isWeekly = tab === "weekly";
 
-  const totalPnl = isWeekly ? WEEKLY.totalPnl : MONTHLY.totalPnl;
-  const winRate = isWeekly ? WEEKLY.winRate : MONTHLY.winRate;
-  const avgDaily = isWeekly ? WEEKLY.avgDaily : MONTHLY.avgDaily;
+  const totalPnl = isWeekly ? computed.weekly.totalPnl : computed.monthly.totalPnl;
+  const winRate = isWeekly ? computed.weekly.winRate : computed.monthly.winRate;
+  const avgDaily = isWeekly ? computed.weekly.avgDaily : computed.monthly.avgDaily;
   const isProfit = totalPnl >= 0;
 
   const barItems: { label: string; pnl: number }[] = isWeekly
-    ? WEEKLY.days.map((d) => ({ label: d.day, pnl: d.pnl }))
-    : MONTHLY.weeks;
+    ? computed.weekly.days.map((d) => ({ label: d.day, pnl: d.pnl }))
+    : computed.monthly.weeks;
 
   const maxAbsPnl = Math.max(...barItems.map((b) => Math.abs(b.pnl)), 1);
 
-  const trendData = isWeekly ? WEEKLY.weeklyTrend : MONTHLY.monthlyTrend;
-  const discipline = isWeekly ? WEEKLY_DISCIPLINE : MONTHLY_DISCIPLINE;
-  const mistakeData = isWeekly ? WEEKLY_MISTAKES : MONTHLY_MISTAKES;
+  const trendData = isWeekly ? computed.weekly.weeklyTrend : computed.monthly.monthlyTrend;
+  const discipline = isWeekly ? computed.weeklyDiscipline : computed.monthlyDiscipline;
+  const mistakeData = isWeekly ? computed.weeklyMistakes : computed.monthlyMistakes;
 
   return (
     <div className="w-full max-w-lg mx-auto">
@@ -674,7 +671,7 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
         {/* CARD 1 — Hero P&L */}
         <div className="rounded-2xl border border-border bg-white px-5 py-5 sm:px-6 shadow-lg">
           <p className="text-[10px] font-medium text-muted-foreground">
-            {isWeekly ? WEEKLY.label : MONTHLY.label}
+            {isWeekly ? computed.weekly.label : computed.monthly.label}
           </p>
           <p
             className={`mt-1 text-2xl sm:text-3xl font-bold tracking-tight transition-all duration-500 ${
@@ -686,7 +683,7 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
               transitionDelay: show ? "50ms" : "0ms",
             }}
           >
-            {formatPnl(totalPnl)}
+            {formatPnlCurrency(totalPnl, isINR)}
           </p>
 
           <div
@@ -704,7 +701,7 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
             <div className="rounded-lg border border-border bg-slate-50/60 px-3 py-2.5">
               <p className="text-[9px] font-medium text-muted-foreground">Avg / Day</p>
               <p className={`mt-1 text-sm font-semibold tabular-nums ${avgDaily >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                {formatPnl(avgDaily)}
+                {formatPnlCurrency(avgDaily, isINR)}
               </p>
             </div>
           </div>
@@ -735,7 +732,7 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
                     {item.pnl < 0 && (
                       <>
                         <span className="text-[8px] font-semibold tabular-nums text-red-600 mr-1 shrink-0">
-                          {formatPnlShort(item.pnl)}
+                          {formatPnlShortCurrency(item.pnl, isINR)}
                         </span>
                         <div
                           className="h-[14px] rounded-l-sm bg-red-400/70 transition-all duration-700"
@@ -761,7 +758,7 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
                           }}
                         />
                         <span className="text-[8px] font-semibold tabular-nums text-emerald-600 ml-1 shrink-0">
-                          {formatPnlShort(item.pnl)}
+                          {formatPnlShortCurrency(item.pnl, isINR)}
                         </span>
                       </>
                     )}
@@ -777,13 +774,13 @@ export function ReviewShowcase({ visible }: { visible: boolean }) {
           <p className="text-[10px] font-medium text-muted-foreground mb-3">
             {isWeekly ? "Weekly P&L Trend" : "Monthly P&L Trend"}
           </p>
-          <MiniTrendChart data={trendData} show={show} uid={`landing-${tab}`} />
+          <MiniTrendChart data={trendData} show={show} uid={`landing-${tab}`} isINR={isINR} />
         </div>
 
         {/* CARD 4 — Discipline Donut */}
         <div className="rounded-2xl border border-border bg-white px-5 py-4 sm:px-6 shadow-lg">
           <p className="text-[10px] font-medium text-muted-foreground mb-3">Discipline</p>
-          <MiniDonut buckets={discipline.buckets} avgScore={discipline.avgScore} show={show} />
+          <MiniDonut buckets={discipline.buckets} avgScore={discipline.avgScore} show={show} isINR={isINR} />
         </div>
 
         {/* CARD 5 — Mistakes */}

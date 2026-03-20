@@ -46,7 +46,6 @@ type DashboardContentProps = {
   userId: string;
   tradingCapital: number | null;
   xHandle: string | null;
-  cardTheme: string;
   trades: Trade[];
   baseUrl?: string;
   accessStatus?: AccessStatus;
@@ -83,7 +82,6 @@ export function DashboardContent({
   userId,
   tradingCapital,
   xHandle,
-  cardTheme,
   trades,
   baseUrl = typeof window !== "undefined" ? window.location.origin : "https://pnlcard.com",
   accessStatus = "expired",
@@ -805,7 +803,6 @@ export function DashboardContent({
         profile={{
           x_handle: xHandle,
           trading_capital: tradingCapital,
-          card_theme: cardTheme,
           currency,
           timezone,
         }}

@@ -116,7 +116,7 @@ export async function GET(request: Request) {
             display: "flex",
             fontSize: Math.round(18 * S),
             fontWeight: 700,
-            color: s.text1,
+            color: s.accent,
           }}
         >
           {tradeCount}

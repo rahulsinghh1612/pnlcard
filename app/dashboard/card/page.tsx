@@ -46,7 +46,7 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "id, display_name, x_handle, currency, timezone, trading_capital, plan, plan_expires_at, trial_ends_at, card_theme"
+      "id, display_name, x_handle, currency, timezone, trading_capital, plan, plan_expires_at, trial_ends_at"
     )
     .eq("id", user.id)
     .single();
@@ -75,7 +75,6 @@ export default async function CardGeneratorPage({ searchParams }: PageProps) {
     x_handle: profile.x_handle,
     trading_capital:
       profile.trading_capital != null ? Number(profile.trading_capital) : null,
-    card_theme: profile.card_theme ?? "light",
     currency: profile.currency ?? "INR",
     timezone: profile.timezone ?? "Asia/Kolkata",
   };

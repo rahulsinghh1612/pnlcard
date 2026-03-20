@@ -18,7 +18,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "display_name, x_handle, currency, timezone, trading_capital, card_theme"
+      "display_name, x_handle, currency, timezone, trading_capital"
     )
     .eq("id", user.id)
     .single();
@@ -42,7 +42,6 @@ export default async function ProfilePage() {
           currency: profile.currency as "INR" | "USD",
           timezone: profile.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
           tradingCapital: profile.trading_capital?.toString() ?? "",
-          cardTheme: (profile.card_theme as "light" | "dark") ?? "light",
         }}
       />
     </div>

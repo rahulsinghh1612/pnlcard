@@ -1,18 +1,24 @@
 /**
  * Fetches promo OG card images from the running dev server
  * and saves them as static PNGs in public/promo/.
- * Generates profit + loss variants (light theme only — new card design).
+ * Generates profit + loss variants for both INR and USD.
  *
- * Usage: node scripts/save-promo-images.mjs
+ * Usage: node scripts/save-promo-images.mjs [--inr] [--usd]
+ *   --inr   Regenerate INR images only (default: both)
+ *   --usd   Regenerate USD images only (default: both)
  * Requires: dev server running on localhost:3000
  */
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
+const args = process.argv.slice(2);
+const doInr = args.length === 0 || args.includes("--inr");
+const doUsd = args.length === 0 || args.includes("--usd");
 
-// Profit params — derived from Jan 2026 demo trades (capital: 10L)
-const profitParams = {
+// ─── INR params (no currency symbol on the card) ──────────────────
+
+const inrProfitParams = {
   daily: {
     handle: "@iamrahulx0",
     currency: "INR",
@@ -68,8 +74,7 @@ const profitParams = {
   },
 };
 
-// Loss params — derived from Dec 2025 demo trades (capital: 10L)
-const lossParams = {
+const inrLossParams = {
   daily: {
     handle: "@iamrahulx0",
     currency: "INR",
@@ -125,37 +130,164 @@ const lossParams = {
   },
 };
 
+// ─── USD params (INR values ÷ 84, rounded to nearest 10, no symbol) ─
+
+const usdProfitParams = {
+  daily: {
+    handle: "@traderhandle",
+    currency: "USD",
+    date: "2nd Jan, 2026",
+    pnl: "+100",        // 8,650 / 84 ≈ 103 → 100
+    charges: "3",
+    netPnl: "+100",     // 8,400 / 84 = 100
+    netRoi: "+0.84%",
+    trades: "2",
+    streak: "2",
+    disciplineScore: "4",
+    executionTag: "fomo_entry",
+  },
+  weekly: {
+    handle: "@traderhandle",
+    currency: "USD",
+    range: "5 Jan – 11 Jan, 2026",
+    pnl: "+140",        // 11,400 / 84 ≈ 136 → 140
+    roi: "+1.14%",
+    roiLabel: "Net ROI",
+    avgPerDay: "+30",   // 2,280 / 84 ≈ 27 → 30
+    days: JSON.stringify([
+      { day: "M", pnl: 5800, win: true },
+      { day: "T", pnl: -3400, win: false },
+      { day: "W", pnl: 10000, win: true },
+      { day: "T", pnl: 0, win: false },
+      { day: "F", pnl: -2800, win: false },
+      { day: "S", pnl: 1800, win: true },
+      { day: "S", pnl: 0, win: false },
+    ]),
+  },
+  monthly: {
+    handle: "@traderhandle",
+    currency: "USD",
+    month: "January 2026",
+    pnl: "+770",        // 65,000 / 84 ≈ 774 → 770
+    roi: "+6.50%",
+    roiLabel: "Net ROI",
+    avgPerDay: "+40",   // 3,095 / 84 ≈ 37 → 40
+    calendar: JSON.stringify({
+      2: 8400, 3: 2200, 5: 5800, 6: -3400, 7: 10000,
+      9: -2800, 10: 1800, 12: 6400, 14: 5200, 15: 7200,
+      16: -3600, 19: 7600, 20: -2400, 21: 4800, 22: -3200,
+      23: 7600, 27: 6800, 28: -2600, 29: 3400, 30: 5600, 31: 1600,
+    }),
+    calendarGrid: JSON.stringify([
+      null, null, null, 1, 2, 3, 4,
+      5, 6, 7, 8, 9, 10, 11,
+      12, 13, 14, 15, 16, 17, 18,
+      19, 20, 21, 22, 23, 24, 25,
+      26, 27, 28, 29, 30, 31, null,
+    ]),
+  },
+};
+
+const usdLossParams = {
+  daily: {
+    handle: "@traderhandle",
+    currency: "USD",
+    date: "30th Dec, 2025",
+    pnl: "-80",         // 7,000 / 84 ≈ 83 → 80
+    charges: "2",
+    netPnl: "-90",      // 7,200 / 84 ≈ 86 → 90
+    netRoi: "-0.72%",
+    trades: "3",
+    streak: "0",
+    disciplineScore: "1",
+    executionTag: "fomo_entry,no_stop_loss",
+  },
+  weekly: {
+    handle: "@traderhandle",
+    currency: "USD",
+    range: "8 Dec – 14 Dec, 2025",
+    pnl: "-120",        // 10,000 / 84 ≈ 119 → 120
+    roi: "-1.00%",
+    roiLabel: "Net ROI",
+    avgPerDay: "-20",   // 2,000 / 84 ≈ 24 → 20
+    days: JSON.stringify([
+      { day: "M", pnl: -3200, win: false },
+      { day: "T", pnl: 0, win: false },
+      { day: "W", pnl: -7400, win: false },
+      { day: "T", pnl: 4800, win: true },
+      { day: "F", pnl: -5400, win: false },
+      { day: "S", pnl: 1200, win: true },
+      { day: "S", pnl: 0, win: false },
+    ]),
+  },
+  monthly: {
+    handle: "@traderhandle",
+    currency: "USD",
+    month: "December 2025",
+    pnl: "-420",        // 35,000 / 84 ≈ 417 → 420
+    roi: "-3.50%",
+    roiLabel: "Net ROI",
+    avgPerDay: "-20",   // 1,842 / 84 ≈ 22 → 20
+    calendar: JSON.stringify({
+      1: -5200, 2: 3600, 4: -5800, 5: 2400, 6: -2600,
+      8: -3200, 10: -7400, 11: 4800, 12: -5400, 13: 1200,
+      15: 3200, 16: -6600, 18: 2800, 19: -3800, 22: -5600,
+      23: 3400, 24: -6200, 29: 2600, 30: -7200,
+    }),
+    calendarGrid: JSON.stringify([
+      1, 2, 3, 4, 5, 6, 7,
+      8, 9, 10, 11, 12, 13, 14,
+      15, 16, 17, 18, 19, 20, 21,
+      22, 23, 24, 25, 26, 27, 28,
+      29, 30, 31, null, null, null, null,
+    ]),
+  },
+};
+
+// ─── Generate images ──────────────────────────────────────────────
+
 const promoDir = resolve(process.cwd(), "public/promo");
 try {
   mkdirSync(promoDir, { recursive: true });
 } catch {}
 
-for (const variant of ["profit", "loss"]) {
-  const baseParams = variant === "loss" ? lossParams : profitParams;
-  const variantSuffix = variant === "loss" ? "-loss" : "";
+const sets = [];
+if (doInr) {
+  sets.push({ label: "INR", profit: inrProfitParams, loss: inrLossParams, suffix: "" });
+}
+if (doUsd) {
+  sets.push({ label: "USD", profit: usdProfitParams, loss: usdLossParams, suffix: "-usd" });
+}
 
-  for (const type of ["daily", "weekly", "monthly"]) {
-    const params = { ...baseParams[type] };
-    const url = new URL(`/api/og/${type}`, BASE);
-    for (const [k, v] of Object.entries(params)) {
-      url.searchParams.set(k, v);
-    }
+for (const { label, profit, loss, suffix } of sets) {
+  console.log(`\n── ${label} ──────────────────────────`);
+  for (const variant of ["profit", "loss"]) {
+    const baseParams = variant === "loss" ? loss : profit;
+    const variantSuffix = variant === "loss" ? "-loss" : "";
 
-    const filename = `${type}${variantSuffix}.png`;
-
-    console.log(`Fetching ${type} (${variant})...`);
-    try {
-      const res = await fetch(url.toString());
-      if (!res.ok) {
-        console.error(`  ✗ ${filename}: ${res.status} ${res.statusText}`);
-        continue;
+    for (const type of ["daily", "weekly", "monthly"]) {
+      const params = { ...baseParams[type] };
+      const url = new URL(`/api/og/${type}`, BASE);
+      for (const [k, v] of Object.entries(params)) {
+        url.searchParams.set(k, v);
       }
-      const buf = Buffer.from(await res.arrayBuffer());
-      const outPath = resolve(promoDir, filename);
-      writeFileSync(outPath, buf);
-      console.log(`  ✓ Saved ${filename} (${(buf.length / 1024).toFixed(0)} KB)`);
-    } catch (err) {
-      console.error(`  ✗ ${filename}: ${err.message}`);
+
+      const filename = `${type}${variantSuffix}${suffix}.png`;
+
+      console.log(`Fetching ${type} (${variant})...`);
+      try {
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          console.error(`  ✗ ${filename}: ${res.status} ${res.statusText}`);
+          continue;
+        }
+        const buf = Buffer.from(await res.arrayBuffer());
+        const outPath = resolve(promoDir, filename);
+        writeFileSync(outPath, buf);
+        console.log(`  ✓ Saved ${filename} (${(buf.length / 1024).toFixed(0)} KB)`);
+      } catch (err) {
+        console.error(`  ✗ ${filename}: ${err.message}`);
+      }
     }
   }
 }

@@ -125,4 +125,33 @@ export const DEMO_MONTH_LABELS: Record<DemoMonthKey, string> = {
 export const DEMO_DISPLAY_NAME = "Rahul";
 export const DEMO_CAPITAL = 1_000_000;
 export const DEMO_CURRENCY = "INR";
-export const DEMO_CARD_THEME = "light" as const;
+
+// ─── Dual-currency getters ─────────────────────────────────────
+
+import {
+  DEMO_TRADES_USD,
+  DEMO_TRADES_DEC_2025_USD,
+  DEMO_TRADES_FEB_2026_USD,
+  DEMO_MONTHS_USD,
+  DEMO_CAPITAL_USD,
+} from "./demo-trades-usd";
+
+export function getDemoTrades(isINR: boolean) {
+  return isINR ? DEMO_TRADES : DEMO_TRADES_USD;
+}
+
+export function getDemoTradesDec(isINR: boolean) {
+  return isINR ? DEMO_TRADES_DEC_2025 : DEMO_TRADES_DEC_2025_USD;
+}
+
+export function getDemoTradesFeb(isINR: boolean) {
+  return isINR ? DEMO_TRADES_FEB_2026 : DEMO_TRADES_FEB_2026_USD;
+}
+
+export function getDemoMonths(isINR: boolean) {
+  return isINR ? DEMO_MONTHS : DEMO_MONTHS_USD;
+}
+
+export function getDemoCapital(isINR: boolean) {
+  return isINR ? DEMO_CAPITAL : DEMO_CAPITAL_USD;
+}

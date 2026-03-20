@@ -9,7 +9,6 @@ export interface Profile {
   plan: "free" | "premium";
   plan_expires_at: string | null;
   trial_ends_at: string | null;
-  card_theme: "light" | "dark";
   created_at: string;
   updated_at: string;
 }

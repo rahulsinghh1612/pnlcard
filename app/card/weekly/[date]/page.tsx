@@ -25,7 +25,6 @@ function buildWeeklyOgUrl(params: WeeklyCardParams, baseUrl: string): string {
     totalTrades: String(params.totalTrades ?? 0),
     bestDay: params.bestDay,
     days: JSON.stringify(params.days),
-    theme: params.theme,
     currency: params.currency,
   });
   if (params.roi) search.set("roi", params.roi);
@@ -40,7 +39,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
 
   if (!tradeId) return { title: "Weekly Card — PnLCard" };
 
-  let profile: { x_handle: string | null; trading_capital: number | null; card_theme: string; currency: string; timezone: string } | null = null;
+  let profile: { x_handle: string | null; trading_capital: number | null; currency: string; timezone: string } | null = null;
   let tradesForCard: Array<{ id: string; trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null }> = [];
 
   try {
@@ -56,7 +55,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("x_handle, trading_capital, card_theme, currency, timezone")
+      .select("x_handle, trading_capital, currency, timezone")
       .eq("id", t.user_id)
       .single();
 
@@ -65,7 +64,6 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
     profile = {
       x_handle: p.x_handle,
       trading_capital: p.trading_capital != null ? Number(p.trading_capital) : null,
-      card_theme: p.card_theme ?? "light",
       currency: p.currency ?? "INR",
       timezone: p.timezone ?? "Asia/Kolkata",
     };
@@ -120,7 +118,7 @@ export default async function WeeklyCardPage({ params, searchParams }: PageProps
 
   if (!tradeId) notFound();
 
-  let profile: { x_handle: string | null; trading_capital: number | null; card_theme: string; currency: string; timezone: string } | null = null;
+  let profile: { x_handle: string | null; trading_capital: number | null; currency: string; timezone: string } | null = null;
   let tradesForCard: Array<{ id: string; trade_date: string; net_pnl: number; charges: number | null; num_trades: number; capital_deployed: number | null }> = [];
 
   try {
@@ -136,7 +134,7 @@ export default async function WeeklyCardPage({ params, searchParams }: PageProps
 
     const { data: p } = await supabase
       .from("profiles")
-      .select("x_handle, trading_capital, card_theme, currency, timezone")
+      .select("x_handle, trading_capital, currency, timezone")
       .eq("id", t.user_id)
       .single();
 
@@ -144,7 +142,6 @@ export default async function WeeklyCardPage({ params, searchParams }: PageProps
     profile = {
       x_handle: p.x_handle,
       trading_capital: p.trading_capital != null ? Number(p.trading_capital) : null,
-      card_theme: p.card_theme ?? "light",
       currency: p.currency ?? "INR",
       timezone: p.timezone ?? "Asia/Kolkata",
     };
