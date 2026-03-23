@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
     <html lang="en" className={`${font.variable} scroll-smooth`} suppressHydrationWarning>
       <body className="antialiased font-sans" suppressHydrationWarning>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
