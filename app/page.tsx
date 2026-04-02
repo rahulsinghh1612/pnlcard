@@ -957,47 +957,51 @@ export default function LandingPage() {
       </nav>
 
       {/* Mobile backdrop overlay — blurs page + closes menu on tap */}
-      {mobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm animate-fade-in"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
+      <div
+        className={`md:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+          mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
 
       {/* Mobile dropdown menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 rounded-b-2xl border-b border-x border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1 shadow-lg animate-slide-down">
-          <a
-            href="#how-it-works"
-            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            See how it works
-          </a>
-          <a
-            href="#features"
-            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Features
-          </a>
-          <a
-            href="#pricing"
-            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Pricing
-          </a>
-          <div className="h-px bg-border my-1" />
-          <Link
-            href="/signup"
-            className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Start for Free
-          </Link>
-        </div>
-      )}
+      <div
+        className={`md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 rounded-b-2xl border-b border-x border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1 shadow-lg transition-all duration-300 ease-out origin-top ${
+          mobileMenuOpen
+            ? "opacity-100 translate-y-0 scale-y-100"
+            : "opacity-0 -translate-y-2 scale-y-95 pointer-events-none"
+        }`}
+      >
+        <a
+          href="#how-it-works"
+          className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          See how it works
+        </a>
+        <a
+          href="#features"
+          className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          Features
+        </a>
+        <a
+          href="#pricing"
+          className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          Pricing
+        </a>
+        <div className="h-px bg-border my-1" />
+        <Link
+          href="/signup"
+          className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          Start for Free
+        </Link>
+      </div>
 
       {/* ── Hero ───────────────────────────────────────────── */}
       <section className="relative pt-24 pb-12 sm:pt-40 sm:pb-24">
