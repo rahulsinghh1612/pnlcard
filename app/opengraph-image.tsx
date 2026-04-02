@@ -5,7 +5,26 @@ export const alt = "PnLCard — The simplest trading journal";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/* ── Font loading (runs once on cold start, then cached) ───── */
+const plusJakartaExtraBold = fetch(
+  new URL("./api/og/fonts/PlusJakartaSans-ExtraBold.woff", import.meta.url),
+).then((r) => r.arrayBuffer());
+
+const plusJakartaSemiBold = fetch(
+  new URL("./api/og/fonts/PlusJakartaSans-SemiBold.woff", import.meta.url),
+).then((r) => r.arrayBuffer());
+
+const plusJakartaRegular = fetch(
+  new URL("./api/og/fonts/PlusJakartaSans-Regular.woff", import.meta.url),
+).then((r) => r.arrayBuffer());
+
 export default async function Image() {
+  const [extraBold, semiBold, regular] = await Promise.all([
+    plusJakartaExtraBold,
+    plusJakartaSemiBold,
+    plusJakartaRegular,
+  ]);
+
   return new ImageResponse(
     (
       <div
@@ -17,7 +36,7 @@ export default async function Image() {
           alignItems: "center",
           justifyContent: "center",
           background: "#fafafa",
-          fontFamily: "Inter, sans-serif",
+          fontFamily: "PlusJakarta",
         }}
       >
         {/* Logo + wordmark */}
@@ -41,7 +60,7 @@ export default async function Image() {
             <div style={{ width: 7, height: 18, borderRadius: 2, background: "#16a34a", opacity: 0.9 }} />
             <div style={{ width: 7, height: 24, borderRadius: 2, background: "#16a34a" }} />
           </div>
-          <div style={{ display: "flex", fontSize: 36, fontWeight: 800, letterSpacing: "-0.03em" }}>
+          <div style={{ display: "flex", fontSize: 36, fontWeight: 700, letterSpacing: "-0.03em" }}>
             <div style={{ color: "#111827" }}>PnL</div>
             <div style={{ color: "#9ca3af" }}>Card</div>
           </div>
@@ -71,6 +90,7 @@ export default async function Image() {
         <div
           style={{
             fontSize: 22,
+            fontWeight: 400,
             color: "#6b7280",
             marginTop: 24,
           }}
@@ -97,6 +117,13 @@ export default async function Image() {
         </div>
       </div>
     ),
-    { ...size },
+    {
+      ...size,
+      fonts: [
+        { name: "PlusJakarta", data: extraBold, weight: 800 as const, style: "normal" as const },
+        { name: "PlusJakarta", data: semiBold, weight: 600 as const, style: "normal" as const },
+        { name: "PlusJakarta", data: regular, weight: 400 as const, style: "normal" as const },
+      ],
+    },
   );
 }
