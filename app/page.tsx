@@ -954,56 +954,57 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Mobile backdrop overlay — blurs page + closes menu on tap */}
-        {mobileMenuOpen && (
-          <div
-            className="md:hidden fixed inset-0 top-14 sm:top-16 z-40 bg-black/40 backdrop-blur-sm"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-
-        {/* Mobile dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden relative z-50 border-t border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1">
-            <a
-              href="#how-it-works"
-              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              See how it works
-            </a>
-            <a
-              href="#features"
-              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Features
-            </a>
-            <a
-              href="#pricing"
-              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Pricing
-            </a>
-            <div className="h-px bg-border my-1" />
-            <Link
-              href="/login"
-              className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Start for Free
-            </Link>
-          </div>
-        )}
       </nav>
+
+      {/* Mobile backdrop overlay — blurs page + closes menu on tap */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile dropdown menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 border-t border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1">
+          <a
+            href="#how-it-works"
+            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            See how it works
+          </a>
+          <a
+            href="#features"
+            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Features
+          </a>
+          <a
+            href="#pricing"
+            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Pricing
+          </a>
+          <div className="h-px bg-border my-1" />
+          <Link
+            href="/login"
+            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Start for Free
+          </Link>
+        </div>
+      )}
 
       {/* ── Hero ───────────────────────────────────────────── */}
       <section className="relative pt-24 pb-12 sm:pt-40 sm:pb-24">
