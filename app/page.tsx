@@ -876,10 +876,12 @@ export default function LandingPage() {
     <main id="top" className="min-h-screen bg-page overflow-x-hidden">
       {/* ── Navbar ─────────────────────────────────────────── */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled || mobileMenuOpen
+        className={`fixed top-0 left-0 right-0 z-50 ${
+          mobileMenuOpen
             ? "bg-white/95 backdrop-blur-lg border-b border-border shadow-sm"
-            : "bg-transparent"
+            : scrolled
+              ? "bg-white/95 backdrop-blur-lg border-b border-border shadow-sm transition-all duration-300"
+              : "bg-transparent transition-all duration-300"
         }`}
       >
         <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -958,7 +960,7 @@ export default function LandingPage() {
 
       {/* Mobile backdrop overlay — blurs page + closes menu on tap */}
       <div
-        className={`md:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`md:hidden fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
           mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setMobileMenuOpen(false)}
@@ -966,10 +968,10 @@ export default function LandingPage() {
 
       {/* Mobile dropdown menu */}
       <div
-        className={`md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 rounded-b-2xl border-b border-x border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1 shadow-lg transition-all duration-300 ease-out origin-top ${
+        className={`md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 rounded-b-2xl border-b border-x border-border bg-white px-4 py-4 flex flex-col gap-1 shadow-lg transition-[opacity,transform] duration-300 ease-out ${
           mobileMenuOpen
-            ? "opacity-100 translate-y-0 scale-y-100"
-            : "opacity-0 -translate-y-2 scale-y-95 pointer-events-none"
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-3 pointer-events-none"
         }`}
       >
         <a
