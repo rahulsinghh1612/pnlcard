@@ -935,6 +935,14 @@ export default function LandingPage() {
               </Link>
             </div>
 
+            {/* Sign in — mobile only, always visible */}
+            <Link
+              href="/login"
+              className="md:hidden text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mr-3"
+            >
+              Sign in
+            </Link>
+
             {/* Hamburger — mobile only */}
             <button
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-foreground hover:bg-muted transition-colors"
@@ -946,9 +954,17 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Mobile backdrop overlay — blurs page + closes menu on tap */}
+        {mobileMenuOpen && (
+          <div
+            className="md:hidden fixed inset-0 top-14 sm:top-16 z-40 bg-black/40 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
         {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1">
+          <div className="md:hidden relative z-50 border-t border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1">
             <a
               href="#how-it-works"
               className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -1373,14 +1389,16 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-8 text-center text-xs text-muted-foreground/60">
+            A{" "}
             <a
               href="https://www.nextalphabet.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-foreground/70 transition-colors"
+              className="relative text-muted-foreground/80 hover:text-foreground/70 transition-colors after:absolute after:left-0 after:bottom-0 after:h-px after:w-0 after:bg-current after:transition-all after:duration-300 hover:after:w-full"
             >
-              A Next Alphabet Product
-            </a>
+              NextAlphabet
+            </a>{" "}
+            Product
           </div>
         </div>
       </footer>
