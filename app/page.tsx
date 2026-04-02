@@ -959,7 +959,7 @@ export default function LandingPage() {
       {/* Mobile backdrop overlay — blurs page + closes menu on tap */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm animate-fade-in"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
