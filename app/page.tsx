@@ -861,6 +861,10 @@ export default function LandingPage() {
   const currency = useCurrency();
   const scrolled = useScrolled();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [backdropVisible, setBackdropVisible] = useState(false);
+
+  const openMenu = () => { setBackdropVisible(true); setMobileMenuOpen(true); };
+  const closeMenu = () => { setMobileMenuOpen(false); };
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   const debriefFeature = useInView();
@@ -948,7 +952,7 @@ export default function LandingPage() {
             {/* Hamburger — mobile only */}
             <button
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-foreground hover:bg-muted transition-colors"
-              onClick={() => setMobileMenuOpen((o) => !o)}
+              onClick={() => (mobileMenuOpen ? closeMenu() : openMenu())}
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -962,8 +966,9 @@ export default function LandingPage() {
       <div
         className={`md:hidden fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
           mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setMobileMenuOpen(false)}
+        } ${!backdropVisible ? "hidden" : ""}`}
+        onClick={closeMenu}
+        onTransitionEnd={() => { if (!mobileMenuOpen) setBackdropVisible(false); }}
       />
 
       {/* Mobile dropdown menu */}
@@ -977,21 +982,21 @@ export default function LandingPage() {
         <a
           href="#how-it-works"
           className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMenu}
         >
           See how it works
         </a>
         <a
           href="#features"
           className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMenu}
         >
           Features
         </a>
         <a
           href="#pricing"
           className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMenu}
         >
           Pricing
         </a>
@@ -999,7 +1004,7 @@ export default function LandingPage() {
         <Link
           href="/signup"
           className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMenu}
         >
           Start for Free
         </Link>
@@ -1399,6 +1404,8 @@ export default function LandingPage() {
               NextAlphabet
             </a>{" "}
             Product
+            <span className="mx-1.5">·</span>
+            <span>v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
           </div>
         </div>
       </footer>

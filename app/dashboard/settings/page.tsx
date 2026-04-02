@@ -146,6 +146,10 @@ export default async function SettingsPage() {
           <DeleteAccountButton />
         </CardContent>
       </Card>
+
+      <p className="text-center text-xs text-muted-foreground/50">
+        PnLCard v{process.env.NEXT_PUBLIC_APP_VERSION}
+      </p>
     </div>
   );
 }
