@@ -10,21 +10,23 @@ const font = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "PnLCard — Log daily results",
+  title: "PnLCard — The simplest trading journal",
   description:
-    "Log your daily P&L in 60 seconds and generate stunning shareable cards for X and Instagram.",
+    "The trading journal that only takes 60 seconds a day. Log daily results, track your edge, and share beautiful recap cards.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://pnlcard.com"),
   openGraph: {
-    title: "PnLCard — Log daily results",
-    description: "Generate beautiful trading recap cards for social media.",
+    title: "PnLCard — The simplest trading journal",
+    description:
+      "The trading journal that only takes 60 seconds a day. Log daily results, track your edge, and share beautiful recap cards.",
     url: "/",
     siteName: "PnLCard",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PnLCard — Log daily results",
-    description: "Generate beautiful trading recap cards for social media.",
+    title: "PnLCard — The simplest trading journal",
+    description:
+      "The trading journal that only takes 60 seconds a day. Log daily results, track your edge, and share beautiful recap cards.",
     site: "@pnlcard",
   },
   robots: {
