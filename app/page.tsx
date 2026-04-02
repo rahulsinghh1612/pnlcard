@@ -966,7 +966,7 @@ export default function LandingPage() {
 
       {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 border-t border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1">
+        <div className="md:hidden fixed top-14 sm:top-16 left-0 right-0 z-50 mx-2 rounded-b-2xl border border-t-0 border-border bg-white/95 backdrop-blur-lg px-4 py-4 flex flex-col gap-1 shadow-lg">
           <a
             href="#how-it-works"
             className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -989,13 +989,6 @@ export default function LandingPage() {
             Pricing
           </a>
           <div className="h-px bg-border my-1" />
-          <Link
-            href="/login"
-            className="px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Sign in
-          </Link>
           <Link
             href="/signup"
             className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
