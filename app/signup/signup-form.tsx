@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeRedirect } from "@/lib/safe-redirect";
 import { validateEmail } from "@/lib/email-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 export function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/dashboard";
+  const redirect = safeRedirect(searchParams.get("redirect"));
 
   const [isLoading, setIsLoading] = useState(false);
   const [googleClicked, setGoogleClicked] = useState(false);

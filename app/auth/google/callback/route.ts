@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeRedirect } from "@/lib/safe-redirect";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -15,6 +16,15 @@ export async function GET(request: Request) {
   const state = searchParams.get("state");
   const errorParam = searchParams.get("error");
 
+  // Read and immediately clean up OAuth cookies on every path
+  const cookieStore = await cookies();
+  const storedState = cookieStore.get("google_oauth_state")?.value;
+  const nextRaw = cookieStore.get("google_oauth_next")?.value ?? null;
+  cookieStore.delete("google_oauth_state");
+  cookieStore.delete("google_oauth_next");
+
+  const next = safeRedirect(nextRaw);
+
   // Google returned an error (e.g. user denied consent)
   if (errorParam) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
@@ -25,19 +35,9 @@ export async function GET(request: Request) {
   }
 
   // CSRF: validate state matches the cookie
-  const cookieStore = await cookies();
-  const storedState = cookieStore.get("google_oauth_state")?.value;
-
   if (!storedState || storedState !== state) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
-
-  // Delete the state cookie
-  cookieStore.delete("google_oauth_state");
-
-  // Read the redirect destination (stored alongside state)
-  const next = cookieStore.get("google_oauth_next")?.value ?? "/dashboard";
-  cookieStore.delete("google_oauth_next");
 
   try {
     // Exchange authorization code for tokens

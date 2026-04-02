@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeRedirect } from "@/lib/safe-redirect";
 import { NextResponse } from "next/server";
 
 /**
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const next = safeRedirect(searchParams.get("next"));
 
   // Email confirmation flow (signup, magic link, recovery)
   if (tokenHash && type) {
