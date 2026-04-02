@@ -1016,10 +1016,10 @@ export default function LandingPage() {
               <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
                 60 seconds
               </span>{" "}
-              a day
+              a day.
             </h1>
             <p className="mt-4 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
-              Log daily results (not every trade). Built for simplicity and consistency.
+              Log daily results. Built for simplicity and consistency.
             </p>
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link
@@ -1285,7 +1285,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
               >
-                Start your 14-day Free Trial
+                Start your 14-days Free Trial
               </Link>
               {billingCycle === "monthly" && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -1311,7 +1311,7 @@ export default function LandingPage() {
       <section className="relative py-16 sm:py-32 bg-page overflow-hidden">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Start your 14-day Free Trial{" "}
+            Start your 14-days Free Trial{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               Today.
             </span>
