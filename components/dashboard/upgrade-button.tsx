@@ -298,7 +298,7 @@ export function UpgradeButton({
               Save 33%
             </span>
             <p className="mt-1 text-xs text-muted-foreground">
-              7-day free trial with card required
+              7-day free trial. Card required. A small temporary authorization may appear before the annual charge starts after day 7.
             </p>
           </button>
         </div>
