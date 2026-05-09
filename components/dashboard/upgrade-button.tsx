@@ -79,6 +79,14 @@ function loadRazorpayScript(): Promise<void> {
   });
 }
 
+function waitForNextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
 export function UpgradeButton({
   userEmail,
   userName,
@@ -127,6 +135,7 @@ export function UpgradeButton({
     setShowPicker(false);
 
     try {
+      await waitForNextFrame();
       await loadRazorpayScript();
 
       const res = await fetch("/api/razorpay/create-subscription", {
