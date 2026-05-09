@@ -1242,9 +1242,11 @@ export default function LandingPage() {
                 transitionDelay: pricing.visible ? "150ms" : "0ms",
               }}
             >
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
-                {billingCycle === "yearly" ? "7-DAY FREE TRIAL" : "NO FREE TRIAL"}
-              </div>
+              {billingCycle === "yearly" && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
+                  7-DAY FREE TRIAL
+                </div>
+              )}
               <h3 className="text-xl font-bold text-foreground">PnLCard</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 Everything you need to journal your trades
@@ -1303,11 +1305,11 @@ export default function LandingPage() {
                   </button>
                 </p>
               )}
-              <p className="mt-4 text-center text-xs text-muted-foreground">
-                {billingCycle === "yearly"
-                  ? "Card required to start the yearly trial. Cancel before day 7 to avoid the annual charge."
-                  : "Monthly plan bills immediately. No free trial on monthly."}
-              </p>
+              {billingCycle === "yearly" && (
+                <p className="mt-4 text-center text-xs text-muted-foreground">
+                  Card required to start the yearly trial. Cancel before day 7 to avoid the annual charge.
+                </p>
+              )}
             </div>
           </div>
         </div>
