@@ -55,6 +55,7 @@ type UpgradeButtonProps = {
   defaultCycle?: "monthly" | "yearly";
   directCycle?: "monthly" | "yearly";
   autoStartCycle?: "monthly" | "yearly";
+  beforeOpenCheckout?: () => void;
   className?: string;
   children?: React.ReactNode;
   /** Align dropdown to right edge (for header use). Default: left */
@@ -87,12 +88,19 @@ function waitForNextFrame(): Promise<void> {
   });
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 export function UpgradeButton({
   userEmail,
   userName,
   defaultCycle = "yearly",
   directCycle,
   autoStartCycle,
+  beforeOpenCheckout,
   className,
   children,
   dropdownAlign = "left",
@@ -135,7 +143,9 @@ export function UpgradeButton({
     setShowPicker(false);
 
     try {
+      beforeOpenCheckout?.();
       await waitForNextFrame();
+      await wait(250);
       await loadRazorpayScript();
 
       const res = await fetch("/api/razorpay/create-subscription", {
@@ -225,7 +235,7 @@ export function UpgradeButton({
       );
       setLoading(false);
     }
-  }, [userEmail, userName, router]);
+  }, [beforeOpenCheckout, userEmail, userName, router]);
 
   useEffect(() => {
     if (!autoStartCycle || autoStartedRef.current) return;

@@ -311,6 +311,7 @@ export function CardPreviewModal({
                   <UpgradeButton
                     userEmail={userEmail}
                     userName={userName}
+                    beforeOpenCheckout={() => onOpenChange(false)}
                     dropdownPosition="top"
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
