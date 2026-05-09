@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { startTransition, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -120,6 +120,8 @@ type TradeEntryModalProps = {
   onGenerateCard?: () => void;
   /** Called after a new trade is saved with the new total trade count. Used for milestone upgrade prompts. */
   onTradeSaved?: (newTotalCount: number) => void;
+  onTradeCommitted?: (trade: TradeEntry) => void;
+  onTradeDeleted?: (tradeId: string) => void;
   /** When true, submit shows toast and closes without saving to DB (for landing demo) */
   demoMode?: boolean;
   loggingStreak?: number;
@@ -138,6 +140,8 @@ export function TradeEntryModal({
   onEditExisting,
   onGenerateCard,
   onTradeSaved,
+  onTradeCommitted,
+  onTradeDeleted,
   demoMode = false,
   loggingStreak = 0,
   weekLogCount = 0,
@@ -275,19 +279,33 @@ export function TradeEntryModal({
       const supabase = createClient();
 
       if (isEdit) {
-        const { error } = await supabase
+        const { data: savedTrade, error } = await supabase
           .from("trades")
           .update(payload)
+          .select(
+            "id, trade_date, num_trades, net_pnl, charges, capital_deployed, note, execution_tag, discipline_score"
+          )
           .eq("id", existingTrade.id)
-          .eq("user_id", userId);
+          .eq("user_id", userId)
+          .single();
 
         if (error) throw error;
+        if (savedTrade) {
+          onTradeCommitted?.(savedTrade);
+        }
       } else {
-        const { error } = await supabase
+        const { data: savedTrade, error } = await supabase
           .from("trades")
-          .insert({ user_id: userId, ...payload });
+          .insert({ user_id: userId, ...payload })
+          .select(
+            "id, trade_date, num_trades, net_pnl, charges, capital_deployed, note, execution_tag, discipline_score"
+          )
+          .single();
 
         if (error) throw error;
+        if (savedTrade) {
+          onTradeCommitted?.(savedTrade);
+        }
       }
 
       setShowReward(true);
@@ -300,8 +318,10 @@ export function TradeEntryModal({
         if (!isEdit && onTradeSaved && newTotalCount >= 1) {
           onTradeSaved(newTotalCount);
         }
+      }, 700);
+      startTransition(() => {
         router.refresh();
-      }, 2000);
+      });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Something went wrong.";
@@ -324,9 +344,12 @@ export function TradeEntryModal({
 
       if (error) throw error;
       toast.success("Trade deleted.");
+      onTradeDeleted?.(existingTrade.id);
       setShowDeleteConfirm(false);
       onOpenChange(false);
-      router.refresh();
+      startTransition(() => {
+        router.refresh();
+      });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Something went wrong.";

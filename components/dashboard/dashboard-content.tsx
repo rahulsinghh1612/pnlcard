@@ -93,7 +93,17 @@ export function DashboardContent({
   loggingStreak = 0,
   debriefReady = false,
 }: DashboardContentProps) {
-  const effectiveTrades = demoMode && demoTrades ? demoTrades : trades;
+  const sourceTrades = useMemo(
+    () => (demoMode && demoTrades ? demoTrades : trades),
+    [demoMode, demoTrades, trades]
+  );
+  const [localTrades, setLocalTrades] = useState<Trade[]>(sourceTrades);
+
+  useEffect(() => {
+    setLocalTrades(sourceTrades);
+  }, [sourceTrades]);
+
+  const effectiveTrades = localTrades;
 
   const weekLogCount = useMemo(() => {
     const now = new Date();
@@ -176,6 +186,17 @@ export function DashboardContent({
   const [dailyIdx, setDailyIdx] = useState(0);
   const [weeklyIdx, setWeeklyIdx] = useState(0);
   const [monthlyIdx, setMonthlyIdx] = useState(0);
+
+  const upsertTrade = (trade: Trade) => {
+    setLocalTrades((current) => {
+      const remaining = current.filter((entry) => entry.id !== trade.id);
+      return [...remaining, trade].sort((a, b) => b.trade_date.localeCompare(a.trade_date));
+    });
+  };
+
+  const removeTrade = (tradeId: string) => {
+    setLocalTrades((current) => current.filter((trade) => trade.id !== tradeId));
+  };
 
   const displayModalOpen = forceModalOpen ?? modalOpen;
 
@@ -788,6 +809,12 @@ export function DashboardContent({
             setMilestoneShown(newTotalCount);
             setMilestoneModalOpen(true);
           } catch {}
+        }}
+        onTradeCommitted={(trade) => {
+          upsertTrade(trade);
+        }}
+        onTradeDeleted={(tradeId) => {
+          removeTrade(tradeId);
         }}
       />
 
