@@ -826,7 +826,6 @@ export function DashboardContent({
         weekMondayStr={cardPreviewWeekMonday}
         monthDateStr={cardPreviewMonthDate}
         allTrades={effectiveTrades}
-        baseUrl={baseUrl}
         profile={{
           x_handle: xHandle,
           trading_capital: tradingCapital,

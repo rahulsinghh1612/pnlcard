@@ -41,7 +41,6 @@ type CardPreviewModalProps = {
   weekMondayStr?: string | null;
   monthDateStr?: string | null;
   allTrades: Trade[];
-  baseUrl: string;
   profile: {
     x_handle: string | null;
     trading_capital: number | null;
@@ -117,7 +116,6 @@ export function CardPreviewModal({
   weekMondayStr,
   monthDateStr,
   allTrades,
-  baseUrl,
   profile,
   accessStatus = "expired",
   userEmail = "",
@@ -203,37 +201,6 @@ export function CardPreviewModal({
     setImgError(false);
   }, [imgSrc]);
 
-  const shareUrl = useMemo(() => {
-    if (cardType === "daily" && trade) {
-      return `${baseUrl}/card/${trade.id}`;
-    }
-    if (cardType === "weekly" && weekMondayStr) {
-      const monday = new Date(weekMondayStr + "T12:00:00");
-      const sunday = new Date(monday);
-      sunday.setDate(sunday.getDate() + 6);
-      const weekTrade = allTrades.find((t) => {
-        const d = new Date(t.trade_date + "T12:00:00");
-        return d >= monday && d <= sunday;
-      });
-      if (weekTrade) {
-        return `${baseUrl}/card/weekly/${weekMondayStr}?t=${weekTrade.id}`;
-      }
-    }
-    if (cardType === "monthly" && monthDateStr) {
-      const monthStr = monthDateStr.slice(0, 7);
-      const monthStart = new Date(monthDateStr + "T12:00:00");
-      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-      const monthTrade = allTrades.find((t) => {
-        const d = new Date(t.trade_date + "T12:00:00");
-        return d >= monthStart && d <= monthEnd;
-      });
-      if (monthTrade) {
-        return `${baseUrl}/card/monthly/${monthStr}?t=${monthTrade.id}`;
-      }
-    }
-    return null;
-  }, [baseUrl, cardType, trade, weekMondayStr, monthDateStr, allTrades]);
-
   const downloadFilename = useMemo(() => {
     if (cardType === "daily" && dailyParams) {
       return `PnLCard-Daily-${dailyParams.date.replace(/\s/g, "-")}.png`;
@@ -271,38 +238,6 @@ export function CardPreviewModal({
     URL.revokeObjectURL(url);
     toast.success("Card downloaded!");
   }, [fetchCardBlob, downloadFilename, downloadFormat]);
-
-  const handleShareX = useCallback(async () => {
-    const shareText = shareUrl
-      ? `Check out my PnL Card! ${shareUrl} #PnLCard #Trading`
-      : "Check out my PnL Card! #PnLCard #Trading";
-
-    const blob = await fetchCardBlob();
-    if (!blob) return;
-
-    const file = new File([blob], downloadFilename, { type: "image/png" });
-
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({
-          text: shareText,
-          files: [file],
-        });
-        toast.success("Shared successfully!");
-        return;
-      } catch (err) {
-        if ((err as Error).name === "AbortError") return;
-      }
-    }
-
-    const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-    window.open(tweetUrl, "_blank", "noopener,noreferrer");
-    if (shareUrl) {
-      toast.success("Opening X — the link will show your card preview!");
-    } else {
-      toast.success("Opening X — paste the link after sharing to show your card!");
-    }
-  }, [fetchCardBlob, downloadFilename, shareUrl]);
 
   const handleEdit = useCallback(() => {
     if (!trade) return;
@@ -522,17 +457,6 @@ export function CardPreviewModal({
               >
                 <Download className="h-3.5 w-3.5" />
                 Download
-              </button>
-
-              <button
-                onClick={handleShareX}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
-                title="Share to X"
-              >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-                Share
               </button>
 
               {cardType === "daily" && trade && (
