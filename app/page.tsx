@@ -1319,7 +1319,7 @@ export default function LandingPage() {
       <section className="relative py-16 sm:py-32 bg-page overflow-hidden">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Start your 7-day yearly trial{" "}
+            Start your free trial{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               Today.
             </span>
