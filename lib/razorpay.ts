@@ -1,6 +1,8 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
+export const YEARLY_TRIAL_DAYS = 7;
+
 /**
  * Server-side Razorpay client instance.
  * Only import this in API routes / Server Components — never on the client.
@@ -42,6 +44,28 @@ export function verifyWebhookSignature(
   return crypto.timingSafeEqual(
     Buffer.from(expected),
     Buffer.from(signature)
+  );
+}
+
+export function verifySubscriptionCheckoutSignature(params: {
+  paymentId: string;
+  subscriptionId: string;
+  signature: string;
+}): boolean {
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) {
+    throw new Error("Missing RAZORPAY_KEY_SECRET environment variable");
+  }
+
+  const payload = `${params.paymentId}|${params.subscriptionId}`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected),
+    Buffer.from(params.signature)
   );
 }
 

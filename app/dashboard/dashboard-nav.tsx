@@ -20,7 +20,7 @@ interface DashboardNavProps {
 const BADGE_CONFIG: Record<AccessStatus, { label: string; classes: string }> = {
   subscribed: { label: "Pro", classes: "bg-amber-100 text-amber-700" },
   trial: { label: "Trial", classes: "bg-blue-100 text-blue-700" },
-  expired: { label: "Expired", classes: "bg-red-100 text-red-700" },
+  expired: { label: "Free", classes: "bg-red-100 text-red-700" },
 };
 
 export function DashboardNav({ displayName, accessStatus = "expired" }: DashboardNavProps) {

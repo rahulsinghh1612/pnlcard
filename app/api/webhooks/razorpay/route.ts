@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * Razorpay sends webhook events here when subscription-related things happen.
  * We handle three key events:
  *
+ *   subscription.authenticated — card authorised, waiting for future trial-end charge
  *   subscription.activated  — first payment succeeded, subscription is active
  *   subscription.charged    — recurring payment succeeded (renewal)
  *   subscription.cancelled  — user or system cancelled the subscription
@@ -63,7 +64,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (
+    if (eventType === "subscription.authenticated") {
+      await handleSubscriptionAuthenticated(supabase, event);
+    } else if (
       eventType === "subscription.activated" ||
       eventType === "subscription.charged"
     ) {
@@ -77,6 +80,73 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Webhook processing error:", error);
     return NextResponse.json({ status: "ok" });
+  }
+}
+
+async function handleSubscriptionAuthenticated(
+  supabase: ReturnType<typeof createAdminClient> & object,
+  event: Record<string, unknown>
+) {
+  const payload = event.payload as Record<string, unknown>;
+  const subscription = (payload.subscription as Record<string, unknown>)
+    ?.entity as Record<string, unknown>;
+
+  if (!subscription) {
+    console.error("No subscription entity in webhook payload");
+    return;
+  }
+
+  const subscriptionId = subscription.id as string;
+  const notes = subscription.notes as Record<string, string> | undefined;
+  const userId = notes?.user_id;
+
+  if (!userId) {
+    console.error("No user_id in subscription notes:", subscriptionId);
+    return;
+  }
+
+  const planType = (notes?.cycle as "monthly" | "yearly") ?? "monthly";
+  const currentStart = subscription.current_start
+    ? new Date((subscription.current_start as number) * 1000).toISOString()
+    : null;
+  const trialEndsAt = subscription.charge_at
+    ? new Date((subscription.charge_at as number) * 1000).toISOString()
+    : subscription.start_at
+      ? new Date((subscription.start_at as number) * 1000).toISOString()
+      : null;
+
+  const { error: subError } = await supabase
+    .from("subscriptions")
+    .upsert(
+      {
+        user_id: userId,
+        provider: "razorpay",
+        provider_subscription_id: subscriptionId,
+        plan_type: planType,
+        status: "authenticated",
+        current_period_start: currentStart,
+        current_period_end: trialEndsAt,
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (subError) {
+    console.error("Error upserting authenticated subscription:", subError);
+  }
+
+  if (planType === "yearly" && trialEndsAt) {
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        plan: "free",
+        plan_expires_at: null,
+        trial_ends_at: trialEndsAt,
+      })
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error updating profile trial:", profileError);
+    }
   }
 }
 
@@ -141,6 +211,7 @@ async function handleSubscriptionActivated(
     .update({
       plan: "premium",
       plan_expires_at: currentEnd,
+      trial_ends_at: null,
     })
     .eq("id", userId);
 
@@ -180,6 +251,10 @@ async function handleSubscriptionCancelled(
     return;
   }
 
+  const currentEnd = subscription.current_end
+    ? new Date((subscription.current_end as number) * 1000).toISOString()
+    : null;
+
   // Mark subscription as cancelled — no more renewals
   const { error: subError } = await supabase
     .from("subscriptions")
@@ -191,5 +266,20 @@ async function handleSubscriptionCancelled(
     console.error("Error updating subscription status:", subError);
   }
 
-  // Do NOT downgrade the profile. User retains premium until plan_expires_at.
+  if (currentEnd && new Date(currentEnd) > new Date()) {
+    return;
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({
+      plan: "free",
+      plan_expires_at: null,
+      trial_ends_at: null,
+    })
+    .eq("id", userId);
+
+  if (profileError) {
+    console.error("Error downgrading cancelled trial profile:", profileError);
+  }
 }

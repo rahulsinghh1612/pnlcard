@@ -17,18 +17,21 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Crown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { isPremiumUser } from "@/lib/utils";
+import { getUserAccessStatus } from "@/lib/utils";
+import type { AccessStatus } from "@/lib/types";
 
-async function checkPremiumStatus(): Promise<boolean> {
+async function checkAccessStatus(): Promise<AccessStatus> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+  if (!user) return "expired";
   const { data } = await supabase
     .from("profiles")
-    .select("plan, plan_expires_at")
+    .select("plan, plan_expires_at, trial_ends_at")
     .eq("id", user.id)
     .single();
-  return isPremiumUser(data ?? { plan: null, plan_expires_at: null });
+  return getUserAccessStatus(
+    data ?? { plan: null, plan_expires_at: null, trial_ends_at: null }
+  );
 }
 
 declare global {
@@ -39,6 +42,12 @@ declare global {
     };
   }
 }
+
+type RazorpayCheckoutResponse = {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
+};
 
 type UpgradeButtonProps = {
   userEmail: string;
@@ -83,14 +92,19 @@ export function UpgradeButton({
   const [cycle, setCycle] = useState<"monthly" | "yearly">(defaultCycle);
   const [showPicker, setShowPicker] = useState(false);
 
-  const pollForPremium = async () => {
+  const pollForAccess = async () => {
     let attempts = 0;
     const maxAttempts = 15;
     const check = async () => {
       attempts++;
-      const isPremium = await checkPremiumStatus();
-      if (isPremium) {
+      const status = await checkAccessStatus();
+      if (status === "subscribed") {
         toast.success("Pro activated!");
+        router.refresh();
+        return;
+      }
+      if (status === "trial") {
+        toast.success("Your 7-day yearly trial has started!");
         router.refresh();
         return;
       }
@@ -135,11 +149,47 @@ export function UpgradeButton({
         theme: {
           color: "#059669",
         },
-        handler: () => {
-          toast.success(
-            "Payment successful! Activating Pro features..."
-          );
-          pollForPremium();
+        handler: async (response: RazorpayCheckoutResponse) => {
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify-subscription", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                cycle: selectedCycle,
+                paymentId: response.razorpay_payment_id,
+                subscriptionId: response.razorpay_subscription_id,
+                signature: response.razorpay_signature,
+              }),
+            });
+
+            if (!verifyRes.ok) {
+              const data = await verifyRes.json().catch(() => ({}));
+              throw new Error(data.error || "Payment verification failed");
+            }
+
+            const data = await verifyRes.json();
+            if (data.status === "subscribed") {
+              toast.success("Pro activated!");
+              router.refresh();
+              setLoading(false);
+              return;
+            }
+            if (data.status === "trial") {
+              toast.success("Your 7-day yearly trial has started!");
+              router.refresh();
+              setLoading(false);
+              return;
+            }
+
+            toast.success("Payment successful! Updating your access...");
+            pollForAccess();
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            toast.error(
+              error instanceof Error ? error.message : "Payment verification failed"
+            );
+            setLoading(false);
+          }
         },
         modal: {
           ondismiss: () => {
@@ -212,7 +262,7 @@ export function UpgradeButton({
             }`}
           >
             <span className="font-semibold">₹249/month</span>
-            <span className="text-muted-foreground ml-1.5">Billed monthly</span>
+            <span className="text-muted-foreground ml-1.5">Billed monthly • No free trial</span>
           </button>
           <button
             type="button"
@@ -230,6 +280,9 @@ export function UpgradeButton({
             <span className="text-emerald-600 ml-1.5 text-xs font-medium">
               Save 33%
             </span>
+            <p className="mt-1 text-xs text-muted-foreground">
+              7-day free trial with card required
+            </p>
           </button>
         </div>
       )}

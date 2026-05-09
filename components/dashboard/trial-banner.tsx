@@ -30,10 +30,10 @@ export function TrialBanner({
     >
       <p className="font-medium">
         {trialDaysRemaining === 0
-          ? "Your trial ends today!"
+          ? "Your yearly trial ends today!"
           : trialDaysRemaining === 1
-            ? "1 day left in your free trial"
-            : `${trialDaysRemaining} days left in your free trial`}
+            ? "1 day left in your 7-day yearly trial"
+            : `${trialDaysRemaining} days left in your 7-day yearly trial`}
       </p>
       <UpgradeButton
         userEmail={userEmail}

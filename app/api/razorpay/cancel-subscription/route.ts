@@ -54,10 +54,10 @@ export async function POST() {
     }
 
     const razorpay = getRazorpayInstance();
-    // cancel_at_cycle_end = true: user keeps access until end of paid period
+    const cancelAtCycleEnd = subscription.status === "active";
     await razorpay.subscriptions.cancel(
       subscription.provider_subscription_id,
-      true
+      cancelAtCycleEnd
     );
 
     // Mark subscription as cancelled — no more renewals
@@ -67,9 +67,13 @@ export async function POST() {
       .eq("user_id", user.id)
       .eq("provider_subscription_id", subscription.provider_subscription_id);
 
-    // Do NOT downgrade the profile. User has paid until current_period_end.
-    // Keep plan="premium" and plan_expires_at so they retain access until then.
-    // The isPremiumUser() helper checks plan_expires_at to revoke access when it passes.
+    if (subscription.status !== "active") {
+      await admin
+        .from("profiles")
+        .update({ plan: "free", plan_expires_at: null, trial_ends_at: null })
+        .eq("id", user.id);
+    }
+
     return NextResponse.json({ status: "cancelled" });
   } catch (error: unknown) {
     console.error("Error cancelling subscription:", error);

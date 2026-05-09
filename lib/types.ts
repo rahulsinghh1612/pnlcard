@@ -23,7 +23,7 @@ export interface Subscription {
   provider: string;
   provider_subscription_id: string | null;
   plan_type: "monthly" | "yearly";
-  status: "active" | "cancelled" | "expired";
+  status: "created" | "authenticated" | "active" | "pending" | "halted" | "cancelled" | "expired" | "completed";
   current_period_start: string | null;
   current_period_end: string | null;
   created_at: string;

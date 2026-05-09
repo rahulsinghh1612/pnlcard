@@ -35,15 +35,17 @@ export default async function SettingsPage() {
   );
   const expiresAt = profile?.plan_expires_at;
 
-  // Check subscription state: only show "Renews on" + Cancel when we have an active subscription
+  // Check subscription state: active = paid, authenticated = yearly trial awaiting first charge
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("status")
+    .select("status, plan_type, current_period_end")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   const hasActiveSubscription = subscription?.status === "active";
+  const hasTrialSubscription = subscription?.status === "authenticated";
+  const isYearlyTrial = accessStatus === "trial" && subscription?.plan_type === "yearly";
 
   return (
     <div className="space-y-8">
@@ -75,8 +77,8 @@ export default async function SettingsPage() {
                 {accessStatus === "subscribed"
                   ? "You have access to all features."
                   : accessStatus === "trial"
-                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} remaining in your free trial.`
-                    : "Your trial has ended. Subscribe to regain access."}
+                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left in your 7-day yearly trial. Cancel before it ends to avoid the annual charge.`
+                    : "No active plan. Subscribe to regain access."}
               </p>
             </div>
             <span
@@ -92,9 +94,21 @@ export default async function SettingsPage() {
                 ? "Pro"
                 : accessStatus === "trial"
                   ? "Trial"
-                  : "Trial Ended"}
+                  : "Free"}
             </span>
           </div>
+
+          {isYearlyTrial && profile?.trial_ends_at && (
+            <p className="text-xs text-muted-foreground">
+              Trial ends on{" "}
+              {new Date(profile.trial_ends_at).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+              . You&apos;ll be charged ₹1,999/year unless you cancel before then.
+            </p>
+          )}
 
           {accessStatus === "subscribed" && expiresAt && (
             <p className="text-xs text-muted-foreground">
@@ -107,7 +121,7 @@ export default async function SettingsPage() {
             </p>
           )}
 
-          {accessStatus !== "subscribed" && (
+          {accessStatus === "expired" && (
             <UpgradeButton
               userEmail={user.email ?? ""}
               userName={profile?.display_name ?? ""}
@@ -116,6 +130,10 @@ export default async function SettingsPage() {
 
           {accessStatus === "subscribed" && hasActiveSubscription && (
             <CancelSubscriptionButton />
+          )}
+
+          {hasTrialSubscription && (
+            <CancelSubscriptionButton mode="trial" />
           )}
 
           {accessStatus === "subscribed" && !hasActiveSubscription && expiresAt && (

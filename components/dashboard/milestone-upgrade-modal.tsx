@@ -13,15 +13,15 @@ import { Sparkles, BarChart3, CalendarDays } from "lucide-react";
 const MILESTONE_MESSAGES: Record<number, { title: string; subtitle: string }> = {
   1: {
     title: "Great start!",
-    subtitle: "Subscribe anytime to keep access after your trial ends.",
+    subtitle: "Start the yearly trial or subscribe monthly to unlock the full experience.",
   },
   5: {
     title: "You're building a habit!",
-    subtitle: "Make it permanent with a subscription. Don't lose your streak.",
+    subtitle: "Keep the momentum going with the yearly trial or a monthly subscription.",
   },
   10: {
     title: "10 trades logged!",
-    subtitle: "Don't lose your momentum \u2014 subscribe now to keep full access.",
+    subtitle: "Keep full access with the yearly trial or a monthly subscription.",
   },
 };
 
@@ -65,7 +65,7 @@ export function MilestoneUpgradeModal({
 
             <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left">
               {[
-                { icon: BarChart3, text: "Keep logging trades after trial" },
+                { icon: BarChart3, text: "Keep logging trades without interruptions" },
                 { icon: CalendarDays, text: "Weekly & monthly reviews" },
                 { icon: Sparkles, text: "All card types, no watermark" },
               ].map(({ icon: Icon, text }) => (

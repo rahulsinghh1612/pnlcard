@@ -292,7 +292,7 @@ export function CardPreviewModal({
                     Subscribe to continue
                   </p>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    Your trial has ended. Subscribe to generate cards, download recaps, and keep logging trades.
+                    Subscribe to generate cards, download recaps, and keep logging trades.
                   </p>
                 </div>
                 <ul className="mx-auto mt-4 max-w-xs space-y-2 text-left">

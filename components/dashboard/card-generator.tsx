@@ -182,7 +182,7 @@ export function CardGenerator({
       {isExpired && (
         <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <p className="text-sm text-red-800 flex-1">
-            Your trial has ended. Subscribe to generate and download cards.
+            Subscribe to generate and download cards.
           </p>
           <UpgradeButton
             userEmail={userEmail ?? ""}

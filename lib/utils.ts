@@ -32,7 +32,7 @@ export function getUserAccessStatus(profile: {
   trial_ends_at: string | null;
 }): AccessStatus {
   if (isSubscribed(profile)) return "subscribed";
-  if (!profile.trial_ends_at) return "trial"; // NULL = new account, treat as active trial
+  if (!profile.trial_ends_at) return "expired";
   if (new Date(profile.trial_ends_at) > new Date()) return "trial";
   return "expired";
 }

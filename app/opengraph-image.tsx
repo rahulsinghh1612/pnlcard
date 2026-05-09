@@ -113,7 +113,7 @@ export default async function Image() {
             borderRadius: 12,
           }}
         >
-          Start for Free
+          Get Started
         </div>
       </div>
     ),

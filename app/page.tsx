@@ -937,7 +937,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
               >
-                Start for Free
+                Get Started
               </Link>
             </div>
 
@@ -1006,7 +1006,7 @@ export default function LandingPage() {
           className="mt-1 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:bg-muted active:scale-[0.98]"
           onClick={closeMenu}
         >
-          Start for Free
+          Get Started
         </Link>
       </div>
 
@@ -1030,7 +1030,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="inline-flex items-center justify-center rounded-xl px-6 py-2.5 sm:px-7 sm:py-3 text-sm sm:text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98]"
               >
-                Start for Free
+                Get Started
               </Link>
             </div>
           </div>
@@ -1197,7 +1197,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              All features. 14 days. No card required.
+              Monthly bills immediately. Yearly includes a 7-day trial with card required.
             </p>
           </div>
 
@@ -1243,7 +1243,7 @@ export default function LandingPage() {
               }}
             >
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1 text-xs font-bold text-white tracking-wide">
-                14-DAY FREE TRIAL
+                {billingCycle === "yearly" ? "7-DAY FREE TRIAL" : "NO FREE TRIAL"}
               </div>
               <h3 className="text-xl font-bold text-foreground">PnLCard</h3>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -1289,7 +1289,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
               >
-                Start your 14-days Free Trial
+                {billingCycle === "yearly" ? "Start Your 7-Day Yearly Trial" : "Start Monthly Plan"}
               </Link>
               {billingCycle === "monthly" && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -1304,7 +1304,9 @@ export default function LandingPage() {
                 </p>
               )}
               <p className="mt-4 text-center text-xs text-muted-foreground">
-                No card required to start
+                {billingCycle === "yearly"
+                  ? "Card required to start the yearly trial. Cancel before day 7 to avoid the annual charge."
+                  : "Monthly plan bills immediately. No free trial on monthly."}
               </p>
             </div>
           </div>
@@ -1315,7 +1317,7 @@ export default function LandingPage() {
       <section className="relative py-16 sm:py-32 bg-page overflow-hidden">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
-            Start your 14-days Free Trial{" "}
+            Start your 7-day yearly trial{" "}
             <span className="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               Today.
             </span>
@@ -1325,7 +1327,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
             >
-              Start for Free
+              Get Started
             </Link>
           </div>
         </div>

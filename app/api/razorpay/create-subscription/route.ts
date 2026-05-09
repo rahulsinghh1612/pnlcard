@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getRazorpayInstance, getPlanId } from "@/lib/razorpay";
+import { getRazorpayInstance, getPlanId, YEARLY_TRIAL_DAYS } from "@/lib/razorpay";
 
 /**
  * POST /api/razorpay/create-subscription
@@ -41,11 +41,16 @@ export async function POST(request: NextRequest) {
 
     const razorpay = getRazorpayInstance();
     const planId = getPlanId(cycle);
+    const startAt =
+      cycle === "yearly"
+        ? Math.floor(Date.now() / 1000) + YEARLY_TRIAL_DAYS * 24 * 60 * 60
+        : undefined;
 
     const subscription = await razorpay.subscriptions.create({
       plan_id: planId,
       total_count: cycle === "monthly" ? 12 : 1,
       quantity: 1,
+      ...(startAt ? { start_at: startAt } : {}),
       notes: {
         user_id: user.id,
         user_email: user.email ?? "",
@@ -56,6 +61,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       subscriptionId: subscription.id,
       keyId: process.env.RAZORPAY_KEY_ID,
+      trialDays: cycle === "yearly" ? YEARLY_TRIAL_DAYS : 0,
     });
   } catch (error: unknown) {
     console.error("Error creating Razorpay subscription:", error);

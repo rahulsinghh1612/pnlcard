@@ -90,6 +90,7 @@ export default async function DashboardLayout({
       <TrialToastNudge
         trialDaysRemaining={trialDaysRemaining}
         accessStatus={accessStatus}
+        hasTrialHistory={profile.trial_ends_at != null}
       />
     </div>
   );

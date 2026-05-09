@@ -190,7 +190,7 @@ export default async function MonthlyCardPage({ params, searchParams }: PageProp
         href="/"
         className="mt-3 text-sm font-medium text-primary hover:underline"
       >
-        Start for Free — PnLCard
+        Get Started — PnLCard
       </Link>
     </div>
   );
