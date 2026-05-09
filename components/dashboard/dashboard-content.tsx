@@ -10,6 +10,7 @@ import { CardPreviewModal } from "@/components/dashboard/card-preview-modal";
 import { TradeDetailModal } from "@/components/dashboard/trade-detail-modal";
 import { UpgradeToProModal } from "@/components/dashboard/upgrade-to-pro-modal";
 import { MilestoneUpgradeModal } from "@/components/dashboard/milestone-upgrade-modal";
+import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import type { AccessStatus } from "@/lib/types";
 import { Sparkles, CalendarDays, CalendarRange, CalendarCheck, ChevronLeft, ChevronRight, FileText, Plus } from "lucide-react";
 import Link from "next/link";
@@ -182,6 +183,7 @@ export function DashboardContent({
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [milestoneModalOpen, setMilestoneModalOpen] = useState(false);
   const [milestoneShown, setMilestoneShown] = useState<number | null>(null);
+  const [autoCheckoutCycle, setAutoCheckoutCycle] = useState<"monthly" | "yearly" | null>(null);
 
   const [dailyIdx, setDailyIdx] = useState(0);
   const [weeklyIdx, setWeeklyIdx] = useState(0);
@@ -278,9 +280,27 @@ export function DashboardContent({
 
   const searchParams = useSearchParams();
   useEffect(() => {
-    if (searchParams.get("log") === "1" && !demoMode) {
+    if (demoMode) return;
+
+    const nextAutoCheckout = searchParams.get("checkout");
+    const shouldOpenLog = searchParams.get("log") === "1";
+
+    if (nextAutoCheckout === "monthly" || nextAutoCheckout === "yearly") {
+      setAutoCheckoutCycle(nextAutoCheckout);
+    }
+
+    if (shouldOpenLog) {
       openCreateModal();
-      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    if (nextAutoCheckout || shouldOpenLog) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("checkout");
+      params.delete("log");
+      const nextUrl = params.toString()
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", nextUrl);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -849,6 +869,19 @@ export function DashboardContent({
         userName={displayName}
         redirectOnClose={false}
       />
+
+      {autoCheckoutCycle && (
+        <div className="hidden">
+          <UpgradeButton
+            userEmail={userEmail}
+            userName={displayName}
+            directCycle={autoCheckoutCycle}
+            autoStartCycle={autoCheckoutCycle}
+          >
+            Hidden auto checkout trigger
+          </UpgradeButton>
+        </div>
+      )}
 
       {milestoneShown != null && (
         <MilestoneUpgradeModal

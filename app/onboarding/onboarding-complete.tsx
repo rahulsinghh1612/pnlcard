@@ -1,10 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 
-export function OnboardingComplete() {
+export function OnboardingComplete({
+  selectedPlan,
+}: {
+  selectedPlan?: "monthly" | "yearly" | null;
+}) {
   const router = useRouter();
+
+  useEffect(() => {
+    if (!selectedPlan) return;
+
+    const timer = window.setTimeout(() => {
+      router.push(`/dashboard?checkout=${selectedPlan}`);
+      router.refresh();
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [router, selectedPlan]);
 
   return (
     <div className="flex flex-col items-center text-center animate-fade-in-up">
@@ -16,22 +32,32 @@ export function OnboardingComplete() {
         You&apos;re all set
       </h2>
       <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-xs">
-        Log today&apos;s result to start building your calendar.
+        {selectedPlan
+          ? `Preparing your ${selectedPlan === "yearly" ? "7-day free trial" : "monthly plan"} checkout.`
+          : "Log today&apos;s result to start building your calendar."}
       </p>
       <p className="mt-1 text-xs text-muted-foreground/70">
-        Takes less than 60 seconds.
+        {selectedPlan ? "You can still come back to the dashboard anytime." : "Takes less than 60 seconds."}
       </p>
 
       <div className="w-full mt-6 space-y-2">
         <button
           type="button"
           onClick={() => {
-            router.push("/dashboard?log=1");
+            router.push(
+              selectedPlan
+                ? `/dashboard?checkout=${selectedPlan}`
+                : "/dashboard?log=1"
+            );
             router.refresh();
           }}
           className="w-full rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
         >
-          Log your first trade
+          {selectedPlan
+            ? selectedPlan === "yearly"
+              ? "Start 7-day free trial"
+              : "Start monthly plan"
+            : "Log your first trade"}
         </button>
         <button
           type="button"

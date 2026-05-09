@@ -102,7 +102,9 @@ export function SignupForm() {
         router.push(redirect);
         router.refresh();
       } else {
-        router.push(`/signup/confirm?email=${encodeURIComponent(email)}`);
+        router.push(
+          `/signup/confirm?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirect)}`
+        );
       }
       setIsLoading(false);
     } catch {

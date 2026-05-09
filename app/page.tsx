@@ -875,6 +875,9 @@ export default function LandingPage() {
     window.scrollTo(0, 0);
   }, []);
 
+  const getPlanSignupHref = (cycle: "monthly" | "yearly") =>
+    `/signup?redirect=${encodeURIComponent(`/onboarding?plan=${cycle}`)}`;
+
   return (
     <CurrencyCtx.Provider value={currency}>
     <main id="top" className="min-h-screen bg-page overflow-x-hidden">
@@ -1210,7 +1213,7 @@ export default function LandingPage() {
             }`}
           >
             <div className="flex items-center rounded-full border border-border bg-muted/50 p-1">
-              {(["monthly", "yearly"] as const).map((cycle) => (
+              {(["yearly", "monthly"] as const).map((cycle) => (
                 <button
                   key={cycle}
                   onClick={() => setBillingCycle(cycle)}
@@ -1288,7 +1291,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/signup"
+                href={getPlanSignupHref(billingCycle)}
                 className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
               >
                 {billingCycle === "yearly" ? "Start 7-Day Free Trial" : "Start Monthly Plan"}
@@ -1326,7 +1329,7 @@ export default function LandingPage() {
           </h2>
           <div className="mt-8 flex justify-center">
             <Link
-              href="/signup"
+              href={getPlanSignupHref("yearly")}
               className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
             >
               Start 7-Day Free Trial

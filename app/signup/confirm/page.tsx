@@ -4,6 +4,7 @@ import { Suspense, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeRedirect } from "@/lib/safe-redirect";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Button } from "@/components/ui/button";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
@@ -12,6 +13,7 @@ function ConfirmContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const emailParam = searchParams.get("email") ?? "";
+  const redirect = safeRedirect(searchParams.get("redirect"), "/onboarding");
 
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -56,7 +58,7 @@ function ConfirmContent() {
         return;
       }
 
-      router.push("/onboarding");
+      router.push(redirect);
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");

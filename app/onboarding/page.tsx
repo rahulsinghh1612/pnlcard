@@ -9,7 +9,15 @@ export const metadata = {
   description: "Set up your PnLCard profile.",
 };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const planParam = searchParams?.plan;
+  const selectedPlan =
+    planParam === "monthly" || planParam === "yearly" ? planParam : null;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,7 +34,7 @@ export default async function OnboardingPage() {
     .single();
 
   if (profile) {
-    redirect("/dashboard");
+    redirect(selectedPlan ? `/dashboard?checkout=${selectedPlan}` : "/dashboard");
   }
 
   return (
@@ -44,7 +52,7 @@ export default async function OnboardingPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
-          <OnboardingFlow userId={user.id} />
+          <OnboardingFlow userId={user.id} selectedPlan={selectedPlan} />
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

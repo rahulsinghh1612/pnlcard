@@ -12,7 +12,7 @@
  * 6. We reload the page so the user sees their updated plan
  */
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Crown } from "lucide-react";
@@ -53,6 +53,8 @@ type UpgradeButtonProps = {
   userEmail: string;
   userName: string;
   defaultCycle?: "monthly" | "yearly";
+  directCycle?: "monthly" | "yearly";
+  autoStartCycle?: "monthly" | "yearly";
   className?: string;
   children?: React.ReactNode;
   /** Align dropdown to right edge (for header use). Default: left */
@@ -81,6 +83,8 @@ export function UpgradeButton({
   userEmail,
   userName,
   defaultCycle = "yearly",
+  directCycle,
+  autoStartCycle,
   className,
   children,
   dropdownAlign = "left",
@@ -91,8 +95,9 @@ export function UpgradeButton({
   const [loading, setLoading] = useState(false);
   const [cycle, setCycle] = useState<"monthly" | "yearly">(defaultCycle);
   const [showPicker, setShowPicker] = useState(false);
+  const autoStartedRef = useRef(false);
 
-  const pollForAccess = async () => {
+  const pollForAccess = useCallback(async () => {
     let attempts = 0;
     const maxAttempts = 15;
     const check = async () => {
@@ -115,9 +120,9 @@ export function UpgradeButton({
       }
     };
     setTimeout(check, 3000);
-  };
+  }, [router]);
 
-  const handleUpgrade = async (selectedCycle: "monthly" | "yearly") => {
+  const handleUpgrade = useCallback(async (selectedCycle: "monthly" | "yearly") => {
     setLoading(true);
     setShowPicker(false);
 
@@ -211,14 +216,26 @@ export function UpgradeButton({
       );
       setLoading(false);
     }
-  };
+  }, [userEmail, userName, router]);
+
+  useEffect(() => {
+    if (!autoStartCycle || autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    handleUpgrade(autoStartCycle);
+  }, [autoStartCycle, handleUpgrade]);
 
   return (
     <div className="relative">
       <button
         type="button"
         disabled={loading}
-        onClick={() => setShowPicker((prev) => !prev)}
+        onClick={() => {
+          if (directCycle) {
+            handleUpgrade(directCycle);
+            return;
+          }
+          setShowPicker((prev) => !prev);
+        }}
         className={
           className ??
           "w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"

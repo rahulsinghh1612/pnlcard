@@ -9,9 +9,13 @@ type Step = "slides" | "form" | "complete";
 
 interface OnboardingFlowProps {
   userId: string;
+  selectedPlan?: "monthly" | "yearly" | null;
 }
 
-export function OnboardingFlow({ userId }: OnboardingFlowProps) {
+export function OnboardingFlow({
+  userId,
+  selectedPlan = null,
+}: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>("slides");
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export function OnboardingFlow({ userId }: OnboardingFlowProps) {
   }
 
   if (step === "complete") {
-    return <OnboardingComplete />;
+    return <OnboardingComplete selectedPlan={selectedPlan} />;
   }
 
   return (
