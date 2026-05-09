@@ -865,7 +865,7 @@ export default function LandingPage() {
 
   const openMenu = () => { setBackdropVisible(true); setMobileMenuOpen(true); };
   const closeMenu = () => { setMobileMenuOpen(false); };
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
 
   const debriefFeature = useInView();
   const cardsFeature = useInView();
@@ -1262,11 +1262,11 @@ export default function LandingPage() {
                 ) : (
                   <>
                     <span className="text-4xl font-extrabold tracking-tight text-foreground">
-                      {currency.isINR ? "₹1,999" : "$24"}
+                      {currency.isINR ? "₹167" : "$2"}
                     </span>
-                    <span className="text-muted-foreground">/year</span>
+                    <span className="text-muted-foreground">/month</span>
                     <p className="mt-1 text-xs text-emerald-600 font-medium">
-                      {currency.isINR ? "₹167/mo" : "$2/mo"} &mdash; save {currency.isINR ? "₹989" : "$12"} vs monthly
+                      Yearly: {currency.isINR ? "₹1,999" : "$24"} billed annually &mdash; save {currency.isINR ? "₹989" : "$12"} vs monthly
                     </p>
                   </>
                 )}
@@ -1291,7 +1291,7 @@ export default function LandingPage() {
                 href="/signup"
                 className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
               >
-                {billingCycle === "yearly" ? "Start Your 7-Day Yearly Trial" : "Start Monthly Plan"}
+                {billingCycle === "yearly" ? "Start 7-Day Free Trial" : "Start Monthly Plan"}
               </Link>
               {billingCycle === "monthly" && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -1329,7 +1329,7 @@ export default function LandingPage() {
               href="/signup"
               className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-base font-semibold border border-slate-300 bg-white text-slate-900 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-muted hover:shadow-md active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
             >
-              Get Started
+              Start 7-Day Free Trial
             </Link>
           </div>
         </div>
