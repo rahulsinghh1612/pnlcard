@@ -1200,7 +1200,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Monthly bills immediately. Yearly includes a 7-day trial with card required.
+              Monthly bills immediately. Yearly includes a 7-day free trial for eligible users.
             </p>
           </div>
 
@@ -1310,7 +1310,7 @@ export default function LandingPage() {
               )}
               {billingCycle === "yearly" && (
                 <p className="mt-4 text-center text-xs text-muted-foreground">
-                  A temporary ₹5 authorization is required to start the trial and will be auto-refunded. Cancel before day 7 to avoid the ₹1,999 annual charge.
+                  Card required. Cancel before Day 7 to avoid the ₹1,999 annual charge.
                 </p>
               )}
             </div>

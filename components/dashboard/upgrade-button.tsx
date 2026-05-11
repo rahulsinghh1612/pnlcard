@@ -404,7 +404,7 @@ export function UpgradeButton({
             </p>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
               {yearlyTrialEligible
-                ? "₹5 temporary authorization • Auto-refunded • Annual billing starts after Day 7"
+                ? "Card required • Annual billing starts after Day 7"
                 : "Billed yearly • No free trial"}
             </p>
           </button>

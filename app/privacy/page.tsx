@@ -23,7 +23,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-sm text-muted-foreground">
-          Last updated: February 22, 2026
+          Last updated: May 11, 2026
         </p>
 
         <section className="mt-10 space-y-6 text-sm text-foreground/80 leading-relaxed">
@@ -60,8 +60,10 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Payment information:</strong> Subscription status and
-                billing period. Payment card details are processed by Razorpay
-                and never stored on our servers.
+                billing period, plan type, cancellation status, renewal or trial
+                end date, and whether a yearly free trial has already been used.
+                Payment method details are processed by Razorpay and are never
+                stored on our servers.
               </li>
               <li>
                 <strong>Usage data:</strong> Pages visited and features used,
@@ -81,6 +83,10 @@ export default function PrivacyPage() {
                 stats).
               </li>
               <li>To process subscription payments via Razorpay.</li>
+              <li>
+                To manage free trial eligibility, renewals, cancellations, and
+                subscription access.
+              </li>
               <li>
                 To send account-related emails (welcome, subscription
                 confirmation, cancellation).
@@ -128,8 +134,15 @@ export default function PrivacyPage() {
             <p>
               Your data is retained as long as your account exists. You can
               delete your account at any time from the Settings page, which
-              permanently removes all your data (profile, trades, and
-              subscription records).
+              permanently removes your in-app profile and trade records.
+            </p>
+            <p className="mt-2">
+              We may retain limited billing and trial eligibility records after
+              account deletion, such as normalized email, provider subscription
+              identifiers, subscription status, and whether the yearly free
+              trial has been used. We keep this limited history to prevent
+              duplicate free trials, resolve billing disputes, and comply with
+              payment, tax, accounting, and fraud-prevention obligations.
             </p>
           </div>
 
@@ -151,7 +164,10 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 space-y-1 mt-2">
               <li>Access all data we hold about you.</li>
               <li>Request correction of inaccurate data.</li>
-              <li>Delete your account and all associated data.</li>
+              <li>
+                Delete your account and in-app trading data, subject to limited
+                billing and legal retention described above.
+              </li>
               <li>Export your trade data.</li>
             </ul>
           </div>

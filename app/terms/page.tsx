@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — PnLCard",
+  title: "Terms of Use — PnLCard",
   description: "Terms and conditions for using PnLCard.",
 };
 
@@ -20,10 +20,10 @@ export default function TermsPage() {
 
       <article className="mx-auto max-w-3xl px-6 py-16 prose prose-slate prose-sm">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Terms of Service
+          Terms of Use
         </h1>
         <p className="text-sm text-muted-foreground">
-          Last updated: February 22, 2026
+          Last updated: May 11, 2026
         </p>
 
         <section className="mt-10 space-y-6 text-sm text-foreground/80 leading-relaxed">
@@ -33,7 +33,7 @@ export default function TermsPage() {
             </h2>
             <p>
               By using PnLCard (&quot;the Service&quot;), operated by Next
-              Alphabet, you agree to these Terms of Service. If you do not
+              Alphabet, you agree to these Terms of Use. If you do not
               agree, please do not use the Service.
             </p>
           </div>
@@ -78,6 +78,12 @@ export default function TermsPage() {
               monthly recap cards, your X handle on cards, and no PnLCard
               watermark. Pricing is ₹249/month or ₹1,999/year.
             </p>
+            <p className="mt-2">
+              A one-time 7-day free trial may be available on the yearly plan
+              for eligible first-time customers. Monthly plans do not include a
+              free trial. If you have already used the yearly free trial, any
+              new yearly subscription begins billing immediately.
+            </p>
           </div>
 
           <div>
@@ -90,13 +96,26 @@ export default function TermsPage() {
                 Rupees (INR).
               </li>
               <li>
+                Monthly subscriptions are ₹249 per month and begin billing
+                immediately.
+              </li>
+              <li>
+                Yearly subscriptions are ₹1,999 per year. Eligible users may
+                start with a one-time 7-day free trial before the annual charge.
+              </li>
+              <li>
                 Subscriptions auto-renew at the end of each billing period
                 (monthly or yearly) unless cancelled.
               </li>
               <li>
                 You can cancel your subscription at any time from the Settings
-                page. Cancellation takes effect at the end of the current billing
-                period.
+                page. Cancelling a paid subscription stops future renewal and
+                keeps Pro features active until the end of the current paid
+                billing period.
+              </li>
+              <li>
+                Cancelling a yearly free trial stops the upcoming annual charge.
+                It does not automatically start a monthly subscription.
               </li>
               <li>
                 We reserve the right to change pricing with 30 days advance
@@ -115,6 +134,12 @@ export default function TermsPage() {
                 You can cancel your Pro subscription at any time from the
                 Settings page. Your Pro features remain active until the end
                 of your current billing period.
+              </li>
+              <li>
+                If you cancel during an eligible yearly free trial, the annual
+                charge is stopped and trial access may remain available until
+                the original trial end date. The yearly free trial is considered
+                used once started and cannot be claimed again.
               </li>
               <li>
                 No refunds are issued for partial billing periods or unused time.
