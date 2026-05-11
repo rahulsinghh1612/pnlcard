@@ -130,6 +130,7 @@ export function UpgradeButton({
   const [showPicker, setShowPicker] = useState(false);
   const [yearlyTrialEligible, setYearlyTrialEligible] = useState(true);
   const autoStartedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const pollForAccess = useCallback(async () => {
     let attempts = 0;
@@ -293,8 +294,36 @@ export function UpgradeButton({
     handleUpgrade(autoStartCycle);
   }, [autoStartCycle, handleUpgrade]);
 
+  useEffect(() => {
+    if (!showPicker) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (!containerRef.current?.contains(target)) {
+        setShowPicker(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showPicker]);
+
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         disabled={loading}
@@ -375,7 +404,7 @@ export function UpgradeButton({
             </p>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
               {yearlyTrialEligible
-                ? "Card needed • Annual billing starts after Day 7"
+                ? "₹5 temporary authorization • Auto-refunded • Annual billing starts after Day 7"
                 : "Billed yearly • No free trial"}
             </p>
           </button>

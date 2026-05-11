@@ -1310,7 +1310,7 @@ export default function LandingPage() {
               )}
               {billingCycle === "yearly" && (
                 <p className="mt-4 text-center text-xs text-muted-foreground">
-                  Card required to start the trial. Razorpay may show a small temporary authorization now. Cancel before day 7 to avoid the ₹1,999 annual charge.
+                  A temporary ₹5 authorization is required to start the trial and will be auto-refunded. Cancel before day 7 to avoid the ₹1,999 annual charge.
                 </p>
               )}
             </div>
