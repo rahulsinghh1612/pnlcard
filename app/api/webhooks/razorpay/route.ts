@@ -305,6 +305,7 @@ async function handleSubscriptionCancelled(
   const notes = subscription.notes as Record<string, string> | undefined;
   const userId = notes?.user_id;
   const normalizedEmail = normalizeBillingEmail(notes?.user_email);
+  const planType = (notes?.cycle as "monthly" | "yearly") ?? "monthly";
 
   if (!userId) {
     console.error("No user_id in subscription notes:", subscriptionId);
@@ -313,34 +314,73 @@ async function handleSubscriptionCancelled(
 
   const currentEnd = subscription.current_end
     ? new Date((subscription.current_end as number) * 1000).toISOString()
-    : null;
+    : subscription.charge_at
+      ? new Date((subscription.charge_at as number) * 1000).toISOString()
+      : subscription.start_at
+        ? new Date((subscription.start_at as number) * 1000).toISOString()
+        : null;
 
   // Mark subscription as cancelled — no more renewals
   const { error: subError } = await supabase
     .from("subscriptions")
-    .update({ status: "cancelled" })
-    .eq("user_id", userId)
-    .eq("provider_subscription_id", subscriptionId);
+    .upsert(
+      {
+        user_id: userId,
+        provider: "razorpay",
+        provider_subscription_id: subscriptionId,
+        plan_type: planType,
+        status: "cancelled",
+        current_period_end: currentEnd,
+      },
+      { onConflict: "user_id" }
+    );
 
   if (subError) {
     console.error("Error updating subscription status:", subError);
   }
 
   if (currentEnd && new Date(currentEnd) > new Date()) {
+    const isTrialCancellation =
+      planType === "yearly" && !subscription.current_start;
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update(
+        isTrialCancellation
+          ? {
+              plan: "free",
+              plan_expires_at: null,
+              trial_ends_at: currentEnd,
+            }
+          : {
+              plan: "premium",
+              plan_expires_at: currentEnd,
+              trial_ends_at: null,
+            }
+      )
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error updating cancelled subscription profile:", profileError);
+    }
+
     if (normalizedEmail) {
+      const billingPayload: Record<string, string | null> = {
+        normalized_email: normalizedEmail,
+        latest_auth_user_id: userId,
+        latest_profile_id: userId,
+        latest_provider: "razorpay",
+        latest_provider_subscription_id: subscriptionId,
+        last_known_status: "cancelled",
+      };
+
+      if (isTrialCancellation) {
+        billingPayload.first_paid_at = null;
+      }
+
       const { error: billingError } = await supabase
         .from("billing_customers")
-        .upsert(
-          {
-            normalized_email: normalizedEmail,
-            latest_auth_user_id: userId,
-            latest_profile_id: userId,
-            latest_provider: "razorpay",
-            latest_provider_subscription_id: subscriptionId,
-            last_known_status: "cancelled",
-          },
-          { onConflict: "normalized_email" }
-        );
+        .upsert(billingPayload, { onConflict: "normalized_email" });
 
       if (billingError) {
         console.error("Error updating billing customer cancelled state:", billingError);

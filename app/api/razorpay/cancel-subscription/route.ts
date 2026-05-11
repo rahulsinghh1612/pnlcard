@@ -88,7 +88,11 @@ export async function POST() {
     const razorpayStatus = razorpaySubscription.status as string;
     const currentPeriodEnd = razorpaySubscription.current_end
       ? new Date(razorpaySubscription.current_end * 1000).toISOString()
-      : subscription?.current_period_end ?? null;
+      : razorpaySubscription.charge_at
+        ? new Date(razorpaySubscription.charge_at * 1000).toISOString()
+        : razorpaySubscription.start_at
+          ? new Date(razorpaySubscription.start_at * 1000).toISOString()
+          : subscription?.current_period_end ?? null;
     const planType =
       subscription?.plan_type ??
       (notes?.cycle === "yearly"
@@ -125,6 +129,27 @@ export async function POST() {
           trial_ends_at: currentPeriodEnd,
         })
         .eq("id", user.id);
+    }
+
+    const normalizedEmail = normalizeBillingEmail(user.email ?? null);
+    if (normalizedEmail) {
+      const billingPayload: Record<string, string | null> = {
+        normalized_email: normalizedEmail,
+        latest_auth_user_id: user.id,
+        latest_profile_id: user.id,
+        latest_provider: "razorpay",
+        latest_provider_subscription_id: providerSubscriptionId,
+        last_known_status: "cancelled",
+        deleted_account_at: null,
+      };
+
+      if (razorpayStatus !== "active") {
+        billingPayload.first_paid_at = null;
+      }
+
+      await admin
+        .from("billing_customers")
+        .upsert(billingPayload, { onConflict: "normalized_email" });
     }
 
     return NextResponse.json({
