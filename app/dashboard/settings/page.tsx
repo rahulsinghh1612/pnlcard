@@ -43,15 +43,25 @@ export default async function SettingsPage() {
     profile ?? { trial_ends_at: null }
   );
   const expiresAt = profile?.plan_expires_at;
+  const trialEndsAt = profile?.trial_ends_at;
+  const formattedTrialEndDate = trialEndsAt
+    ? new Date(trialEndsAt).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   // Check subscription state: active = paid, authenticated = yearly trial awaiting first charge
   const hasActiveSubscription = subscription?.status === "active";
-  const hasTrialSubscription = subscription?.status === "authenticated";
   const hasCancelledTrial =
     subscription?.status === "cancelled" &&
     subscription?.plan_type === "yearly" &&
     accessStatus === "trial";
-  const isYearlyTrial = accessStatus === "trial" && subscription?.plan_type === "yearly";
+  const isYearlyTrial =
+    accessStatus === "trial" &&
+    (subscription?.plan_type === "yearly" || trialEndsAt != null);
+  const canCancelTrial = isYearlyTrial && !hasCancelledTrial;
 
   return (
     <div className="space-y-8">
@@ -85,7 +95,7 @@ export default async function SettingsPage() {
                   : hasCancelledTrial
                     ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left of your yearly free trial. Your annual charge has been cancelled.`
                   : accessStatus === "trial"
-                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left of your yearly free trial. Cancel before it ends to avoid the annual charge.`
+                    ? "Your yearly free trial is active."
                     : "No active plan. Subscribe to regain access."}
               </p>
             </div>
@@ -106,20 +116,23 @@ export default async function SettingsPage() {
             </span>
           </div>
 
-          {isYearlyTrial && profile?.trial_ends_at && (
-            <p className="text-xs text-muted-foreground">
-              {hasCancelledTrial
-                ? "Your yearly free trial stays active until "
-                : "Your yearly free trial ends on "}
-              {new Date(profile.trial_ends_at).toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-              {hasCancelledTrial
-                ? ". You will not be charged."
-                : ". You&apos;ll be charged ₹1,999/year unless you cancel before then."}
-            </p>
+          {isYearlyTrial && formattedTrialEndDate && (
+            <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50/60 p-4">
+              <p className="text-sm font-medium text-blue-900">
+                {hasCancelledTrial
+                  ? "Your free trial will stay active until the end date below."
+                  : "Your free trial is ending soon."}
+              </p>
+              <p className="text-xs text-blue-900/80">
+                Trial end date: <span className="font-medium">{formattedTrialEndDate}</span>
+              </p>
+              <p className="text-xs text-blue-900/80">
+                {hasCancelledTrial
+                  ? "You have already cancelled the upcoming annual charge. You will not be charged after the trial ends."
+                  : "Cancel before this date to avoid the ₹1,999 annual charge. If you cancel now, you will still keep access until this date."}
+              </p>
+              {canCancelTrial && <CancelSubscriptionButton mode="trial" />}
+            </div>
           )}
 
           {accessStatus === "subscribed" && expiresAt && (
@@ -142,10 +155,6 @@ export default async function SettingsPage() {
 
           {accessStatus === "subscribed" && hasActiveSubscription && (
             <CancelSubscriptionButton />
-          )}
-
-          {hasTrialSubscription && (
-            <CancelSubscriptionButton mode="trial" />
           )}
 
           {accessStatus === "subscribed" && !hasActiveSubscription && expiresAt && (
