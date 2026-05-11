@@ -52,15 +52,17 @@ export function getBillingState(
   profile: BillingProfile,
   subscription?: BillingSubscription
 ): BillingState {
-  if (subscription?.status === "pending") {
+  const subscriptionStatus = subscription?.status as string | undefined;
+
+  if (subscriptionStatus === "pending") {
     return "payment_retry";
   }
 
-  if (subscription?.status === "halted") {
+  if (subscriptionStatus === "halted") {
     return "payment_halted";
   }
 
-  if (subscription?.status === "paused") {
+  if (subscriptionStatus === "paused") {
     return "subscription_paused";
   }
 
@@ -77,11 +79,10 @@ export function getBillingState(
 
   const isYearlyTrial =
     subscription?.plan_type === "yearly" || profile.trial_ends_at != null;
+  const cancellableTrialStatuses = new Set(["authenticated", "created", "pending"]);
   const canCancelTrial =
     isYearlyTrial &&
-    (subscription?.status === "authenticated" ||
-      subscription?.status === "created" ||
-      subscription?.status === "pending");
+    cancellableTrialStatuses.has(subscriptionStatus ?? "");
 
   return canCancelTrial ? "trial_active" : "trial_cancelled";
 }
