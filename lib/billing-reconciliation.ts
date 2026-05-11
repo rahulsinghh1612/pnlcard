@@ -112,9 +112,7 @@ function scoreSubscription(subscription: RazorpaySubscriptionLike): number {
 
 async function findBestRazorpaySubscriptionForUser(params: {
   userId: string;
-  email: string | null | undefined;
 }) {
-  const normalizedEmail = normalizeBillingEmail(params.email);
   const razorpay = getRazorpayInstance();
   const matches: RazorpaySubscriptionLike[] = [];
 
@@ -125,10 +123,7 @@ async function findBestRazorpaySubscriptionForUser(params: {
     matches.push(
       ...items.filter((subscription) => {
         const notes = subscription.notes ?? {};
-        return (
-          notes.user_id === params.userId ||
-          normalizeBillingEmail(notes.user_email) === normalizedEmail
-        );
+        return notes.user_id === params.userId;
       })
     );
 
@@ -154,7 +149,6 @@ export async function reconcileRazorpaySubscriptionForUser(params: {
   try {
     const razorpaySubscription = await findBestRazorpaySubscriptionForUser({
       userId: params.userId,
-      email: params.email,
     });
 
     if (!razorpaySubscription) return params.subscription;

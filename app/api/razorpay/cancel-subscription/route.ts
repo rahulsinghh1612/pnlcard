@@ -74,14 +74,24 @@ export async function POST() {
     const razorpaySubscription = await razorpay.subscriptions.fetch(
       providerSubscriptionId
     );
+    const notes = razorpaySubscription.notes as Record<string, string> | undefined;
+    if (notes?.user_id && notes.user_id !== user.id) {
+      return NextResponse.json(
+        {
+          error:
+            "This subscription belongs to a different account session. Please refresh and try again.",
+        },
+        { status: 409 }
+      );
+    }
+
     const razorpayStatus = razorpaySubscription.status as string;
     const currentPeriodEnd = razorpaySubscription.current_end
       ? new Date(razorpaySubscription.current_end * 1000).toISOString()
       : subscription?.current_period_end ?? null;
     const planType =
       subscription?.plan_type ??
-      ((razorpaySubscription.notes as Record<string, string> | undefined)?.cycle ===
-      "yearly"
+      (notes?.cycle === "yearly"
         ? "yearly"
         : "monthly");
 
