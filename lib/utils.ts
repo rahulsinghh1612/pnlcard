@@ -129,9 +129,7 @@ export function getBillingStateDetails(
       (subscription?.plan_type === "yearly" || profile.trial_ends_at != null),
     canCancelTrial:
       billingState === "trial_active" &&
-      ["authenticated", "created", "pending", "active"].includes(
-        subscription?.status ?? ""
-      ),
+      !["cancelled", "completed", "expired"].includes(subscription?.status ?? ""),
     hasCancelledTrial: billingState === "trial_cancelled",
     hasActiveSubscription: billingState === "subscribed_active",
     hasCancelledSubscription: billingState === "subscribed_cancelled",
