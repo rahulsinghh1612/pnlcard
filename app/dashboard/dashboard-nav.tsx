@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +26,18 @@ const BADGE_CONFIG: Record<AccessStatus, { label: string; classes: string }> = {
 export function DashboardNav({ displayName, accessStatus = "expired" }: DashboardNavProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  const prefetchAccountPages = useCallback(() => {
+    router.prefetch("/dashboard/profile");
+    router.prefetch("/dashboard/settings");
+  }, [router]);
+
+  useEffect(() => {
+    if (open) {
+      prefetchAccountPages();
+    }
+  }, [open, prefetchAccountPages]);
+
   const handleSignOut = async () => {
     setOpen(false);
     const supabase = createClient();
@@ -43,6 +55,8 @@ export function DashboardNav({ displayName, accessStatus = "expired" }: Dashboar
           <button
             type="button"
             aria-label="Menu"
+            onMouseEnter={prefetchAccountPages}
+            onFocus={prefetchAccountPages}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
           >
             <Menu className="h-5 w-5" />

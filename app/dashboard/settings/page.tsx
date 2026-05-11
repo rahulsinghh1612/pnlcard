@@ -21,11 +21,20 @@ export default async function SettingsPage() {
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, plan, plan_expires_at, trial_ends_at")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: subscription }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, plan, plan_expires_at, trial_ends_at")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("subscriptions")
+      .select("status, plan_type, current_period_end")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const accessStatus = getUserAccessStatus(
     profile ?? { plan: null, plan_expires_at: null, trial_ends_at: null }
@@ -36,13 +45,6 @@ export default async function SettingsPage() {
   const expiresAt = profile?.plan_expires_at;
 
   // Check subscription state: active = paid, authenticated = yearly trial awaiting first charge
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("status, plan_type, current_period_end")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
   const hasActiveSubscription = subscription?.status === "active";
   const hasTrialSubscription = subscription?.status === "authenticated";
   const isYearlyTrial = accessStatus === "trial" && subscription?.plan_type === "yearly";

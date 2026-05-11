@@ -46,7 +46,7 @@ export function MilestoneUpgradeModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-lg overflow-visible rounded-3xl border border-stone-200/70 bg-gradient-to-b from-white via-stone-50/70 to-[#f6f4ef] p-0 shadow-2xl sm:rounded-2xl"
+        className="max-w-lg overflow-visible rounded-3xl border border-border bg-gradient-to-b from-white to-[hsl(var(--page-bg))] p-0 shadow-2xl sm:rounded-2xl"
         hideCloseButton={false}
       >
         <div className="relative overflow-visible rounded-2xl">

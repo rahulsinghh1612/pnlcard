@@ -282,7 +282,7 @@ export function CardPreviewModal({
 
         {isLocked ? (
           <div className="px-6 pb-6 sm:px-8 sm:pb-8">
-            <div className="rounded-2xl border border-stone-200/70 bg-gradient-to-b from-white via-stone-50/70 to-[#f6f4ef] p-0">
+            <div className="rounded-2xl border border-border bg-gradient-to-b from-white to-[hsl(var(--page-bg))] p-0">
               <div className="space-y-4 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-50 to-emerald-50 ring-2 ring-amber-100/80 ring-offset-2">
                   <Sparkles className="h-7 w-7 text-amber-600" />
