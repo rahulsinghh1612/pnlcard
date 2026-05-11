@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
   const { error: updateError } = await admin
     .from("profiles")
-    .update({ plan: "free", plan_expires_at: null })
+    .update({ plan: "free", plan_expires_at: null, trial_ends_at: null })
     .in("id", ids);
 
   if (updateError) {

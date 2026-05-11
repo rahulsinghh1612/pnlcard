@@ -9,10 +9,15 @@ import { formatTradingCapital, parseTradingCapital } from "@/lib/utils";
 
 interface OnboardingFormProps {
   userId: string;
+  hasUsedYearlyTrial?: boolean;
   onComplete?: () => void;
 }
 
-export function OnboardingForm({ userId, onComplete }: OnboardingFormProps) {
+export function OnboardingForm({
+  userId,
+  hasUsedYearlyTrial = false,
+  onComplete,
+}: OnboardingFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +70,7 @@ export function OnboardingForm({ userId, onComplete }: OnboardingFormProps) {
         trading_capital: capital,
         x_handle: handle,
         currency,
+        yearly_trial_used_at: hasUsedYearlyTrial ? new Date().toISOString() : null,
       });
 
       if (error) {

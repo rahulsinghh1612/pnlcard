@@ -5,6 +5,7 @@ import {
   getRazorpayInstance,
   verifySubscriptionCheckoutSignature,
 } from "@/lib/razorpay";
+import { normalizeBillingEmail } from "@/lib/billing";
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,12 +103,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (cycle === "yearly" && status === "authenticated" && trialEndsAt) {
+      const normalizedEmail = normalizeBillingEmail(user.email ?? null);
       const { error: profileError } = await admin
         .from("profiles")
         .update({
           plan: "free",
           plan_expires_at: null,
           trial_ends_at: trialEndsAt,
+          yearly_trial_used_at: new Date().toISOString(),
         })
         .eq("id", user.id);
 
@@ -115,11 +118,34 @@ export async function POST(request: NextRequest) {
         throw profileError;
       }
 
+      if (normalizedEmail) {
+        const { error: billingError } = await admin
+          .from("billing_customers")
+          .upsert(
+            {
+              normalized_email: normalizedEmail,
+              latest_auth_user_id: user.id,
+              latest_profile_id: user.id,
+              yearly_trial_used_at: new Date().toISOString(),
+              latest_provider: "razorpay",
+              latest_provider_subscription_id: subscription.id,
+              last_known_status: status,
+              deleted_account_at: null,
+            },
+            { onConflict: "normalized_email" }
+          );
+
+        if (billingError) {
+          throw billingError;
+        }
+      }
+
       return NextResponse.json({ status: "trial", trialEndsAt });
     }
 
     if (status === "active") {
       const accessEndsAt = currentEnd ?? trialEndsAt;
+      const normalizedEmail = normalizeBillingEmail(user.email ?? null);
       const { error: profileError } = await admin
         .from("profiles")
         .update({
@@ -131,6 +157,28 @@ export async function POST(request: NextRequest) {
 
       if (profileError) {
         throw profileError;
+      }
+
+      if (normalizedEmail) {
+        const { error: billingError } = await admin
+          .from("billing_customers")
+          .upsert(
+            {
+              normalized_email: normalizedEmail,
+              latest_auth_user_id: user.id,
+              latest_profile_id: user.id,
+              first_paid_at: currentStart ?? new Date().toISOString(),
+              latest_provider: "razorpay",
+              latest_provider_subscription_id: subscription.id,
+              last_known_status: status,
+              deleted_account_at: null,
+            },
+            { onConflict: "normalized_email" }
+          );
+
+        if (billingError) {
+          throw billingError;
+        }
       }
 
       return NextResponse.json({ status: "subscribed", planExpiresAt: accessEndsAt });

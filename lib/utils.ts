@@ -1,9 +1,35 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { AccessStatus } from "@/lib/types"
+import type { AccessStatus, Subscription } from "@/lib/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+type BillingProfile = {
+  plan: string | null;
+  plan_expires_at: string | null;
+  trial_ends_at: string | null;
+};
+
+type BillingSubscription = Pick<
+  Subscription,
+  "status" | "plan_type" | "current_period_end"
+> | null;
+
+export type BillingState =
+  | "expired"
+  | "trial_active"
+  | "trial_cancelled"
+  | "subscribed_active"
+  | "subscribed_cancelled"
+  | "payment_retry"
+  | "payment_halted"
+  | "subscription_paused";
+
+function isFutureDate(value: string | null): boolean {
+  if (!value) return false;
+  return new Date(value) > new Date();
 }
 
 /**
@@ -16,34 +42,101 @@ export function cn(...inputs: ClassValue[]) {
  * the end of their billing period — so they retain access until they've
  * used what they paid for.
  */
-function isSubscribed(profile: {
-  plan: string | null;
-  plan_expires_at: string | null;
-}): boolean {
+function isSubscribed(profile: BillingProfile): boolean {
   if (profile?.plan !== "premium") return false;
   if (!profile.plan_expires_at) return true;
-  return new Date(profile.plan_expires_at) > new Date();
+  return isFutureDate(profile.plan_expires_at);
+}
+
+export function getBillingState(
+  profile: BillingProfile,
+  subscription?: BillingSubscription
+): BillingState {
+  if (subscription?.status === "pending") {
+    return "payment_retry";
+  }
+
+  if (subscription?.status === "halted") {
+    return "payment_halted";
+  }
+
+  if (subscription?.status === "paused") {
+    return "subscription_paused";
+  }
+
+  if (isSubscribed(profile)) {
+    return subscription?.status === "active"
+      ? "subscribed_active"
+      : "subscribed_cancelled";
+  }
+
+  const hasTrialAccess = isFutureDate(profile.trial_ends_at);
+  if (!hasTrialAccess) {
+    return "expired";
+  }
+
+  const isYearlyTrial =
+    subscription?.plan_type === "yearly" || profile.trial_ends_at != null;
+  const canCancelTrial =
+    isYearlyTrial &&
+    (subscription?.status === "authenticated" ||
+      subscription?.status === "created" ||
+      subscription?.status === "pending");
+
+  return canCancelTrial ? "trial_active" : "trial_cancelled";
 }
 
 /** Tri-state access: subscribed > trial > expired */
-export function getUserAccessStatus(profile: {
-  plan: string | null;
-  plan_expires_at: string | null;
-  trial_ends_at: string | null;
-}): AccessStatus {
-  if (isSubscribed(profile)) return "subscribed";
-  if (!profile.trial_ends_at) return "expired";
-  if (new Date(profile.trial_ends_at) > new Date()) return "trial";
+export function getUserAccessStatus(
+  profile: BillingProfile,
+  subscription?: BillingSubscription
+): AccessStatus {
+  const billingState = getBillingState(profile, subscription);
+  if (billingState === "subscribed_active" || billingState === "subscribed_cancelled") {
+    return "subscribed";
+  }
+  if (billingState === "payment_retry" || billingState === "payment_halted" || billingState === "subscription_paused") {
+    return "subscribed";
+  }
+  if (billingState === "trial_active" || billingState === "trial_cancelled") {
+    return "trial";
+  }
   return "expired";
 }
 
+export function getBillingStateDetails(
+  profile: BillingProfile,
+  subscription?: BillingSubscription
+) {
+  const billingState = getBillingState(profile, subscription);
+  const accessStatus = getUserAccessStatus(profile, subscription);
+  const trialDaysRemaining = getTrialDaysRemaining({
+    trial_ends_at: profile.trial_ends_at,
+  });
+
+  return {
+    billingState,
+    accessStatus,
+    trialDaysRemaining,
+    isYearlyTrial:
+      accessStatus === "trial" &&
+      (subscription?.plan_type === "yearly" || profile.trial_ends_at != null),
+    canCancelTrial: billingState === "trial_active",
+    hasCancelledTrial: billingState === "trial_cancelled",
+    hasActiveSubscription: billingState === "subscribed_active",
+    hasCancelledSubscription: billingState === "subscribed_cancelled",
+    hasPaymentRetryIssue: billingState === "payment_retry",
+    hasPaymentHaltedIssue: billingState === "payment_halted",
+    isPausedSubscription: billingState === "subscription_paused",
+  };
+}
+
 /** Full access = trial or subscribed (not expired) */
-export function hasFullAccess(profile: {
-  plan: string | null;
-  plan_expires_at: string | null;
-  trial_ends_at: string | null;
-}): boolean {
-  return getUserAccessStatus(profile) !== "expired";
+export function hasFullAccess(
+  profile: BillingProfile,
+  subscription?: BillingSubscription
+): boolean {
+  return getUserAccessStatus(profile, subscription) !== "expired";
 }
 
 /** Days remaining in trial (0 if expired or subscribed) */

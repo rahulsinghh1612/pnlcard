@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeBillingEmail } from "@/lib/billing";
 
 /**
  * POST /api/account/delete
@@ -29,6 +30,52 @@ export async function POST() {
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
+      );
+    }
+
+    const normalizedEmail = normalizeBillingEmail(user.email ?? null);
+
+    if (normalizedEmail) {
+      const [{ data: profile }, { data: subscription }, { data: billingCustomer }] =
+        await Promise.all([
+        admin
+          .from("profiles")
+          .select("trial_ends_at, yearly_trial_used_at, plan_expires_at")
+          .eq("id", user.id)
+          .maybeSingle(),
+        admin
+          .from("subscriptions")
+          .select("provider, provider_subscription_id, status")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        admin
+          .from("billing_customers")
+          .select("yearly_trial_used_at, first_paid_at")
+          .eq("normalized_email", normalizedEmail)
+          .maybeSingle(),
+      ]);
+
+      await admin.from("billing_customers").upsert(
+        {
+          normalized_email: normalizedEmail,
+          latest_auth_user_id: user.id,
+          latest_profile_id: user.id,
+          yearly_trial_used_at:
+            billingCustomer?.yearly_trial_used_at ??
+            profile?.yearly_trial_used_at ??
+            (profile?.trial_ends_at ? new Date().toISOString() : null),
+          first_paid_at:
+            billingCustomer?.first_paid_at ??
+            (profile?.plan_expires_at ? new Date().toISOString() : null),
+          latest_provider: subscription?.provider ?? "razorpay",
+          latest_provider_subscription_id:
+            subscription?.provider_subscription_id ?? null,
+          last_known_status: subscription?.status ?? "deleted_account",
+          deleted_account_at: new Date().toISOString(),
+        },
+        { onConflict: "normalized_email" }
       );
     }
 

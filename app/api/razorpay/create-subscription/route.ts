@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getRazorpayInstance, getPlanId, YEARLY_TRIAL_DAYS } from "@/lib/razorpay";
+import { normalizeBillingEmail } from "@/lib/billing";
 
 /**
  * POST /api/razorpay/create-subscription
@@ -29,6 +31,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const normalizedEmail = normalizeBillingEmail(user.email ?? null);
+    const admin = createAdminClient();
+
+    const [{ data: profile }, { data: billingCustomer }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("yearly_trial_used_at")
+        .eq("id", user.id)
+        .single(),
+      normalizedEmail && admin
+        ? admin
+            .from("billing_customers")
+            .select("yearly_trial_used_at")
+            .eq("normalized_email", normalizedEmail)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+
     const body = await request.json();
     const cycle = body.cycle as "monthly" | "yearly";
 
@@ -41,8 +61,12 @@ export async function POST(request: NextRequest) {
 
     const razorpay = getRazorpayInstance();
     const planId = getPlanId(cycle);
+    const yearlyTrialEligible =
+      cycle === "yearly" &&
+      !profile?.yearly_trial_used_at &&
+      !billingCustomer?.yearly_trial_used_at;
     const startAt =
-      cycle === "yearly"
+      yearlyTrialEligible
         ? Math.floor(Date.now() / 1000) + YEARLY_TRIAL_DAYS * 24 * 60 * 60
         : undefined;
 
@@ -61,7 +85,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       subscriptionId: subscription.id,
       keyId: process.env.RAZORPAY_KEY_ID,
-      trialDays: cycle === "yearly" ? YEARLY_TRIAL_DAYS : 0,
+      trialDays: yearlyTrialEligible ? YEARLY_TRIAL_DAYS : 0,
+      yearlyTrialEligible,
     });
   } catch (error: unknown) {
     console.error("Error creating Razorpay subscription:", error);

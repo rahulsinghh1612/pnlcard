@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { OnboardingFlow } from "./onboarding-flow";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
+import { normalizeBillingEmail } from "@/lib/billing";
 
 export const metadata = {
   title: "Get started — PnLCard",
@@ -37,6 +39,22 @@ export default async function OnboardingPage({
     redirect(selectedPlan ? `/dashboard?checkout=${selectedPlan}` : "/dashboard");
   }
 
+  const normalizedEmail = normalizeBillingEmail(user.email ?? null);
+  let hasUsedYearlyTrial = false;
+
+  if (normalizedEmail) {
+    const admin = createAdminClient();
+    if (admin) {
+      const { data: billingCustomer } = await admin
+        .from("billing_customers")
+        .select("yearly_trial_used_at")
+        .eq("normalized_email", normalizedEmail)
+        .maybeSingle();
+
+      hasUsedYearlyTrial = billingCustomer?.yearly_trial_used_at != null;
+    }
+  }
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-page">
       <div className="w-full max-w-md">
@@ -52,7 +70,11 @@ export default async function OnboardingPage({
         </div>
 
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
-          <OnboardingFlow userId={user.id} selectedPlan={selectedPlan} />
+          <OnboardingFlow
+            userId={user.id}
+            selectedPlan={selectedPlan}
+            hasUsedYearlyTrial={hasUsedYearlyTrial}
+          />
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

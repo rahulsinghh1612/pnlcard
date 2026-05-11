@@ -34,6 +34,23 @@ async function checkAccessStatus(): Promise<AccessStatus> {
   );
 }
 
+async function checkYearlyTrialEligibility(): Promise<boolean> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("yearly_trial_used_at")
+    .eq("id", user.id)
+    .single();
+
+  return !data?.yearly_trial_used_at;
+}
+
 declare global {
   interface Window {
     Razorpay: new (options: Record<string, unknown>) => {
@@ -111,6 +128,7 @@ export function UpgradeButton({
   const [loading, setLoading] = useState(false);
   const [cycle, setCycle] = useState<"monthly" | "yearly">(defaultCycle);
   const [showPicker, setShowPicker] = useState(false);
+  const [yearlyTrialEligible, setYearlyTrialEligible] = useState(true);
   const autoStartedRef = useRef(false);
 
   const pollForAccess = useCallback(async () => {
@@ -264,6 +282,12 @@ export function UpgradeButton({
   }, [beforeOpenCheckout, userEmail, userName, router, pollForAccess]);
 
   useEffect(() => {
+    checkYearlyTrialEligibility()
+      .then(setYearlyTrialEligible)
+      .catch(() => setYearlyTrialEligible(false));
+  }, []);
+
+  useEffect(() => {
     if (!autoStartCycle || autoStartedRef.current) return;
     autoStartedRef.current = true;
     handleUpgrade(autoStartCycle);
@@ -347,10 +371,12 @@ export function UpgradeButton({
               </span>
             </div>
             <p className="mt-0.5 text-xs font-medium text-foreground">
-              7-Day Free Trial
+              {yearlyTrialEligible ? "7-Day Free Trial" : "Starts immediately"}
             </p>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              Card needed • Annual billing starts after Day 7
+              {yearlyTrialEligible
+                ? "Card needed • Annual billing starts after Day 7"
+                : "Billed yearly • No free trial"}
             </p>
           </button>
         </div>

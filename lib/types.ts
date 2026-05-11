@@ -9,6 +9,7 @@ export interface Profile {
   plan: "free" | "premium";
   plan_expires_at: string | null;
   trial_ends_at: string | null;
+  yearly_trial_used_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,7 +24,7 @@ export interface Subscription {
   provider: string;
   provider_subscription_id: string | null;
   plan_type: "monthly" | "yearly";
-  status: "created" | "authenticated" | "active" | "pending" | "halted" | "cancelled" | "expired" | "completed";
+  status: "created" | "authenticated" | "active" | "pending" | "halted" | "paused" | "cancelled" | "expired" | "completed";
   current_period_start: string | null;
   current_period_end: string | null;
   created_at: string;

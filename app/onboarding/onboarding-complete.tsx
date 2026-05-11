@@ -6,8 +6,10 @@ import { CheckCircle2 } from "lucide-react";
 
 export function OnboardingComplete({
   selectedPlan,
+  hasUsedYearlyTrial = false,
 }: {
   selectedPlan?: "monthly" | "yearly" | null;
+  hasUsedYearlyTrial?: boolean;
 }) {
   const router = useRouter();
 
@@ -33,7 +35,13 @@ export function OnboardingComplete({
       </h2>
       <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-xs">
         {selectedPlan
-          ? `Preparing your ${selectedPlan === "yearly" ? "7-day free trial" : "monthly plan"} checkout.`
+          ? `Preparing your ${
+              selectedPlan === "yearly"
+                ? hasUsedYearlyTrial
+                  ? "yearly plan"
+                  : "7-day free trial"
+                : "monthly plan"
+            } checkout.`
           : "Log today&apos;s result to start building your calendar."}
       </p>
       <p className="mt-1 text-xs text-muted-foreground/70">
@@ -55,7 +63,9 @@ export function OnboardingComplete({
         >
           {selectedPlan
             ? selectedPlan === "yearly"
-              ? "Start 7-day free trial"
+              ? hasUsedYearlyTrial
+                ? "Start yearly plan"
+                : "Start 7-day free trial"
               : "Start monthly plan"
             : "Log your first trade"}
         </button>

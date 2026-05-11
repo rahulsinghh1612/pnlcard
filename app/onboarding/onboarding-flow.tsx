@@ -10,11 +10,13 @@ type Step = "slides" | "form" | "complete";
 interface OnboardingFlowProps {
   userId: string;
   selectedPlan?: "monthly" | "yearly" | null;
+  hasUsedYearlyTrial?: boolean;
 }
 
 export function OnboardingFlow({
   userId,
   selectedPlan = null,
+  hasUsedYearlyTrial = false,
 }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>("slides");
 
@@ -31,7 +33,12 @@ export function OnboardingFlow({
   }
 
   if (step === "complete") {
-    return <OnboardingComplete selectedPlan={selectedPlan} />;
+    return (
+      <OnboardingComplete
+        selectedPlan={selectedPlan}
+        hasUsedYearlyTrial={hasUsedYearlyTrial}
+      />
+    );
   }
 
   return (
@@ -44,7 +51,11 @@ export function OnboardingFlow({
           Just a few details and you&apos;re good to go
         </p>
       </div>
-      <OnboardingForm userId={userId} onComplete={() => setStep("complete")} />
+      <OnboardingForm
+        userId={userId}
+        hasUsedYearlyTrial={hasUsedYearlyTrial}
+        onComplete={() => setStep("complete")}
+      />
     </>
   );
 }

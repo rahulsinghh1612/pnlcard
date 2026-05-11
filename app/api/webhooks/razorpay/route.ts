@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeBillingEmail } from "@/lib/billing";
 
 /**
  * POST /api/webhooks/razorpay
@@ -68,9 +69,18 @@ export async function POST(request: NextRequest) {
       await handleSubscriptionAuthenticated(supabase, event);
     } else if (
       eventType === "subscription.activated" ||
-      eventType === "subscription.charged"
+      eventType === "subscription.charged" ||
+      eventType === "subscription.resumed"
     ) {
       await handleSubscriptionActivated(supabase, event);
+    } else if (
+      eventType === "subscription.pending" ||
+      eventType === "subscription.halted" ||
+      eventType === "subscription.paused" ||
+      eventType === "subscription.completed" ||
+      eventType === "subscription.updated"
+    ) {
+      await handleSubscriptionLifecycleUpdate(supabase, event);
     } else if (eventType === "subscription.cancelled") {
       await handleSubscriptionCancelled(supabase, event);
     }
@@ -99,6 +109,7 @@ async function handleSubscriptionAuthenticated(
   const subscriptionId = subscription.id as string;
   const notes = subscription.notes as Record<string, string> | undefined;
   const userId = notes?.user_id;
+  const normalizedEmail = normalizeBillingEmail(notes?.user_email);
 
   if (!userId) {
     console.error("No user_id in subscription notes:", subscriptionId);
@@ -141,11 +152,36 @@ async function handleSubscriptionAuthenticated(
         plan: "free",
         plan_expires_at: null,
         trial_ends_at: trialEndsAt,
+        yearly_trial_used_at: new Date().toISOString(),
       })
       .eq("id", userId);
 
     if (profileError) {
       console.error("Error updating profile trial:", profileError);
+    }
+  }
+
+  if (normalizedEmail) {
+    const billingPayload: Record<string, string | null> = {
+      normalized_email: normalizedEmail,
+      latest_auth_user_id: userId,
+      latest_profile_id: userId,
+      latest_provider: "razorpay",
+      latest_provider_subscription_id: subscriptionId,
+      last_known_status: "authenticated",
+      deleted_account_at: null,
+    };
+
+    if (planType === "yearly") {
+      billingPayload.yearly_trial_used_at = new Date().toISOString();
+    }
+
+    const { error: billingError } = await supabase
+      .from("billing_customers")
+      .upsert(billingPayload, { onConflict: "normalized_email" });
+
+    if (billingError) {
+      console.error("Error upserting billing customer trial state:", billingError);
     }
   }
 }
@@ -170,6 +206,7 @@ async function handleSubscriptionActivated(
   const subscriptionId = subscription.id as string;
   const notes = subscription.notes as Record<string, string> | undefined;
   const userId = notes?.user_id;
+  const normalizedEmail = normalizeBillingEmail(notes?.user_email);
 
   if (!userId) {
     console.error("No user_id in subscription notes:", subscriptionId);
@@ -218,6 +255,28 @@ async function handleSubscriptionActivated(
   if (profileError) {
     console.error("Error updating profile plan:", profileError);
   }
+
+  if (normalizedEmail) {
+    const { error: billingError } = await supabase
+      .from("billing_customers")
+      .upsert(
+        {
+          normalized_email: normalizedEmail,
+          latest_auth_user_id: userId,
+          latest_profile_id: userId,
+          first_paid_at: currentStart ?? new Date().toISOString(),
+          latest_provider: "razorpay",
+          latest_provider_subscription_id: subscriptionId,
+          last_known_status: "active",
+          deleted_account_at: null,
+        },
+        { onConflict: "normalized_email" }
+      );
+
+    if (billingError) {
+      console.error("Error upserting billing customer paid state:", billingError);
+    }
+  }
 }
 
 /**
@@ -245,6 +304,7 @@ async function handleSubscriptionCancelled(
   const subscriptionId = subscription.id as string;
   const notes = subscription.notes as Record<string, string> | undefined;
   const userId = notes?.user_id;
+  const normalizedEmail = normalizeBillingEmail(notes?.user_email);
 
   if (!userId) {
     console.error("No user_id in subscription notes:", subscriptionId);
@@ -267,6 +327,25 @@ async function handleSubscriptionCancelled(
   }
 
   if (currentEnd && new Date(currentEnd) > new Date()) {
+    if (normalizedEmail) {
+      const { error: billingError } = await supabase
+        .from("billing_customers")
+        .upsert(
+          {
+            normalized_email: normalizedEmail,
+            latest_auth_user_id: userId,
+            latest_profile_id: userId,
+            latest_provider: "razorpay",
+            latest_provider_subscription_id: subscriptionId,
+            last_known_status: "cancelled",
+          },
+          { onConflict: "normalized_email" }
+        );
+
+      if (billingError) {
+        console.error("Error updating billing customer cancelled state:", billingError);
+      }
+    }
     return;
   }
 
@@ -281,5 +360,141 @@ async function handleSubscriptionCancelled(
 
   if (profileError) {
     console.error("Error downgrading cancelled trial profile:", profileError);
+  }
+
+  if (normalizedEmail) {
+    const { error: billingError } = await supabase
+      .from("billing_customers")
+      .upsert(
+        {
+          normalized_email: normalizedEmail,
+          latest_auth_user_id: userId,
+          latest_profile_id: userId,
+          latest_provider: "razorpay",
+          latest_provider_subscription_id: subscriptionId,
+          last_known_status: "cancelled",
+        },
+        { onConflict: "normalized_email" }
+      );
+
+    if (billingError) {
+      console.error("Error finalizing billing customer cancelled state:", billingError);
+    }
+  }
+}
+
+async function handleSubscriptionLifecycleUpdate(
+  supabase: ReturnType<typeof createAdminClient> & object,
+  event: Record<string, unknown>
+) {
+  const payload = event.payload as Record<string, unknown>;
+  const subscription = (payload.subscription as Record<string, unknown>)
+    ?.entity as Record<string, unknown>;
+
+  if (!subscription) {
+    console.error("No subscription entity in webhook payload");
+    return;
+  }
+
+  const subscriptionId = subscription.id as string;
+  const notes = subscription.notes as Record<string, string> | undefined;
+  const userId = notes?.user_id;
+  const normalizedEmail = normalizeBillingEmail(notes?.user_email);
+
+  if (!userId) {
+    console.error("No user_id in subscription notes:", subscriptionId);
+    return;
+  }
+
+  const status = subscription.status as
+    | "active"
+    | "pending"
+    | "halted"
+    | "paused"
+    | "completed"
+    | "expired"
+    | "cancelled";
+  const planType = (notes?.cycle as "monthly" | "yearly") ?? "monthly";
+  const currentStart = subscription.current_start
+    ? new Date((subscription.current_start as number) * 1000).toISOString()
+    : null;
+  const currentEnd = subscription.current_end
+    ? new Date((subscription.current_end as number) * 1000).toISOString()
+    : null;
+
+  const { error: subError } = await supabase
+    .from("subscriptions")
+    .upsert(
+      {
+        user_id: userId,
+        provider: "razorpay",
+        provider_subscription_id: subscriptionId,
+        plan_type: planType,
+        status,
+        current_period_start: currentStart,
+        current_period_end: currentEnd,
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (subError) {
+    console.error("Error updating lifecycle subscription state:", subError);
+  }
+
+  if (status === "pending" || status === "halted" || status === "paused") {
+    const profileUpdate =
+      currentEnd && new Date(currentEnd) > new Date()
+        ? {
+            plan: "premium",
+            plan_expires_at: currentEnd,
+          }
+        : {
+            plan: "free",
+            plan_expires_at: null,
+          };
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update(profileUpdate)
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error updating profile for lifecycle issue state:", profileError);
+    }
+  }
+
+  if ((status === "completed" || status === "expired") && (!currentEnd || new Date(currentEnd) <= new Date())) {
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        plan: "free",
+        plan_expires_at: null,
+        trial_ends_at: null,
+      })
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error expiring completed subscription profile:", profileError);
+    }
+  }
+
+  if (normalizedEmail) {
+    const { error: billingError } = await supabase
+      .from("billing_customers")
+      .upsert(
+        {
+          normalized_email: normalizedEmail,
+          latest_auth_user_id: userId,
+          latest_profile_id: userId,
+          latest_provider: "razorpay",
+          latest_provider_subscription_id: subscriptionId,
+          last_known_status: status,
+        },
+        { onConflict: "normalized_email" }
+      );
+
+    if (billingError) {
+      console.error("Error updating billing customer lifecycle state:", billingError);
+    }
   }
 }

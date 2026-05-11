@@ -6,7 +6,7 @@ import { UpgradeButton } from "@/components/dashboard/upgrade-button";
 import { TrialToastNudge } from "@/components/dashboard/trial-toast-nudge";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Sparkles } from "lucide-react";
-import { getUserAccessStatus, getTrialDaysRemaining } from "@/lib/utils";
+import { getBillingStateDetails } from "@/lib/utils";
 
 export default async function DashboardLayout({
   children,
@@ -22,18 +22,27 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, plan, plan_expires_at, trial_ends_at")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: subscription }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, plan, plan_expires_at, trial_ends_at")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("subscriptions")
+      .select("status, plan_type, current_period_end")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   if (!profile) {
     redirect("/onboarding");
   }
 
-  const accessStatus = getUserAccessStatus(profile);
-  const trialDaysRemaining = getTrialDaysRemaining(profile);
+  const billing = getBillingStateDetails(profile, subscription ?? null);
+  const accessStatus = billing.accessStatus;
 
   return (
     <div className="min-h-screen bg-page">
@@ -77,9 +86,8 @@ export default async function DashboardLayout({
       </main>
 
       <TrialToastNudge
-        trialDaysRemaining={trialDaysRemaining}
-        accessStatus={accessStatus}
-        hasTrialHistory={profile.trial_ends_at != null}
+        billingState={billing.billingState}
+        trialDaysRemaining={billing.trialDaysRemaining}
       />
     </div>
   );

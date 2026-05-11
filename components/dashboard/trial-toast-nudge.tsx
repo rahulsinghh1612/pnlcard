@@ -2,12 +2,11 @@
 
 import { useEffect } from "react";
 import { toast } from "sonner";
-import type { AccessStatus } from "@/lib/types";
+import type { BillingState } from "@/lib/utils";
 
 type TrialToastNudgeProps = {
+  billingState: BillingState;
   trialDaysRemaining: number;
-  accessStatus: AccessStatus;
-  hasTrialHistory: boolean;
 };
 
 const NUDGE_SCHEDULE: { maxDays: number; message: string }[] = [
@@ -18,16 +17,42 @@ const NUDGE_SCHEDULE: { maxDays: number; message: string }[] = [
 ];
 
 export function TrialToastNudge({
+  billingState,
   trialDaysRemaining,
-  accessStatus,
-  hasTrialHistory,
 }: TrialToastNudgeProps) {
   useEffect(() => {
-    if (accessStatus === "subscribed") return;
-    if (!hasTrialHistory) return;
+    if (billingState === "subscribed_active" || billingState === "subscribed_cancelled") {
+      return;
+    }
+    if (billingState === "trial_cancelled") return;
+    if (billingState === "expired" && trialDaysRemaining > 0) return;
+    if (billingState === "expired" && trialDaysRemaining === 0) {
+      const key = "pnlcard_trial_nudge_0";
+      try {
+        if (localStorage.getItem(key) === "shown") return;
+        localStorage.setItem(key, "shown");
+      } catch {
+        return;
+      }
+
+      const t = setTimeout(() => {
+        toast(NUDGE_SCHEDULE[0].message, {
+          duration: 8000,
+          action: {
+            label: "Subscribe",
+            onClick: () => {
+              window.location.href = "/dashboard/settings";
+            },
+          },
+        });
+      }, 1500);
+
+      return () => clearTimeout(t);
+    }
 
     const nudge = NUDGE_SCHEDULE.find((n) => trialDaysRemaining <= n.maxDays);
     if (!nudge) return;
+    if (nudge.maxDays === 0) return;
 
     const key = `pnlcard_trial_nudge_${nudge.maxDays}`;
     try {
@@ -45,12 +70,12 @@ export function TrialToastNudge({
           onClick: () => {
             window.location.href = "/dashboard/settings";
           },
-        },
-      });
-    }, 1500);
+          },
+        });
+      }, 1500);
 
     return () => clearTimeout(t);
-  }, [trialDaysRemaining, accessStatus, hasTrialHistory]);
+  }, [trialDaysRemaining, billingState]);
 
   return null;
 }
