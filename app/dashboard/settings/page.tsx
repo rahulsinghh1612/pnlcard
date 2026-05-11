@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DeleteAccountButton } from "./delete-account-button";
 import { CancelSubscriptionButton } from "./cancel-subscription-button";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
+import { reconcileRazorpaySubscriptionForUser } from "@/lib/billing-reconciliation";
 import { getBillingStateDetails } from "@/lib/utils";
 import { CalendarDays, CreditCard, ShieldCheck } from "lucide-react";
 
@@ -31,7 +32,7 @@ export default async function SettingsPage() {
 
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: subscription }] = await Promise.all([
+  const [{ data: profile }, { data: initialSubscription }] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, plan, plan_expires_at, trial_ends_at, yearly_trial_used_at")
@@ -39,12 +40,19 @@ export default async function SettingsPage() {
       .single(),
     supabase
       .from("subscriptions")
-      .select("status, plan_type, current_period_end")
+      .select("provider, provider_subscription_id, status, plan_type, current_period_start, current_period_end, created_at, updated_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
   ]);
+
+  const subscription = await reconcileRazorpaySubscriptionForUser({
+    userId: user.id,
+    email: user.email,
+    profile: profile ?? null,
+    subscription: initialSubscription ?? null,
+  });
 
   const billing = getBillingStateDetails(
     profile ?? { plan: null, plan_expires_at: null, trial_ends_at: null },

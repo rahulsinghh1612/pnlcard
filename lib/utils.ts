@@ -57,13 +57,12 @@ export function getBillingState(
   if (isSubscribed(profile)) {
     if (
       subscriptionStatus === "active" ||
-      subscriptionStatus === "authenticated" ||
-      subscriptionStatus === "created"
+      subscriptionStatus === "authenticated"
     ) {
       return "subscribed_active";
     }
 
-    if (subscriptionStatus === "pending") {
+    if (subscriptionStatus === "pending" || subscriptionStatus === "created") {
       return "payment_retry";
     }
 
