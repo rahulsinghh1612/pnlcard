@@ -43,7 +43,7 @@ export function CancelSubscriptionButton({
 
       toast.success(
         mode === "trial"
-          ? "Yearly trial cancelled. You won't be charged."
+          ? "Yearly free trial cancelled. You will keep access until the trial end date, and you won't be charged."
           : "Subscription cancelled. You'll keep Pro access until the end of your billing period."
       );
       router.refresh();
@@ -71,7 +71,7 @@ export function CancelSubscriptionButton({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {mode === "trial"
-              ? "If you cancel before the 7-day trial ends, your card will not be charged and your access will end immediately."
+              ? "If you cancel before the yearly free trial ends, the upcoming annual charge will be stopped. You will keep access until the trial end date."
               : "You&apos;ll keep Pro access until the end of your current billing period. After that, you&apos;ll lose weekly &amp; monthly recap cards and story downloads. You can re-subscribe anytime."}
           </AlertDialogDescription>
         </AlertDialogHeader>

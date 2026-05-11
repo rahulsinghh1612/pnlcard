@@ -122,17 +122,20 @@ export function UpgradeButton({
       if (status === "subscribed") {
         toast.success("Pro activated!");
         router.refresh();
+        setLoading(false);
         return;
       }
       if (status === "trial") {
         toast.success("Your 7-day yearly trial has started!");
         router.refresh();
+        setLoading(false);
         return;
       }
       if (attempts < maxAttempts) {
         setTimeout(check, 2000);
       } else {
         router.refresh();
+        setLoading(false);
       }
     };
     setTimeout(check, 3000);
@@ -174,6 +177,9 @@ export function UpgradeButton({
           color: "#059669",
         },
         handler: async (response: RazorpayCheckoutResponse) => {
+          const resolvedSubscriptionId =
+            response.razorpay_subscription_id || subscriptionId;
+
           try {
             const verifyRes = await fetch("/api/razorpay/verify-subscription", {
               method: "POST",
@@ -181,14 +187,25 @@ export function UpgradeButton({
               body: JSON.stringify({
                 cycle: selectedCycle,
                 paymentId: response.razorpay_payment_id,
-                subscriptionId: response.razorpay_subscription_id,
+                subscriptionId: resolvedSubscriptionId,
                 signature: response.razorpay_signature,
               }),
             });
 
             if (!verifyRes.ok) {
               const data = await verifyRes.json().catch(() => ({}));
-              throw new Error(data.error || "Payment verification failed");
+              const message = data.error || "Payment verification failed";
+              const isRetryable =
+                verifyRes.status >= 500 ||
+                /identified|verify|fetch|timeout|tempor/i.test(message);
+
+              if (isRetryable) {
+                toast.success("Payment received. Finalizing your access...");
+                pollForAccess();
+                return;
+              }
+
+              throw new Error(message);
             }
 
             const data = await verifyRes.json();
@@ -209,9 +226,18 @@ export function UpgradeButton({
             pollForAccess();
           } catch (error) {
             console.error("Payment verification error:", error);
-            toast.error(
-              error instanceof Error ? error.message : "Payment verification failed"
-            );
+            const message =
+              error instanceof Error ? error.message : "Payment verification failed";
+            const isRetryable =
+              /identified|verify|fetch|timeout|tempor/i.test(message);
+
+            if (isRetryable) {
+              toast.success("Payment received. Finalizing your access...");
+              pollForAccess();
+              return;
+            }
+
+            toast.error(message);
             setLoading(false);
           }
         },
@@ -235,7 +261,7 @@ export function UpgradeButton({
       );
       setLoading(false);
     }
-  }, [beforeOpenCheckout, userEmail, userName, router]);
+  }, [beforeOpenCheckout, userEmail, userName, router, pollForAccess]);
 
   useEffect(() => {
     if (!autoStartCycle || autoStartedRef.current) return;

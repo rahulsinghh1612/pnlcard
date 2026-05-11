@@ -47,6 +47,10 @@ export default async function SettingsPage() {
   // Check subscription state: active = paid, authenticated = yearly trial awaiting first charge
   const hasActiveSubscription = subscription?.status === "active";
   const hasTrialSubscription = subscription?.status === "authenticated";
+  const hasCancelledTrial =
+    subscription?.status === "cancelled" &&
+    subscription?.plan_type === "yearly" &&
+    accessStatus === "trial";
   const isYearlyTrial = accessStatus === "trial" && subscription?.plan_type === "yearly";
 
   return (
@@ -78,8 +82,10 @@ export default async function SettingsPage() {
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {accessStatus === "subscribed"
                   ? "You have access to all features."
+                  : hasCancelledTrial
+                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left of your yearly free trial. Your annual charge has been cancelled.`
                   : accessStatus === "trial"
-                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left in your 7-day yearly trial. Cancel before it ends to avoid the annual charge.`
+                    ? `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} left of your yearly free trial. Cancel before it ends to avoid the annual charge.`
                     : "No active plan. Subscribe to regain access."}
               </p>
             </div>
@@ -102,13 +108,17 @@ export default async function SettingsPage() {
 
           {isYearlyTrial && profile?.trial_ends_at && (
             <p className="text-xs text-muted-foreground">
-              Trial ends on{" "}
+              {hasCancelledTrial
+                ? "Your yearly free trial stays active until "
+                : "Your yearly free trial ends on "}
               {new Date(profile.trial_ends_at).toLocaleDateString("en-IN", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
               })}
-              . You&apos;ll be charged ₹1,999/year unless you cancel before then.
+              {hasCancelledTrial
+                ? ". You will not be charged."
+                : ". You&apos;ll be charged ₹1,999/year unless you cancel before then."}
             </p>
           )}
 

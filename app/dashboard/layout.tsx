@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { DashboardNav } from "./dashboard-nav";
 import { UpgradeButton } from "@/components/dashboard/upgrade-button";
-import { TrialBanner } from "@/components/dashboard/trial-banner";
 import { TrialToastNudge } from "@/components/dashboard/trial-toast-nudge";
 import { PnLCardLogo } from "@/components/ui/pnlcard-logo";
 import { Sparkles } from "lucide-react";
@@ -74,16 +73,6 @@ export default async function DashboardLayout({
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-8">
-        {accessStatus === "trial" && (
-          <div className="mb-6">
-            <TrialBanner
-              trialDaysRemaining={trialDaysRemaining}
-              accessStatus={accessStatus}
-              userEmail={user.email ?? ""}
-              userName={profile?.display_name ?? "User"}
-            />
-          </div>
-        )}
         {children}
       </main>
 

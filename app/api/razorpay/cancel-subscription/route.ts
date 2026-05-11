@@ -70,11 +70,19 @@ export async function POST() {
     if (subscription.status !== "active") {
       await admin
         .from("profiles")
-        .update({ plan: "free", plan_expires_at: null, trial_ends_at: null })
+        .update({
+          plan: "free",
+          plan_expires_at: null,
+          trial_ends_at: subscription.current_period_end,
+        })
         .eq("id", user.id);
     }
 
-    return NextResponse.json({ status: "cancelled" });
+    return NextResponse.json({
+      status: "cancelled",
+      accessEndsAt:
+        subscription.status === "active" ? null : subscription.current_period_end,
+    });
   } catch (error: unknown) {
     console.error("Error cancelling subscription:", error);
     const message =
