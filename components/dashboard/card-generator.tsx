@@ -111,7 +111,15 @@ export function CardGenerator({
     ogUrl = buildMonthlyOgUrl(monthlyParams);
   }
 
-  const shareUrl = `${baseUrl}/card/${dailyParams.tradeId}`;
+  const sharePath =
+    cardType === "daily"
+      ? dailyParams.sharePath
+      : cardType === "weekly" && weeklyParams
+        ? weeklyParams.sharePath
+        : cardType === "monthly" && monthlyParams
+          ? monthlyParams.sharePath
+          : dailyParams.sharePath;
+  const shareUrl = `${baseUrl}${sharePath}`;
 
   const downloadLabel =
     cardType === "daily"

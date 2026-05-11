@@ -276,7 +276,7 @@ export function UpgradeButton({
 
       {showPicker && !loading && (
         <div
-          className={`absolute z-50 min-w-[200px] rounded-xl border border-border bg-white p-3 shadow-xl animate-in fade-in duration-200 ${
+          className={`absolute z-50 w-[280px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-white p-3.5 shadow-xl animate-in fade-in duration-200 ${
             dropdownPosition === "top"
               ? "bottom-full mb-2 left-0 right-0 slide-in-from-bottom-2"
               : "top-full mt-2 slide-in-from-top-2"
@@ -297,8 +297,10 @@ export function UpgradeButton({
                 : "hover:bg-muted text-foreground"
             }`}
           >
-            <span className="font-semibold">₹249/month</span>
-            <span className="text-muted-foreground ml-1.5">Billed monthly • No free trial</span>
+            <span className="block font-semibold">₹249/month</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Billed monthly • No free trial
+            </span>
           </button>
           <button
             type="button"
@@ -312,12 +314,17 @@ export function UpgradeButton({
                 : "hover:bg-muted text-foreground"
             }`}
           >
-            <span className="font-semibold">₹1,999/year</span>
-            <span className="text-emerald-600 ml-1.5 text-xs font-medium">
-              Save 33%
-            </span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              7-day free trial. Card required. A small temporary authorization may appear before the annual charge starts after day 7.
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-semibold">₹1,999/year</span>
+              <span className="text-emerald-600 text-xs font-medium">
+                Save 33%
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs font-medium text-foreground">
+              7-Day Free Trial
+            </p>
+            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+              Card needed • Annual billing starts after Day 7
             </p>
           </button>
         </div>

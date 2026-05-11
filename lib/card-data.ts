@@ -160,6 +160,7 @@ export type DailyCardParams = {
   handle: string | null;
   currency: string;
   tradeId: string;
+  sharePath: string;
   disciplineScore: number | null;
   executionTag: string | null;
 };
@@ -201,6 +202,7 @@ export function buildDailyCardParams(
     handle: profile.x_handle,
     currency: profile.currency,
     tradeId: trade.id,
+    sharePath: `/card/${trade.id}`,
     disciplineScore: trade.discipline_score ?? null,
     executionTag: trade.execution_tag ?? null,
   };
@@ -208,6 +210,7 @@ export function buildDailyCardParams(
 
 export type WeeklyCardParams = {
   range: string;
+  sharePath: string;
   pnl: string;
   roi: string | null;
   roiLabel: string;
@@ -306,6 +309,7 @@ export function buildWeeklyCardParams(
 
   return {
     range,
+    sharePath: `/card/weekly/${format(start, "yyyy-MM-dd")}?t=${weekTrades[0].id}`,
     pnl: formatPnl(totalPnl, profile.currency),
     roi: roi != null ? `${roi >= 0 ? "+" : ""}${roi.toFixed(2)}%` : null,
     roiLabel,
@@ -322,6 +326,7 @@ export function buildWeeklyCardParams(
 
 export type MonthlyCardParams = {
   month: string;
+  sharePath: string;
   pnl: string;
   roi: string | null;
   roiLabel: string;
@@ -404,6 +409,7 @@ export function buildMonthlyCardParams(
 
   return {
     month: format(start, "MMMM yyyy"),
+    sharePath: `/card/monthly/${format(start, "yyyy-MM")}?t=${monthTrades[0].id}`,
     pnl: formatPnl(totalPnl, profile.currency),
     roi: roi != null ? `${roi >= 0 ? "+" : ""}${roi.toFixed(2)}%` : null,
     roiLabel,
