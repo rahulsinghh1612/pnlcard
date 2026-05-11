@@ -54,22 +54,28 @@ export function getBillingState(
 ): BillingState {
   const subscriptionStatus = subscription?.status as string | undefined;
 
-  if (subscriptionStatus === "pending") {
-    return "payment_retry";
-  }
-
-  if (subscriptionStatus === "halted") {
-    return "payment_halted";
-  }
-
-  if (subscriptionStatus === "paused") {
-    return "subscription_paused";
-  }
-
   if (isSubscribed(profile)) {
-    return subscription?.status === "active"
-      ? "subscribed_active"
-      : "subscribed_cancelled";
+    if (
+      subscriptionStatus === "active" ||
+      subscriptionStatus === "authenticated" ||
+      subscriptionStatus === "created"
+    ) {
+      return "subscribed_active";
+    }
+
+    if (subscriptionStatus === "pending") {
+      return "payment_retry";
+    }
+
+    if (subscriptionStatus === "halted") {
+      return "payment_halted";
+    }
+
+    if (subscriptionStatus === "paused") {
+      return "subscription_paused";
+    }
+
+    return "subscribed_cancelled";
   }
 
   const hasTrialAccess = isFutureDate(profile.trial_ends_at);
@@ -79,12 +85,11 @@ export function getBillingState(
 
   const isYearlyTrial =
     subscription?.plan_type === "yearly" || profile.trial_ends_at != null;
-  const cancellableTrialStatuses = new Set(["authenticated", "created", "pending"]);
-  const canCancelTrial =
-    isYearlyTrial &&
-    cancellableTrialStatuses.has(subscriptionStatus ?? "");
+  if (isYearlyTrial) {
+    return subscriptionStatus === "cancelled" ? "trial_cancelled" : "trial_active";
+  }
 
-  return canCancelTrial ? "trial_active" : "trial_cancelled";
+  return "trial_active";
 }
 
 /** Tri-state access: subscribed > trial > expired */
@@ -122,7 +127,11 @@ export function getBillingStateDetails(
     isYearlyTrial:
       accessStatus === "trial" &&
       (subscription?.plan_type === "yearly" || profile.trial_ends_at != null),
-    canCancelTrial: billingState === "trial_active",
+    canCancelTrial:
+      billingState === "trial_active" &&
+      ["authenticated", "created", "pending", "active"].includes(
+        subscription?.status ?? ""
+      ),
     hasCancelledTrial: billingState === "trial_cancelled",
     hasActiveSubscription: billingState === "subscribed_active",
     hasCancelledSubscription: billingState === "subscribed_cancelled",
